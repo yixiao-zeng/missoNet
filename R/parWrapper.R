@@ -1,0 +1,68 @@
+parWrapper <- function(k) {
+  n <- nrow(X)
+  p <- ncol(X)
+  q <- ncol(Y)
+  
+  err.fold <- rep(NA, length(lamTh.vec))
+  # err.var.fold = rep(NA,length(lamTh.vec))
+  
+  foldind <- ind[(1 + floor((k - 1) * n/kfold)):floor(k * n/kfold)]
+  X.tr <- X[-foldind, ]
+  Y.tr <- Y[-foldind, ]
+  X.va <- X[foldind, , drop = FALSE]
+  Y.va <- Y[foldind, , drop = FALSE]
+  n.tr <- nrow(Y.tr)
+  
+  if (is.null(rho)) {
+    rho.vec <- apply(Y.tr, 2, function(x) {
+      sum(is.na(x))/n.tr
+    })
+  } else {
+    rho.vec <- init.obj$rho.vec
+  }
+  rho.mat.1 <- t(matrix(rep(1 - rho.vec, p), q, p))  # pxq
+  rho.mat.2 <- matrix(1 - rho.vec, q, 1) %*% matrix(1 - rho.vec, 1, q)
+  diag(rho.mat.2) <- 1 - rho.vec  # qxq
+  
+  mx.tr <- apply(X.tr, 2, mean)
+  sdx <- init.obj$sdx
+  X.tr <- scale(X.tr, center = mx.tr, scale = sdx)
+  X.va <- scale(X.va, center = mx.tr, scale = sdx)
+  
+  my.tr <- apply(Y.tr, 2, mean, na.rm = TRUE)
+  sdy <- init.obj$sdy
+  Y.tr <- scale(Y.tr, center = my.tr, scale = sdy)
+  Y.tr[is.na(Y.tr)] <- 0
+  Y.va <- scale(Y.va, center = my.tr, scale = sdy)
+  
+  info <- NULL
+  info$n <- n.tr
+  info$q <- q
+  info$penalize.diagonal <- init.obj$penalize.diagonal
+  info$xtx <- crossprod(X.tr)
+  info$til.xty <- crossprod(X.tr, Y.tr)/rho.mat.1
+  info$B.init <- init.obj$B.init * sdx
+  Beta.thr.rescale <- Beta.thr * sum(abs(info$B.init))
+  info$residual.cov <- getResidual(X = X.tr, Y = Y.tr, B = info$B.init, rho.mat = rho.mat.2, eps = eps)
+  
+  for (i in 1:length(lamTh.vec)) {
+    cv.out <- update.missoNet(lamTh = lamTh.vec[i], lamB = lamB.vec[i],
+                              Beta.maxit = Beta.maxit, Beta.thr = Beta.thr.rescale,
+                              Theta.maxit = Theta.maxit, Theta.thr = Theta.thr,
+                              verbose = 0, eps = eps, diag.pf = init.obj$diag.pf,
+                              info = info, init.obj = NULL)
+    info$B.init <- cv.out$Beta
+    Beta.thr.rescale <- Beta.thr * sum(abs(info$B.init))
+    info$residual.cov <- getResidual(X = X.tr, Y = Y.tr, B = info$B.init, rho.mat = rho.mat.2, eps = eps)
+    
+    Yh.va <- X.va %*% cv.out$Beta
+    E.va.sq <- (Y.va - Yh.va)^2
+    err.fold[i] <- mean(E.va.sq, na.rm = TRUE)
+    # err.var.fold[i] = (sd(E.va.sq, na.rm=TRUE)^2)/sum(!is.na(E.va.sq))
+  }
+  
+  # return(list(err.fold=err.fold, err.var.fold=err.var.fold))
+  return(err.fold)
+}
+
+
