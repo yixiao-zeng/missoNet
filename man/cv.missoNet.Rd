@@ -17,21 +17,21 @@ cv.missoNet(
   lamTheta.scale.factor = 1,
   n.lamBeta = round(-log10(lamBeta.min.ratio) * 15),
   n.lamTheta = round(-log10(lamTheta.min.ratio) * 10),
-  eps = 1e-08,
-  diag.penalty.factor = NULL,
-  fit.relax = FALSE,
-  fit.1se = FALSE,
   Beta.maxit = 1000,
   Beta.thr = 1e-04,
   Theta.maxit = 1000,
   Theta.thr = 1e-04,
+  eps = 1e-08,
+  diag.penalty.factor = NULL,
   standardize = TRUE,
   standardize.response = TRUE,
+  fit.1se = FALSE,
+  fit.relax = FALSE,
   permute = FALSE,
   with.seed = NULL,
-  verbose = 1,
   parallel = FALSE,
-  cpus
+  cpus,
+  verbose = 1
 )
 }
 \arguments{
@@ -59,35 +59,35 @@ cv.missoNet(
 
 \item{n.lamTheta}{The number of \code{lambda.Theta} values. By default, the program estimates a number based on \code{lamTheta.min.ratio}. An excessively large number results in a significant increase in computation time. Only needed when \code{lambda.Theta = NULL}.}
 
-\item{eps}{A numeric tolerance level for L1 projection; default is \code{eps = 1e-8}. If any of the eigenvalues is less than the given tolerance, then the unbiased estimate of covariance is projected onto L1 ball to have \code{min(eigen(Sigma)$value) == eps}.}
-
-\item{diag.penalty.factor}{Numeric: a separate penalty factor for the diagonal entries of \code{Theta}. This is a number that multiplies \code{lambda.Theta} to allow differential shrinkage. Default is \code{NULL} and the program computes it based on an initial estimate of \code{Theta}. Can be 0 for no shrinkage. Only needed when n <= p.}
-
-\item{fit.relax}{Logical: default is \code{FALSE}. If \code{TRUE}, the program will re-estimate a relaxed graph (\code{Theta}) without penalization, which could be useful for network analysis. WARNING: there may be convergence issues if the residual covariance matrix is not of full rank.}
-
-\item{fit.1se}{Logical: default is \code{FALSE}. Should the model be refitted with the largest \code{lambda.Beta} according to the one-standard-error rule?}
-
-\item{Beta.maxit}{The maximum number of internal iterations allowed for updating \code{Beta}. Default is 1000.}
+\item{Beta.maxit}{The maximum number of internal iterations allowed for updating \code{Beta}. Default is \code{Beta.maxit = 1000}.}
 
 \item{Beta.thr}{The convergence threshold for updating \code{Beta}; default is \code{Beta.thr = 1e-4}. Iterations stop when absolute parameter change is less than \code{Beta.thr * sum(abs(Beta))}.}
 
-\item{Theta.maxit}{The maximum number of internal iterations allowed for updating \code{Theta}. Default is 1000.}
+\item{Theta.maxit}{The maximum number of internal iterations allowed for updating \code{Theta}. Default is \code{Theta.maxit = 1000}.}
 
 \item{Theta.thr}{The convergence threshold for updating \code{Theta}; default is \code{Theta.thr = 1e-4}. Iterations stop when average absolute parameter change is less than \code{Theta.thr * ave(abs(offdiag(Sigma)))}.}
 
-\item{standardize}{Logical: should the columns of \code{X} be standardized so each has unit length and zero average; default is \code{TRUE}. The parameter estimates will be returned on the original scale. If \code{X} has been standardized prior to fitting the model, you might not wish to standardize..}
+\item{eps}{A numeric tolerance level for L1 projection; default is \code{eps = 1e-8}. If any of the eigenvalues is less than the given tolerance, the unbiased estimate of covariance is projected onto L1 ball to have \code{min(eigen(Sigma)$value) == eps}.}
 
-\item{standardize.response}{Logical: should the columns of \code{Y} be standardized so each has unit length and zero average; default is \code{TRUE}. The parameter estimates will be returned on the original scale. If \code{Y} has been standardized prior to fitting the model, you might not wish to standardize..}
+\item{diag.penalty.factor}{Numeric: a separate penalty factor for the diagonal entries of \code{Theta}. This is a number that multiplies \code{lambda.Theta} to allow differential shrinkage. Default is \code{NULL} and the program computes it based on an initial estimate of \code{Theta}. Can be 0 for no shrinkage. Only needed when n <= p.}
+
+\item{standardize}{Logical: should the columns of \code{X} be standardized so each has unit length and zero average; default is \code{TRUE}. The parameter estimates will be returned on the original scale. If \code{X} has been standardized prior to fitting the model, you might not wish to standardize.}
+
+\item{standardize.response}{Logical: should the columns of \code{Y} be standardized so each has unit length and zero average; default is \code{TRUE}. The parameter estimates will be returned on the original scale. If \code{Y} has been standardized prior to fitting the model, you might not wish to standardize.}
+
+\item{fit.1se}{Logical: default is \code{FALSE}. Should the model be refitted with the largest \code{lambda.Beta} according to the one-standard-error rule?}
+
+\item{fit.relax}{Logical: default is \code{FALSE}. If \code{TRUE}, the program will re-estimate a relaxed graph (\code{Theta}) without penalization, which could be useful for network analysis. WARNING: there may be convergence issues if the residual covariance matrix is not of full rank.}
 
 \item{permute}{Logical: should the subject indices for CV be permuted? Default is \code{FALSE}.}
 
 \item{with.seed}{A random seed for permutation.}
 
-\item{verbose}{Value of 0, 1 or 2. 0 -- silent; 1 -- limited tracing; 2 -- detailed tracing. Limited tracing if \code{parallel = TRUE}.}
-
 \item{parallel}{Logical: default is \code{FALSE}. If \code{TRUE}, use parallel cluster to fit each fold.}
 
-\item{cpus}{Number of cores for parallelization.}
+\item{cpus}{Number of cores for parallelization. Only needed when \code{parallel = TRUE}.}
+
+\item{verbose}{Value of 0, 1 or 2. 0 -- silent; 1 -- limited tracing; 2 -- detailed tracing. Limited tracing if \code{parallel = TRUE}.}
 }
 \value{
 This function returns a cv.missoNet object containing a \code{list} of estimates and working parameters:
@@ -96,7 +96,7 @@ This function returns a cv.missoNet object containing a \code{list} of estimates
 \item \code{est.1se}: estimates using the pair of regularization parameters such that error is within one-standard-error of the minimum, if \code{fit.1se = TRUE}.
 \item \code{lambda.Beta.vec}: a long vector of length \code{n.lamBeta * n.lamTheta} from which the CV procedure searches.
 \item \code{lambda.Theta.vec}: a long vector of length \code{n.lamBeta * n.lamTheta} from which the CV procedure searches.
-\item \code{relax.graph}: estimate of network without penalization if \code{fit.relax = TRUE}.
+\item \code{relax.graph}: an estimate of network without penalization if \code{fit.relax = TRUE}.
 \item \code{rho}: a vector of length q: working missing probability.
 \item \code{fold.index}: subject indices for cross-validation split.
 \item \code{cvm}: mean cross-validated error that has a one to one correspondence with \code{lambda.Beta.vec} and \code{lambda.Theta.vec}.

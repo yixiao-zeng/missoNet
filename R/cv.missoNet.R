@@ -12,21 +12,21 @@
 #' @param lamTheta.scale.factor A multiplication factor for scaling the entire \code{lambda.Theta} sequence; defaults is 1. A typical usage scenario is when the optimal lambda approaches the boundary of the search area. Only needed when \code{lambda.Theta = NULL}.
 #' @param n.lamBeta The number of \code{lambda.Beta} values. By default, the program estimates a number based on \code{lamBeta.min.ratio}. An excessively large number results in a significant increase in computation time. Only needed when \code{lambda.Beta = NULL}.
 #' @param n.lamTheta The number of \code{lambda.Theta} values. By default, the program estimates a number based on \code{lamTheta.min.ratio}. An excessively large number results in a significant increase in computation time. Only needed when \code{lambda.Theta = NULL}.
-#' @param eps A numeric tolerance level for L1 projection; default is \code{eps = 1e-8}. If any of the eigenvalues is less than the given tolerance, then the unbiased estimate of covariance is projected onto L1 ball to have \code{min(eigen(Sigma)$value) == eps}.
-#' @param diag.penalty.factor Numeric: a separate penalty factor for the diagonal entries of \code{Theta}. This is a number that multiplies \code{lambda.Theta} to allow differential shrinkage. Default is \code{NULL} and the program computes it based on an initial estimate of \code{Theta}. Can be 0 for no shrinkage. Only needed when n <= p.
-#' @param fit.relax Logical: default is \code{FALSE}. If \code{TRUE}, the program will re-estimate a relaxed graph (\code{Theta}) without penalization, which could be useful for network analysis. WARNING: there may be convergence issues if the residual covariance matrix is not of full rank.
-#' @param fit.1se Logical: default is \code{FALSE}. Should the model be refitted with the largest \code{lambda.Beta} according to the one-standard-error rule?
-#' @param Beta.maxit The maximum number of internal iterations allowed for updating \code{Beta}. Default is 1000.
+#' @param Beta.maxit The maximum number of internal iterations allowed for updating \code{Beta}. Default is \code{Beta.maxit = 1000}.
 #' @param Beta.thr The convergence threshold for updating \code{Beta}; default is \code{Beta.thr = 1e-4}. Iterations stop when absolute parameter change is less than \code{Beta.thr * sum(abs(Beta))}.
-#' @param Theta.maxit The maximum number of internal iterations allowed for updating \code{Theta}. Default is 1000.
+#' @param Theta.maxit The maximum number of internal iterations allowed for updating \code{Theta}. Default is \code{Theta.maxit = 1000}.
 #' @param Theta.thr The convergence threshold for updating \code{Theta}; default is \code{Theta.thr = 1e-4}. Iterations stop when average absolute parameter change is less than \code{Theta.thr * ave(abs(offdiag(Sigma)))}.
-#' @param standardize Logical: should the columns of \code{X} be standardized so each has unit length and zero average; default is \code{TRUE}. The parameter estimates will be returned on the original scale. If \code{X} has been standardized prior to fitting the model, you might not wish to standardize..
-#' @param standardize.response Logical: should the columns of \code{Y} be standardized so each has unit length and zero average; default is \code{TRUE}. The parameter estimates will be returned on the original scale. If \code{Y} has been standardized prior to fitting the model, you might not wish to standardize..
+#' @param eps A numeric tolerance level for L1 projection; default is \code{eps = 1e-8}. If any of the eigenvalues is less than the given tolerance, the unbiased estimate of covariance is projected onto L1 ball to have \code{min(eigen(Sigma)$value) == eps}.
+#' @param diag.penalty.factor Numeric: a separate penalty factor for the diagonal entries of \code{Theta}. This is a number that multiplies \code{lambda.Theta} to allow differential shrinkage. Default is \code{NULL} and the program computes it based on an initial estimate of \code{Theta}. Can be 0 for no shrinkage. Only needed when n <= p.
+#' @param standardize Logical: should the columns of \code{X} be standardized so each has unit length and zero average; default is \code{TRUE}. The parameter estimates will be returned on the original scale. If \code{X} has been standardized prior to fitting the model, you might not wish to standardize.
+#' @param standardize.response Logical: should the columns of \code{Y} be standardized so each has unit length and zero average; default is \code{TRUE}. The parameter estimates will be returned on the original scale. If \code{Y} has been standardized prior to fitting the model, you might not wish to standardize.
+#' @param fit.1se Logical: default is \code{FALSE}. Should the model be refitted with the largest \code{lambda.Beta} according to the one-standard-error rule?
+#' @param fit.relax Logical: default is \code{FALSE}. If \code{TRUE}, the program will re-estimate a relaxed graph (\code{Theta}) without penalization, which could be useful for network analysis. WARNING: there may be convergence issues if the residual covariance matrix is not of full rank.
 #' @param permute Logical: should the subject indices for CV be permuted? Default is \code{FALSE}.
 #' @param with.seed A random seed for permutation.
-#' @param verbose Value of 0, 1 or 2. 0 -- silent; 1 -- limited tracing; 2 -- detailed tracing. Limited tracing if \code{parallel = TRUE}.
 #' @param parallel Logical: default is \code{FALSE}. If \code{TRUE}, use parallel cluster to fit each fold.
-#' @param cpus Number of cores for parallelization.
+#' @param cpus Number of cores for parallelization. Only needed when \code{parallel = TRUE}.
+#' @param verbose Value of 0, 1 or 2. 0 -- silent; 1 -- limited tracing; 2 -- detailed tracing. Limited tracing if \code{parallel = TRUE}.
 #'
 #' @return This function returns a cv.missoNet object containing a \code{list} of estimates and working parameters:
 #' \itemize{
@@ -34,7 +34,7 @@
 #' \item \code{est.1se}: estimates using the pair of regularization parameters such that error is within one-standard-error of the minimum, if \code{fit.1se = TRUE}.
 #' \item \code{lambda.Beta.vec}: a long vector of length \code{n.lamBeta * n.lamTheta} from which the CV procedure searches.
 #' \item \code{lambda.Theta.vec}: a long vector of length \code{n.lamBeta * n.lamTheta} from which the CV procedure searches.
-#' \item \code{relax.graph}: estimate of network without penalization if \code{fit.relax = TRUE}.
+#' \item \code{relax.graph}: an estimate of network without penalization if \code{fit.relax = TRUE}.
 #' \item \code{rho}: a vector of length q: working missing probability.
 #' \item \code{fold.index}: subject indices for cross-validation split.
 #' \item \code{cvm}: mean cross-validated error that has a one to one correspondence with \code{lambda.Beta.vec} and \code{lambda.Theta.vec}.
@@ -50,10 +50,9 @@
 cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.Theta = NULL,
                         lamBeta.min.ratio = 0.01, lamTheta.min.ratio = 0.01, lamBeta.scale.factor = 1, lamTheta.scale.factor = 1,
                         n.lamBeta = round(-log10(lamBeta.min.ratio) * 15), n.lamTheta = round(-log10(lamTheta.min.ratio) * 10),
-                        eps = 1e-08, diag.penalty.factor = NULL, fit.relax = FALSE, fit.1se = FALSE,
-                        Beta.maxit = 1000, Beta.thr = 1e-04, Theta.maxit = 1000, Theta.thr = 1e-04,
-                        standardize = TRUE, standardize.response = TRUE,
-                        permute = FALSE, with.seed = NULL, verbose = 1, parallel = FALSE, cpus) {
+                        Beta.maxit = 1000, Beta.thr = 1e-04, Theta.maxit = 1000, Theta.thr = 1e-04, eps = 1e-08, diag.penalty.factor = NULL,
+                        standardize = TRUE, standardize.response = TRUE, fit.1se = FALSE, fit.relax = FALSE,
+                        permute = FALSE, with.seed = NULL, parallel = FALSE, cpus, verbose = 1) {
   if (verbose > 0) {
     cat("Initializing necessary parameters...\n\n")
   }
@@ -85,7 +84,6 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
   lamB.vec <- lambda.obj$lamB.vec
   
   err <- matrix(NA, kfold, length(lamTh.vec))
-  # err.var = matrix(NA, kfold, length(lamTh.vec))
   
   ################################################################################
   # Cross-validation
@@ -134,8 +132,6 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
       info$B.init <- init.obj$B.init * sdx   ## initialize B on the standardized scale
       Beta.thr.rescale <- Beta.thr * sum(abs(info$B.init))
       info$residual.cov <- getResidual(X = X.tr, Y = Y.tr, B = info$B.init, rho.mat = rho.mat.2, eps = eps)
-      # info$w.init <- matrix(0, nrow = q, ncol = q)
-      # info$wi.init <- matrix(0, nrow = q, ncol = q)
       
       for (i in 1:length(lamTh.vec)) {
         cv.out <- update.missoNet(lamTh = lamTh.vec[i], lamB = lamB.vec[i],
@@ -146,14 +142,9 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
         info$B.init <- cv.out$Beta
         Beta.thr.rescale <- Beta.thr * sum(abs(info$B.init))
         info$residual.cov <- getResidual(X = X.tr, Y = Y.tr, B = info$B.init, rho.mat = rho.mat.2, eps = eps)
-        # info$w.init <-  cv.out$Sigma
-        # info$wi.init <-  cv.out$Theta
         
-        Yh.va <- X.va %*% cv.out$Beta
-        E.va.sq <- (Y.va - Yh.va)^2
-        # E.va.sq = (Y.va - X.va%*%cv.out$Beta)^2
+        E.va.sq <- (Y.va - X.va %*% cv.out$Beta)^2
         err[k, i] <- mean(E.va.sq, na.rm = TRUE)
-        # err.var[k,i] = (sd(E.va.sq, na.rm=TRUE)^2)/sum(!is.na(E.va.sq))
       }
     }
     
@@ -177,12 +168,10 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
     
     for (k in 1:kfold) {
       err[k, ] <- par.out[[k]]
-      # err.var[k,] = par.out[[k]]$err.var.fold
     }
   }
   
   err.cv <- colSums(err)/kfold
-  # err.sd = sqrt(colSums(err.var)/(kfold^2))
   err.sd <- apply(err, 2, sd)/sqrt(kfold)
   err.up <- err.cv + err.sd
   err.low <- err.cv - err.sd
@@ -213,7 +202,7 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
   
   if (verbose > 0) {
     cat("Cross validation completed.\n\n")
-    cat("Fittig with the lambda pair that gives minimum CV error...\n")
+    cat("Fittig with the lambda pair that gives the minimum CV error...\n")
   }
   out.min <- update.missoNet(X = X, Y = Y, lamTh = lamTh.min, lamB = lamB.min,
                              Beta.maxit = Beta.maxit * 10, Beta.thr = Beta.thr * 0.1,
@@ -222,8 +211,7 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
                              info = NULL, init.obj = init.obj)
   out.min$lambda.Beta <- lamB.min
   out.min$lambda.Theta <- lamTh.min
-  ## Convert back to the original scale
-  out.min$Beta <- sweep(out.min$Beta/init.obj$sdx, 2, init.obj$sdy, `*`)
+  out.min$Beta <- sweep(out.min$Beta/init.obj$sdx, 2, init.obj$sdy, `*`)    ## convert back to the original scale
   out.min$mu <- as.numeric(init.obj$my - crossprod(out.min$Beta, init.obj$mx))
   if (verbose > 0) {
     cat("Done.\n\n")

@@ -28,13 +28,14 @@ update.missoNet <- function(X, Y, lamTh, lamB,
     }
     
     #####################################################
-    # Pre-updating several times due to a non-warming start
+    # Pre-updating several times due to a cold start
     #####################################################
+    if (verbose == 2) {
+      cat("  Begin to pre-update due to a cold start.\n")
+    }
     B.init <- init.obj$B.init * init.obj$sdx
     Beta.thr.rescale <- Beta.thr * sum(abs(B.init))
     residual.cov <- init.obj$residual.cov.init
-    # w.init <- matrix(0, nrow = q, ncol = q)
-    # wi.init <- matrix(0, nrow = q, ncol = q)
     
     if (info$penalize.diagonal) {
       lamTh.mat <- lamTh * (1 - diag(info$q)) + lamTh * diag.pf * diag(info$q)
@@ -53,7 +54,7 @@ update.missoNet <- function(X, Y, lamTh, lamB,
     while(s < 50) {
       if(abs(lik.new - lik.old) < lik.thr) {
         if (verbose == 2) {
-          cat("  Pre-updating completed.\n\n")
+          cat("  Pre-update completed.\n\n")
         }
         break
       } else {
@@ -68,15 +69,13 @@ update.missoNet <- function(X, Y, lamTh, lamB,
         B.init <- B.out$Bhat
         Beta.thr.rescale <- Beta.thr * sum(abs(B.init))
         residual.cov <- getResidual(X = X, Y = Y, B = B.init, rho.mat = rho.mat.2, eps = eps)
-        # w.init <-  Theta.out$w
-        # wi.init <-  Theta
         
         lik.new <- sum(diag(1/n * (til.yty - til.ytx %*% B.init - crossprod(B.init, info$til.xty)
                                    + crossprod(B.init, info$xtx) %*% B.init) %*% Theta))
         - determinant(Theta, logarithm = TRUE)$mod[1] + sum(abs(lamTh.mat * Theta)) + sum(abs(lamB.mat * B.init))
         
         if (verbose == 2) {
-          cat("  Pre-updating iteration ", (s + 1), " -- likelihood change: ", abs(lik.new - lik.old), "\n")
+          cat("    Pre-update iteration ", (s + 1), " -- likelihood change: ", abs(lik.new - lik.old), "\n")
         }
         s <- s + 1
       }
@@ -88,8 +87,6 @@ update.missoNet <- function(X, Y, lamTh, lamB,
     info$B.init <- B.init
     Beta.thr <- Beta.thr.rescale
     info$residual.cov <- residual.cov
-    # info$w.init <- w.init
-    # info$wi.init <- wi.init
   }
   
   ################################################################################

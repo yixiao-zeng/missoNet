@@ -2,7 +2,7 @@ relax.glasso <- function(X, Y, init.obj, est, eps, Theta.thr, Theta.maxit) {
   if (init.obj$penalize.diagonal) {
     thr <- 0.1
   } else {
-    thr <- 0.05
+    thr <- 0.01
   }
   
   Theta <- est$Theta

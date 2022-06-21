@@ -4,7 +4,6 @@ parWrapper <- function(k) {
   q <- ncol(Y)
   
   err.fold <- rep(NA, length(lamTh.vec))
-  # err.var.fold = rep(NA,length(lamTh.vec))
   
   foldind <- ind[(1 + floor((k - 1) * n/kfold)):floor(k * n/kfold)]
   X.tr <- X[-foldind, ]
@@ -55,13 +54,10 @@ parWrapper <- function(k) {
     Beta.thr.rescale <- Beta.thr * sum(abs(info$B.init))
     info$residual.cov <- getResidual(X = X.tr, Y = Y.tr, B = info$B.init, rho.mat = rho.mat.2, eps = eps)
     
-    Yh.va <- X.va %*% cv.out$Beta
-    E.va.sq <- (Y.va - Yh.va)^2
+    E.va.sq <- (Y.va - X.va %*% cv.out$Beta)^2
     err.fold[i] <- mean(E.va.sq, na.rm = TRUE)
-    # err.var.fold[i] = (sd(E.va.sq, na.rm=TRUE)^2)/sum(!is.na(E.va.sq))
   }
   
-  # return(list(err.fold=err.fold, err.var.fold=err.var.fold))
   return(err.fold)
 }
 

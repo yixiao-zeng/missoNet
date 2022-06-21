@@ -28,7 +28,7 @@ InitParams <- function(X, Y, rho, kfold, foldid, Theta.maxit, Theta.thr, eps, di
     cv <- glmnet::cv.glmnet(x = X[cc, ], y = Y[cc, j], intercept = TRUE, standardize = standardize, 
                             family = "gaussian", foldid = foldid[cc])
     B.init[, j] <- coef(cv, s = cv$lambda.min)[2:(p + 1)]
-    lam.list[j] <- cv$lambda[1]
+    lam.list[j] <- max(cv$lambda)
   }
   lamB.max <- max(lam.list) * 4
   
