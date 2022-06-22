@@ -48,7 +48,8 @@ InitParams <- function(X, Y, rho, kfold, foldid, Theta.maxit, Theta.thr, eps, di
   rho.mat <- matrix(1 - rho.vec, q, 1) %*% matrix(1 - rho.vec, 1, q)
   diag(rho.mat) <- 1 - rho.vec  # qxq
   
-  residual.cov.init <- getResidual(X = X, Y = Y, B = B.init, rho.mat = rho.mat, eps = eps)
+  E <- Y - X %*% B.init
+  residual.cov.init <- getResidual(E = E, n = n, rho.mat = rho.mat, eps = eps)
   glasso.obj <- glasso::glassopath(s = residual.cov.init, rholist = NULL, thr = Theta.thr, maxit = Theta.maxit, 
                                    approx = FALSE, penalize.diagonal = penalize.diagonal, trace = 0)
   if (penalize.diagonal) {

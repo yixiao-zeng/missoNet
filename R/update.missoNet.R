@@ -68,7 +68,8 @@ update.missoNet <- function(X, Y, lamTh, lamB,
         
         B.init <- B.out$Bhat
         Beta.thr.rescale <- Beta.thr * sum(abs(B.init))
-        residual.cov <- getResidual(X = X, Y = Y, B = B.init, rho.mat = rho.mat.2, eps = eps)
+        E <- Y - X %*% B.init
+        residual.cov <- getResidual(E = E, n = n, rho.mat = rho.mat.2, eps = eps)
         
         lik.new <- sum(diag(1/n * (til.yty - til.ytx %*% B.init - crossprod(B.init, info$til.xty)
                                    + crossprod(B.init, info$xtx) %*% B.init) %*% Theta))

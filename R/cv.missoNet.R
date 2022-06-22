@@ -132,7 +132,8 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
       info$til.xty <- crossprod(X.tr, Y.tr)/rho.mat.1
       info$B.init <- init.obj$B.init * sdx   ## initialize B on the standardized scale
       Beta.thr.rescale <- Beta.thr * sum(abs(info$B.init))
-      info$residual.cov <- getResidual(X = X.tr, Y = Y.tr, B = info$B.init, rho.mat = rho.mat.2, eps = eps)
+      E.tr <- Y.tr - X.tr %*% info$B.init
+      info$residual.cov <- getResidual(E = E.tr, n = n.tr, rho.mat = rho.mat.2, eps = eps)
       
       for (i in 1:length(lamTh.vec)) {
         cv.out <- update.missoNet(lamTh = lamTh.vec[i], lamB = lamB.vec[i],
@@ -142,7 +143,8 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
                                   info = info, init.obj = NULL)
         info$B.init <- cv.out$Beta
         Beta.thr.rescale <- Beta.thr * sum(abs(info$B.init))
-        info$residual.cov <- getResidual(X = X.tr, Y = Y.tr, B = info$B.init, rho.mat = rho.mat.2, eps = eps)
+        E.tr <- Y.tr - X.tr %*% info$B.init
+        info$residual.cov <- getResidual(E = E.tr, n = n.tr, rho.mat = rho.mat.2, eps = eps)
         
         E.va.sq <- (Y.va - X.va %*% cv.out$Beta)^2
         err[k, i] <- mean(E.va.sq, na.rm = TRUE)
