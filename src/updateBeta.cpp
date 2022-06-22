@@ -7,7 +7,6 @@ using namespace Rcpp;
 List updateBeta(const arma::mat& Theta, arma::mat& B0, 
                 const int& n, const arma::mat& xtx, const arma::mat& xty,
                 const double& lamB, const double& eta, const double& tolin, const int& maxitrin) {
-  const arma::mat xtyTheta = xty*Theta;
   arma::mat B = B0, V(size(B0), arma::fill::none), grad_f(size(B0), arma::fill::none), proxgrad_update_B(size(B0), arma::fill::none), Gt(size(B0), arma::fill::none);
   bool stationary = false;
   int itr = 1;
@@ -19,17 +18,17 @@ List updateBeta(const arma::mat& Theta, arma::mat& B0,
     F_update = Q_update + 1.0;
     c = 1.0 * (itr - 2.0)/(itr + 1.0);
     V = B + c * (B - B0);
-    grad_f = 2.0/n * (xtx * V * Theta - xtyTheta);
-    Q1 = 1.0/n * arma::trace(V.t() * xtx * V * Theta - 2.0 * V.t() * xtyTheta);
+    grad_f = 2.0/n * (xtx * V - xty) * Theta;
+    Q1 = 1.0/n * arma::trace((V.t() * xtx * V  - 2.0 * V.t() * xty) * Theta);
     
     while ( F_update > Q_update ) {
       t = t * eta;
       lamBt = lamB * t;
       proxgrad_update_B = V - t * grad_f;
       proxgrad_update_B.clean(lamBt);
-      proxgrad_update_B.for_each( [lamBt](arma::mat::elem_type& val) { if (val > 0) {val -= lamBt;} else if (val < 0) {val += lamBt;} } );
+      proxgrad_update_B.for_each([lamBt](arma::mat::elem_type& val){if (val > 0) {val -= lamBt;} else if (val < 0) {val += lamBt;}});
       
-      F_update = 1.0/n * arma::trace(proxgrad_update_B.t() * xtx * proxgrad_update_B * Theta - 2.0 * proxgrad_update_B.t() * xtyTheta);
+      F_update = 1.0/n * arma::trace((proxgrad_update_B.t() * xtx * proxgrad_update_B - 2.0 * proxgrad_update_B.t() * xty) * Theta);
       Gt = (V - proxgrad_update_B)/t;
       Q2 = t * arma::accu(grad_f % Gt);
       Q3 = t/2.0 * arma::accu(arma::pow(Gt, 2));
@@ -47,4 +46,5 @@ List updateBeta(const arma::mat& Theta, arma::mat& B0,
   }
   return List::create( _["it.final"] = itr, _["Bhat"] = B );
 }
+
 
