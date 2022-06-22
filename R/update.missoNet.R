@@ -1,6 +1,6 @@
 update.missoNet <- function(X, Y, lamTh, lamB,
                             Beta.maxit, Beta.thr, Theta.maxit, Theta.thr,
-                            verbose, eps, diag.pf,
+                            verbose, eps, eta, diag.pf,
                             info, init.obj) {
   if (is.null(info)) {
     n <- nrow(X)
@@ -63,8 +63,8 @@ update.missoNet <- function(X, Y, lamTh, lamB,
                                     approx = FALSE, penalize.diagonal = info$penalize.diagonal, trace = FALSE)
         Theta <- (Theta.out$wi + t(Theta.out$wi))/2
 
-        B.out <- updateBeta(Theta = Theta, B0 = B.init, lamB = lamB, eta = 0.8,
-                            tolin = Beta.thr.rescale, maxitrin = Beta.maxit, info = info)
+        B.out <- updateBeta(Theta = Theta, B0 = B.init, n = info$n, xtx = info$xtx, xty = info$til.xty,
+                            lamB = lamB, eta = eta, tolin = Beta.thr.rescale, maxitrin = Beta.maxit)
         
         B.init <- B.out$Bhat
         Beta.thr.rescale <- Beta.thr * sum(abs(B.init))
@@ -102,8 +102,8 @@ update.missoNet <- function(X, Y, lamTh, lamB,
   }
   Theta <- (Theta.out$wi + t(Theta.out$wi))/2
   
-  B.out <- updateBeta(Theta = Theta, B0 = info$B.init, lamB = lamB, eta = 0.8,
-                      tolin = Beta.thr, maxitrin = Beta.maxit, info = info)
+  B.out <- updateBeta(Theta = Theta, B0 = info$B.init, n = info$n, xtx = info$xtx, xty = info$til.xty,
+                      lamB = lamB, eta = eta, tolin = Beta.thr, maxitrin = Beta.maxit)
   
   if (verbose == 2) {
     cat("  lambda.Theta: ", lamTh, ";  lambda.Beta: ", lamB, "\n")

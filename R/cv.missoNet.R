@@ -14,6 +14,7 @@
 #' @param n.lamTheta The number of \code{lambda.Theta} values. By default, the program estimates a number based on \code{lamTheta.min.ratio}. An excessively large number results in a significant increase in computation time. Only needed when \code{lambda.Theta = NULL}.
 #' @param Beta.maxit The maximum number of internal iterations allowed for updating \code{Beta}. Default is \code{Beta.maxit = 1000}.
 #' @param Beta.thr The convergence threshold for updating \code{Beta}; default is \code{Beta.thr = 1e-4}. Iterations stop when absolute parameter change is less than \code{Beta.thr * sum(abs(Beta))}.
+#' @param eta Backtracking line search shrinkage factor, default is \code{eta = 0.8}. You may want to choose a more appropriate \code{eta} for a faster \code{Beta} convergence based on your dataset. Note that \code{eta} must be greater than 0 and smaller than 1.
 #' @param Theta.maxit The maximum number of internal iterations allowed for updating \code{Theta}. Default is \code{Theta.maxit = 1000}.
 #' @param Theta.thr The convergence threshold for updating \code{Theta}; default is \code{Theta.thr = 1e-4}. Iterations stop when average absolute parameter change is less than \code{Theta.thr * ave(abs(offdiag(Sigma)))}.
 #' @param eps A numeric tolerance level for L1 projection; default is \code{eps = 1e-8}. If any of the eigenvalues is less than the given tolerance, the unbiased estimate of covariance is projected onto L1 ball to have \code{min(eigen(Sigma)$value) == eps}.
@@ -50,11 +51,11 @@
 cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.Theta = NULL,
                         lamBeta.min.ratio = 0.01, lamTheta.min.ratio = 0.01, lamBeta.scale.factor = 1, lamTheta.scale.factor = 1,
                         n.lamBeta = round(-log10(lamBeta.min.ratio) * 15), n.lamTheta = round(-log10(lamTheta.min.ratio) * 10),
-                        Beta.maxit = 1000, Beta.thr = 1e-04, Theta.maxit = 1000, Theta.thr = 1e-04, eps = 1e-08, diag.penalty.factor = NULL,
-                        standardize = TRUE, standardize.response = TRUE, fit.1se = FALSE, fit.relax = FALSE,
+                        Beta.maxit = 1000, Beta.thr = 1e-04, eta = 0.8, Theta.maxit = 1000, Theta.thr = 1e-04, eps = 1e-08, 
+                        diag.penalty.factor = NULL, standardize = TRUE, standardize.response = TRUE, fit.1se = FALSE, fit.relax = FALSE,
                         permute = FALSE, with.seed = NULL, parallel = FALSE, cpus, verbose = 1) {
   if (verbose > 0) {
-    cat("Initializing necessary parameters...\n\n")
+    cat("\nInitializing necessary parameters...\n\n")
   }
   
   n <- nrow(X)
@@ -137,7 +138,7 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
         cv.out <- update.missoNet(lamTh = lamTh.vec[i], lamB = lamB.vec[i],
                                   Beta.maxit = Beta.maxit, Beta.thr = Beta.thr.rescale,
                                   Theta.maxit = Theta.maxit, Theta.thr = Theta.thr,
-                                  verbose = verbose, eps = eps, diag.pf = init.obj$diag.pf,
+                                  verbose = verbose, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
                                   info = info, init.obj = NULL)
         info$B.init <- cv.out$Beta
         Beta.thr.rescale <- Beta.thr * sum(abs(info$B.init))
@@ -157,7 +158,7 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
     }
     
     snowfall::sfExport("X", "Y", "init.obj", "rho", "ind", "kfold", "lamTh.vec", "lamB.vec",
-                       "Beta.maxit", "Beta.thr", "Theta.maxit", "Theta.thr", "eps")
+                       "Beta.maxit", "Beta.thr", "Theta.maxit", "Theta.thr", "eps", "eta")
     par.out <- snowfall::sfClusterApplyLB(seq(1, kfold, by = 1), parWrapper)
     
     if (verbose > 0) {
@@ -202,12 +203,12 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
   
   if (verbose > 0) {
     cat("Cross validation completed.\n\n")
-    cat("Fittig with the lambda pair that gives the minimum CV error...\n")
+    cat("Fittig with the lambda pair that gives the minimum CV error...\n\n")
   }
   out.min <- update.missoNet(X = X, Y = Y, lamTh = lamTh.min, lamB = lamB.min,
                              Beta.maxit = Beta.maxit * 10, Beta.thr = Beta.thr * 0.1,
                              Theta.maxit = Theta.maxit * 10, Theta.thr = Theta.thr * 0.1,
-                             verbose = verbose, eps = eps, diag.pf = init.obj$diag.pf,
+                             verbose = verbose, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
                              info = NULL, init.obj = init.obj)
   out.min$lambda.Beta <- lamB.min
   out.min$lambda.Theta <- lamTh.min
@@ -220,7 +221,7 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
   out.1se <- NULL
   if (fit.1se) {
     if (verbose > 0) {
-      cat("Fiting with the largest lambda.Beta such that error is within 1se of the minimum....\n")
+      cat("Fiting with the largest lambda.Beta such that error is within 1se of the minimum....\n\n")
     }
     new.lamB.vec <- lamB.vec[lamTh.vec == lamTh.min]
     new.err.cv <- err.cv[lamTh.vec == lamTh.min]
@@ -232,7 +233,7 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
     out.1se <- update.missoNet(X = X, Y = Y, lamTh = lamTh.min, lamB = lamB.1se,
                                Beta.maxit = Beta.maxit * 10, Beta.thr = Beta.thr * 0.1,
                                Theta.maxit = Theta.maxit * 10, Theta.thr = Theta.thr * 0.1,
-                               verbose = verbose, eps = eps, diag.pf = init.obj$diag.pf,
+                               verbose = verbose, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
                                info = NULL, init.obj = init.obj)
     out.1se$lambda.Beta <- lamB.1se
     out.1se$lambda.Theta <- lamTh.min

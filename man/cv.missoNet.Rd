@@ -19,6 +19,7 @@ cv.missoNet(
   n.lamTheta = round(-log10(lamTheta.min.ratio) * 10),
   Beta.maxit = 1000,
   Beta.thr = 1e-04,
+  eta = 0.8,
   Theta.maxit = 1000,
   Theta.thr = 1e-04,
   eps = 1e-08,
@@ -62,6 +63,8 @@ cv.missoNet(
 \item{Beta.maxit}{The maximum number of internal iterations allowed for updating \code{Beta}. Default is \code{Beta.maxit = 1000}.}
 
 \item{Beta.thr}{The convergence threshold for updating \code{Beta}; default is \code{Beta.thr = 1e-4}. Iterations stop when absolute parameter change is less than \code{Beta.thr * sum(abs(Beta))}.}
+
+\item{eta}{Backtracking line search shrinkage factor, default is \code{eta = 0.8}. You may want to choose a more appropriate \code{eta} for a faster \code{Beta} convergence based on your dataset. Note that \code{eta} must be greater than 0 and smaller than 1.}
 
 \item{Theta.maxit}{The maximum number of internal iterations allowed for updating \code{Theta}. Default is \code{Theta.maxit = 1000}.}
 

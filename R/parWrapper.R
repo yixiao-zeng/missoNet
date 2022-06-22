@@ -48,7 +48,7 @@ parWrapper <- function(k) {
     cv.out <- update.missoNet(lamTh = lamTh.vec[i], lamB = lamB.vec[i],
                               Beta.maxit = Beta.maxit, Beta.thr = Beta.thr.rescale,
                               Theta.maxit = Theta.maxit, Theta.thr = Theta.thr,
-                              verbose = 0, eps = eps, diag.pf = init.obj$diag.pf,
+                              verbose = 0, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
                               info = info, init.obj = NULL)
     info$B.init <- cv.out$Beta
     Beta.thr.rescale <- Beta.thr * sum(abs(info$B.init))

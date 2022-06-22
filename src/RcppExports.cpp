@@ -12,25 +12,27 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // updateBeta
-List updateBeta(arma::mat Theta, arma::mat B0, double lamB, double eta, double tolin, int maxitrin, const List& info);
-RcppExport SEXP _missoNet_updateBeta(SEXP ThetaSEXP, SEXP B0SEXP, SEXP lamBSEXP, SEXP etaSEXP, SEXP tolinSEXP, SEXP maxitrinSEXP, SEXP infoSEXP) {
+List updateBeta(const arma::mat& Theta, arma::mat& B0, const int& n, const arma::mat& xtx, const arma::mat& xty, const double& lamB, const double& eta, const double& tolin, const int& maxitrin);
+RcppExport SEXP _missoNet_updateBeta(SEXP ThetaSEXP, SEXP B0SEXP, SEXP nSEXP, SEXP xtxSEXP, SEXP xtySEXP, SEXP lamBSEXP, SEXP etaSEXP, SEXP tolinSEXP, SEXP maxitrinSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type Theta(ThetaSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type B0(B0SEXP);
-    Rcpp::traits::input_parameter< double >::type lamB(lamBSEXP);
-    Rcpp::traits::input_parameter< double >::type eta(etaSEXP);
-    Rcpp::traits::input_parameter< double >::type tolin(tolinSEXP);
-    Rcpp::traits::input_parameter< int >::type maxitrin(maxitrinSEXP);
-    Rcpp::traits::input_parameter< const List& >::type info(infoSEXP);
-    rcpp_result_gen = Rcpp::wrap(updateBeta(Theta, B0, lamB, eta, tolin, maxitrin, info));
+    Rcpp::traits::input_parameter< const arma::mat& >::type Theta(ThetaSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type B0(B0SEXP);
+    Rcpp::traits::input_parameter< const int& >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type xtx(xtxSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type xty(xtySEXP);
+    Rcpp::traits::input_parameter< const double& >::type lamB(lamBSEXP);
+    Rcpp::traits::input_parameter< const double& >::type eta(etaSEXP);
+    Rcpp::traits::input_parameter< const double& >::type tolin(tolinSEXP);
+    Rcpp::traits::input_parameter< const int& >::type maxitrin(maxitrinSEXP);
+    rcpp_result_gen = Rcpp::wrap(updateBeta(Theta, B0, n, xtx, xty, lamB, eta, tolin, maxitrin));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_missoNet_updateBeta", (DL_FUNC) &_missoNet_updateBeta, 7},
+    {"_missoNet_updateBeta", (DL_FUNC) &_missoNet_updateBeta, 9},
     {NULL, NULL, 0}
 };
 
