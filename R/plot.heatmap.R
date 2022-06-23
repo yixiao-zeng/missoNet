@@ -1,6 +1,6 @@
 plot.heatmap <- function(cv.missoNet.obj) {
   if (!requireNamespace("ComplexHeatmap", quietly = TRUE)) {
-    if (!require("BiocManager", quietly = TRUE)) {
+    if (!requireNamespace("BiocManager", quietly = TRUE)) {
       install.packages("BiocManager")
     }
     BiocManager::install("ComplexHeatmap")

@@ -3,12 +3,12 @@ title: "README"
 output: html_document
 ---
 
-# missoNet: a R package for multivariate regression and conditional network estimation with missing outputs.
+# missoNet: an R package for multivariate regression and conditional network estimation with missing outputs.
 
 The package **missoNet** enables users to estimate covariate effects by leveraging the information of multiple correlated outputs. 
 Meanwhile, the algorithm learns the network structure among outputs in an undirected Gaussian graphical model.
 
-Different from existing multivariate regression/multi-task learning techniques, **missoNet** allows the output data to contain missing values, and does not require users to have any prior knowledge for preprocessing them (e.g., imputation).
+Different from existing multivariate regression/multi-task learning techniques, **missoNet** allows missing values in the output data, and does not require users to have any prior knowledge for pre-processing them (e.g., imputation).
 
 
 ## Installation

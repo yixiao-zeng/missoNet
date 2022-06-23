@@ -24,23 +24,22 @@ parWrapper <- function(k) {
   diag(rho.mat.2) <- 1 - rho.vec  # qxq
   
   mx.tr <- apply(X.tr, 2, mean)
-  sdx <- init.obj$sdx
-  X.tr <- scale(X.tr, center = mx.tr, scale = sdx)
-  X.va <- scale(X.va, center = mx.tr, scale = sdx)
+  X.tr <- scale(X.tr, center = mx.tr, scale = init.obj$sdx)
+  X.va <- scale(X.va, center = mx.tr, scale = init.obj$sdx)
   
   my.tr <- apply(Y.tr, 2, mean, na.rm = TRUE)
-  sdy <- init.obj$sdy
-  Y.tr <- scale(Y.tr, center = my.tr, scale = sdy)
-  Y.tr[is.na(Y.tr)] <- 0
-  Y.va <- scale(Y.va, center = my.tr, scale = sdy)
+  Y.tr <- scale(Y.tr, center = my.tr, scale = init.obj$sdy)
+  Y.va <- scale(Y.va, center = my.tr, scale = init.obj$sdy)
+  Z.tr <- Y.tr
+  Z.tr[is.na(Z.tr)] <- 0
   
   info <- NULL
   info$n <- n.tr
   info$q <- q
   info$penalize.diagonal <- init.obj$penalize.diagonal
   info$xtx <- crossprod(X.tr)
-  info$til.xty <- crossprod(X.tr, Y.tr)/rho.mat.1
-  info$B.init <- init.obj$B.init * sdx
+  info$til.xty <- crossprod(X.tr, Z.tr)/rho.mat.1
+  info$B.init <- init.obj$B.init * init.obj$sdx
   Beta.thr.rescale <- Beta.thr * sum(abs(info$B.init))
   E.tr <- Y.tr - X.tr %*% info$B.init
   info$residual.cov <- getResidual(E = E.tr, n = n.tr, rho.mat = rho.mat.2, eps = eps)

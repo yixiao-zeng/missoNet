@@ -9,7 +9,8 @@ update.missoNet <- function(X, Y, lamTh, lamB,
     
     X <- scale(X, center = init.obj$mx, scale = init.obj$sdx)
     Y <- scale(Y, center = init.obj$my, scale = init.obj$sdy)
-    Y[is.na(Y)] <- 0
+    Z <- Y
+    Z[is.na(Z)] <- 0
     
     rho.mat.1 <- t(matrix(rep(1 - init.obj$rho.vec, p), q, p))  # pxq
     rho.mat.2 <- matrix(1 - init.obj$rho.vec, q, 1) %*% matrix(1 - init.obj$rho.vec, 1, q)
@@ -20,9 +21,9 @@ update.missoNet <- function(X, Y, lamTh, lamB,
     info$q <- q
     info$penalize.diagonal <- init.obj$penalize.diagonal
     info$xtx <- crossprod(X)
-    info$til.xty <- crossprod(X, Y)/rho.mat.1
+    info$til.xty <- crossprod(X, Z)/rho.mat.1
     til.ytx <- t(info$til.xty)
-    til.yty <- crossprod(Y)/rho.mat.2
+    til.yty <- crossprod(Z)/rho.mat.2
     if (min(eigen(til.yty)$value) < eps) {
       til.yty <- maxproj.cov(mat = til.yty, epsilon = eps)
     }
@@ -84,7 +85,6 @@ update.missoNet <- function(X, Y, lamTh, lamB,
     #####################################################
     # Pre-updating ends
     #####################################################
-    
     info$B.init <- B.init
     Beta.thr <- Beta.thr.rescale
     info$residual.cov <- residual.cov

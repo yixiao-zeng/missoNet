@@ -1,22 +1,22 @@
 Package: missoNet
 Type: Package
-Title: Multivariate regression and conditional network estimation with missing data
+Title: Multivariate regression and conditional network estimation with missing outputs
 Version: 1.0
 Date: 2022-06-14
 Author: Yixiao Zeng
 Maintainer: Yixiao Zeng <yixiao.zeng@qq.com>
-Description: This is an experimental package for fitting multivariate regression with missing data.
+Description: The package missoNet enables users to estimate covariate effects by leveraging the information of multiple correlated outputs. Meanwhile, the algorithm learns the network structure among outputs in an undirected Gaussian graphical model. Different from existing multivariate regression/multi-task learning techniques, missoNet allows missing values in the output data, and does not require users to have any prior knowledge for pre-processing them (e.g., imputation).
 Encoding: UTF-8
 License: GPL (>= 2)
 Imports: 
     glasso (>= 1.11),
     glmnet (>= 4.1.4),
     Rcpp (>= 1.0.8.3),
-    snow (>= 0.4.4),
     snowfall (>= 1.84.6.1)
 LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 7.2.0
 Suggests: 
+    BiocManager,
     circlize,
     ComplexHeatmap,
     grid,

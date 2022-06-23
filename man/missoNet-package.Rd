@@ -3,7 +3,7 @@
 \docType{package}
 \name{missoNet-package}
 \alias{missoNet-package}
-\title{missoNet: a package for multivariate regression and conditional network estimation with missing outputs.}
+\title{missoNet: an R package for multivariate regression and conditional network estimation with missing outputs.}
 \description{
 The missoNet package provides three categories of important functions:
 cv.missoNet/missoNet, plot/predict and generateData.

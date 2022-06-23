@@ -1,4 +1,4 @@
-#' missoNet: a package for multivariate regression and conditional network estimation with missing outputs.
+#' missoNet: an R package for multivariate regression and conditional network estimation with missing outputs.
 #'
 #' The missoNet package provides three categories of important functions:
 #' cv.missoNet/missoNet, plot/predict and generateData.
@@ -14,5 +14,8 @@
 #' @name missoNet-package
 #' @useDynLib missoNet, .registration=TRUE
 #' @importFrom Rcpp evalCpp
+#' @importFrom graphics par
+#' @importFrom stats coef complete.cases quantile rbinom rnorm runif sd
+#' @importFrom utils install.packages
 NULL
 #> NULL
