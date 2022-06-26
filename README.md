@@ -1,14 +1,16 @@
----
-title: "README"
-output: html_document
----
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/yixiao-zeng/missoNet/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/yixiao-zeng/missoNet/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
 
-# missoNet: an R package for multivariate regression and conditional network estimation with missing outputs.
+# missoNet: multi-task regression and conditional network estimation with missing data.
 
-The package **missoNet** enables users to estimate covariate effects by leveraging the information of multiple correlated outputs. 
-Meanwhile, the algorithm learns the network structure among outputs in an undirected Gaussian graphical model.
+The package **missoNet** enables users to fit multi-task gaussian regression models 
+and estimate covariate effects by leveraging the relatedness information of multiple responses (outputs). 
+Meanwhile, the algorithm learns the conditional network structure among outputs in an undirected Gaussian graphical model.
 
-Different from existing multivariate regression/multi-task learning techniques, **missoNet** allows missing values in the output data, and does not require users to have any prior knowledge for pre-processing them (e.g., imputation).
+Different from existing techniques for multivariate regression/multi-task learning, **missoNet** allows missing values 
+in the output data, gives reliable estimates without requiring users to have any prior knowledge for pre-processing 
+them (e.g., imputation).
 
 
 ## Installation
@@ -28,14 +30,27 @@ devtools::install_github("yixiao-zeng/missoNet")
 An example of how to use the package:
 
 ```r
-sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")  ## generate data
-cv.obj <- cv.missoNet(X = sim.dat$X, Y = sim.dat$Z, kfold = 5)  ## train the model
+## generate data with overall missing probability 0.1, missing mechanism "MCAR"
+sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
+tr <- 1:240
+tst <- 241:300
 
-plot(cv.obj)  ## plot the cross-validation error surface
+## train the model using the first 240 samples
+cv.obj <- cv.missoNet(X = sim.dat$X[tr, ], Y = sim.dat$Z[tr, ], kfold = 5)
 
-Bhat <- cv.obj$est.min$Beta  ## estimated covariate coefficients that give the minimum CV error.
+## or train the model in parallel
+library(snowfall)
+cv.obj <- cv.missoNet(X = sim.dat$X[tr, ], Y = sim.dat$Z[tr, ], kfold = 5,
+                      parallel = TRUE, cpus = min(parallel::detectCores()-1, 5)) 
 
-newy <- predict(cv.obj, newx = sim.dat$X, s = "lambda.min")  ## make prediction
+## plot the cross-validation error heatmap
+plot(cv.obj)
+
+## estimated covariate coefficients that give the minimum CV error.
+Bhat <- cv.obj$est.min$Beta
+
+## make prediction
+newy <- predict(cv.obj, newx = sim.dat$X[tst, ], s = "lambda.min")
 ```
 
 

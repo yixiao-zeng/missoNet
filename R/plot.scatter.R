@@ -7,7 +7,8 @@ plot.scatter <- function(cv.missoNet.obj) {
   log.lamB.vec <- log10(cv.missoNet.obj$lambda.Beta.vec)
   log.lamTh.vec <- log10(cv.missoNet.obj$lambda.Theta.vec)
   
-  par(cex = 0.9, mai = c(0.5, 0, 0.3, 0.5))
+  old <- par(cex = 0.9, mai = c(0.5, 0, 0.3, 0.5))
+  on.exit(par(old), add = TRUE)
   plot3D::scatter3D(x = log.lamB.vec, y = log.lamTh.vec, z = cv.missoNet.obj$cvm,
                     pch = 16, cex = 0.8, col = plot3D::ramp.col(col=c("blue","cyan","green","yellow","orange","red"), alpha=0.8),
                     xlab = "log10(lambda.Beta)", ylab = "log10(lambda.Theta)", zlab = "CV.Error", clab = c("Magnitude"),

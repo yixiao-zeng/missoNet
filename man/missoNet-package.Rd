@@ -3,17 +3,23 @@
 \docType{package}
 \name{missoNet-package}
 \alias{missoNet-package}
-\title{missoNet: an R package for multivariate regression and conditional network estimation with missing outputs.}
+\title{Multi-task regression and conditional network estimation with missing data}
 \description{
-The missoNet package provides three categories of important functions:
-cv.missoNet/missoNet, plot/predict and generateData.
+\tabular{ll}{ Package: \tab missoNet\cr Type: \tab Package\cr Version: \tab
+0.0.0.9000\cr Date: \tab 2022-06-25\cr License: \tab GPL-2\cr }
+The package 'missoNet' provides three categories of important functions:
+cv.missoNet/missoNet; plot/predict and generateData.
 }
 \section{missoNet functions}{
 
-cv.missoNet: fit missoNet with the optimal regularization parameters selected by a k-fold cross-validation.
-missoNet: fit missoNet with a given pair of regularization parameters.
-plot: S3 method for plotting the cross-validation errors from a "cv.missoNet" object.
-predict: S3 method for making predictions from a "cv.missoNet" object.
-generateData: generate simulation data by specifying a certain type of missing mechanism.
+\describe{
+  \item{cv.missoNet}{fit missoNet with the optimal regularization parameters selected 
+    by a k-fold cross-validation over a grid of \code{lambda} values.}
+  \item{missoNet}{fit missoNet with a given pair of regularization parameters.}
+  \item{plot}{S3 method for plotting the cross-validation errors from a "cv.missoNet" object.}
+  \item{predict}{S3 method for making predictions from a "cv.missoNet" object.}
+  \item{generateData}{generate simulation data by specifying a certain type of missing mechanism 
+    and missing probability.}
+}
 }
 

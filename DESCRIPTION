@@ -1,20 +1,28 @@
-Package: missoNet
 Type: Package
-Title: Multivariate regression and conditional network estimation with missing outputs
-Version: 1.0
+Package: missoNet
+Title: Multi-task Regression and Conditional Network Estimation with
+    Missing Data
+Version: 0.0.0.9000
 Date: 2022-06-14
-Author: Yixiao Zeng
-Maintainer: Yixiao Zeng <yixiao.zeng@qq.com>
-Description: The package missoNet enables users to estimate covariate effects by leveraging the information of multiple correlated outputs. Meanwhile, the algorithm learns the network structure among outputs in an undirected Gaussian graphical model. Different from existing multivariate regression/multi-task learning techniques, missoNet allows missing values in the output data, and does not require users to have any prior knowledge for pre-processing them (e.g., imputation).
-Encoding: UTF-8
+Authors@R: 
+    person("Yixiao", "Zeng", , "yixiao.zeng@qq.com", role = c("aut", "cre"))
+Description: The package 'missoNet' enables users to fit multi-task
+    gaussian regression models and estimate covariate effects by
+    leveraging the relatedness information of multiple responses
+    (outputs). Meanwhile, the algorithm learns the conditional network
+    structure among outputs in an undirected Gaussian graphical model.
+    Different from existing techniques for multivariate
+    regression/multi-task learning, 'missoNet' allows missing values in
+    the output data, gives reliable estimates without requiring users to
+    have any prior knowledge for pre-processing them (e.g., imputation).
 License: GPL (>= 2)
+URL: https://github.com/yixiao-zeng/missoNet
+BugReports: https://github.com/yixiao-zeng/missoNet/issues
 Imports: 
     glasso (>= 1.11),
     glmnet (>= 4.1.4),
     Rcpp (>= 1.0.8.3),
     snowfall (>= 1.84.6.1)
-LinkingTo: Rcpp, RcppArmadillo
-RoxygenNote: 7.2.0
 Suggests: 
     BiocManager,
     circlize,
@@ -22,3 +30,8 @@ Suggests:
     grid,
     mvtnorm,
     plot3D
+LinkingTo: 
+    Rcpp,
+    RcppArmadillo
+Encoding: UTF-8
+RoxygenNote: 7.2.0
