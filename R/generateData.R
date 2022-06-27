@@ -1,4 +1,4 @@
-#' Generate simulation data from parameters.
+#' Generate simulation data from parameters
 #'
 #' @param X (Optional) a user supplied numeric predictor matrix (n by p). If not \code{NULL} then \code{Sigma.X} will be ignored.
 #' @param Beta (Optional) a user supplied numeric coefficient matrix (p by q). If not \code{NULL} then \code{Beta.elem.sparsity} and \code{Beta.row.sparsity} will be ignored.

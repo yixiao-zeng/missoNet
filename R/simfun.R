@@ -95,7 +95,7 @@ genY <- function(X, BETAstar, Theta) {
   n <- nrow(X)
   q <- ncol(BETAstar)
   if (min(eigen(Theta)$value) <= 1e-8) {
-    stop("please supply a positive definite Theta.")
+    stop("please supply a positive definite matrix for Theta.")
   }
   Sigma <- solve(Theta)
   E <- mvtnorm::rmvnorm(n, rep(0, q), Sigma, checkSymmetry = TRUE)
@@ -133,5 +133,4 @@ genZ <- function(X, BETAstar, Y, rho, type) {
   }
   return(Z)
 }
-
 

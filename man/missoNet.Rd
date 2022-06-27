@@ -2,7 +2,7 @@
 % Please edit documentation in R/missoNet.R
 \name{missoNet}
 \alias{missoNet}
-\title{Fit a missoNet with a fixed pair of regularization parameters.}
+\title{Fit missoNet with a given pair of regularization parameters}
 \usage{
 missoNet(
   X,
@@ -12,6 +12,7 @@ missoNet(
   rho = NULL,
   Beta.maxit = 10000,
   Beta.thr = 1e-05,
+  eta = 0.8,
   Theta.maxit = 10000,
   Theta.thr = 1e-05,
   eps = 1e-08,
@@ -36,6 +37,8 @@ missoNet(
 \item{Beta.maxit}{The maximum number of internal iterations allowed for updating \code{Beta}. Default is \code{Beta.maxit = 1e4}.}
 
 \item{Beta.thr}{The convergence threshold for updating \code{Beta}; default is \code{Beta.thr = 1e-5}. Iterations stop when absolute parameter change is less than \code{Beta.thr * sum(abs(Beta))}.}
+
+\item{eta}{Backtracking line search shrinkage factor, default is \code{eta = 0.8}. In some cases you may want to pick another \code{eta} for a faster \code{Beta} convergence based on your dataset. Note that \code{eta} must be positive and smaller than 1.}
 
 \item{Theta.maxit}{The maximum number of internal iterations allowed for updating \code{Theta}. Default is \code{Theta.maxit = 1e4}.}
 
@@ -64,5 +67,5 @@ This function returns a \code{list} of estimates and working parameters:
 }
 }
 \description{
-Fit a missoNet with a fixed pair of regularization parameters.
+Fit missoNet with a given pair of regularization parameters
 }

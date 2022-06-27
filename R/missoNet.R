@@ -1,4 +1,4 @@
-#' Fit a missoNet with a fixed pair of regularization parameters.
+#' Fit missoNet with a given pair of regularization parameters
 #'
 #' @param X Numeric predictor matrix (n by p): columns correspond to predictor variables and rows correspond to samples. Missing values are not allowed. Do not include a column of ones.
 #' @param Y Numeric response matrix (n by q): columns correspond to response variables and rows correspond to samples. Missing values should be coded as \code{NA} or \code{NaN}.
@@ -7,6 +7,7 @@
 #' @param rho (Optional) A scalar or a numeric vector of length q: a user supplied missing probability for response variables. Default is \code{rho = NULL} and the program will compute the empirical missing rates for columns of \code{Y} and use them as the missing probability.
 #' @param Beta.maxit The maximum number of internal iterations allowed for updating \code{Beta}. Default is \code{Beta.maxit = 1e4}.
 #' @param Beta.thr The convergence threshold for updating \code{Beta}; default is \code{Beta.thr = 1e-5}. Iterations stop when absolute parameter change is less than \code{Beta.thr * sum(abs(Beta))}.
+#' @param eta Backtracking line search shrinkage factor, default is \code{eta = 0.8}. In some cases you may want to pick another \code{eta} for a faster \code{Beta} convergence based on your dataset. Note that \code{eta} must be positive and smaller than 1.
 #' @param Theta.maxit The maximum number of internal iterations allowed for updating \code{Theta}. Default is \code{Theta.maxit = 1e4}.
 #' @param Theta.thr The convergence threshold for updating \code{Theta}; default is \code{Theta.thr = 1e-5}. Iterations stop when average absolute parameter change is less than \code{Theta.thr * ave(abs(offdiag(Sigma)))}.
 #' @param eps A numeric tolerance level for L1 projection; default is \code{eps = 1e-8}. If any of the eigenvalues is less than the given tolerance, the unbiased estimate of covariance is projected onto L1 ball to have \code{min(eigen(Sigma)$value) == eps}.
@@ -29,10 +30,10 @@
 #' @examples
 
 missoNet <- function(X, Y, lambda.Beta, lambda.Theta, rho = NULL,
-                     Beta.maxit = 1e4, Beta.thr = 1e-05, Theta.maxit = 1e4, Theta.thr = 1e-05, eps = 1e-08, diag.penalty.factor = NULL,
-                     standardize = TRUE, standardize.response = TRUE, fit.relax = FALSE, verbose = 1) {
+                     Beta.maxit = 1e4, Beta.thr = 1e-05, eta = 0.8, Theta.maxit = 1e4, Theta.thr = 1e-05, eps = 1e-08,
+                     diag.penalty.factor = NULL, standardize = TRUE, standardize.response = TRUE, fit.relax = FALSE, verbose = 1) {
   if (verbose > 0) {
-    cat("Initializing necessary parameters...\n\n")
+    cat("\nInitializing necessary parameters...\n\n")
   }
   
   n <- nrow(X)
@@ -53,14 +54,14 @@ missoNet <- function(X, Y, lambda.Beta, lambda.Theta, rho = NULL,
   fit <- update.missoNet(X = X, Y = Y, lamTh = lambda.Theta, lamB = lambda.Beta,
                          Beta.maxit = Beta.maxit, Beta.thr = Beta.thr,
                          Theta.maxit = Theta.maxit, Theta.thr = Theta.thr,
-                         verbose = verbose, eps = eps, diag.pf = init.obj$diag.pf,
-                         info = NULL, init.obj = init.obj)
+                         verbose = verbose, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
+                         info = NULL, info.update = NULL, init.obj = init.obj, under.cv = FALSE)
   fit$lambda.Beta <- lambda.Beta
   fit$lambda.Theta <- lambda.Theta
   fit$Beta <- sweep(fit$Beta/init.obj$sdx, 2, init.obj$sdy, `*`)    ## convert back to the original scale
   fit$mu <- as.numeric(init.obj$my - crossprod(fit$Beta, init.obj$mx))
   if (verbose > 0) {
-    cat("Done.\n")
+    cat("Done.\n\n")
   }
   
   relax.graph <- NULL

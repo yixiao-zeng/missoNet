@@ -2,22 +2,22 @@
 % Please edit documentation in R/predict.cv.missoNet.R
 \name{predict.cv.missoNet}
 \alias{predict.cv.missoNet}
-\title{Make predictions from a cv.missoNet object.}
+\title{Make predictions from a \code{cv.missoNet} object}
 \usage{
 \method{predict}{cv.missoNet}(object, newx = NULL, s = "lambda.min", ...)
 }
 \arguments{
-\item{object}{Fitted cv.missoNet object.}
+\item{object}{Fitted \code{cv.missoNet} object.}
 
-\item{newx}{Matrix of new values for X at which predictions are to be made.}
+\item{newx}{Predictor matrix of new values at which predictions are to be made. \code{newx} should be in the same scale as the training data. Missing values are not allowed. Do not include a column of ones.}
 
-\item{s}{The penalty parameter lambda at which predictions are required. Default is \code{s = "lambda.min"} stored in the CV object. Alternatively \code{s = "lambda.1se"} can be used.}
+\item{s}{The penalty parameter lambda at which the regression coefficients for predictions are extracted. Default is \code{s = "lambda.min"} stored in the \code{cv.missoNet} object. Alternatively \code{s = "lambda.1se"} can be used.}
 
 \item{...}{Not used. Other arguments for predicting.}
 }
 \value{
-Predicted response matrix code{newY}.
+Predicted response matrix \code{newy}.
 }
 \description{
-Make predictions from a cv.missoNet object.
+Make predictions from a \code{cv.missoNet} object
 }

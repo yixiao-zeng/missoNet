@@ -2,7 +2,7 @@
 % Please edit documentation in R/generateData.R
 \name{generateData}
 \alias{generateData}
-\title{Generate simulation data from parameters.}
+\title{Generate simulation data from parameters}
 \usage{
 generateData(
   X = NULL,
@@ -60,7 +60,7 @@ This function returns a \code{list} containing:
 }
 }
 \description{
-Generate simulation data from parameters.
+Generate simulation data from parameters
 }
 \examples{
 generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
