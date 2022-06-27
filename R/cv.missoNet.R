@@ -84,12 +84,11 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
   lamTh.vec <- lambda.obj$lamTh.vec
   lamB.vec <- lambda.obj$lamB.vec
   
-  err <- matrix(NA, kfold, length(lamTh.vec))
-  
   ################################################################################
   # Cross-validation
   ################################################################################
   if (!parallel) {
+    err <- matrix(NA, kfold, length(lamTh.vec))
     for (k in 1:kfold) {
       if (verbose > 0) {
         cat("Staring fold: ", k, "\n")
@@ -129,23 +128,24 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
       info$penalize.diagonal <- init.obj$penalize.diagonal
       info$xtx <- crossprod(X.tr)
       info$til.xty <- crossprod(X.tr, Z.tr)/rho.mat.1
-      info$B.init <- init.obj$B.init * init.obj$sdx   ## initialize B on the standardized scale
-      Beta.thr.rescale <- Beta.thr * sum(abs(info$B.init))
-      E.tr <- Y.tr - X.tr %*% info$B.init
-      info$residual.cov <- getResidual(E = E.tr, n = n.tr, rho.mat = rho.mat.2, eps = eps)
+      
+      info.update <- NULL
+      info.update$B.init <- init.obj$B.init * init.obj$sdx   ## initialize B on the standardized scale
+      Beta.thr.rescale <- Beta.thr * sum(abs(info.update$B.init))
+      E.tr <- Y.tr - X.tr %*% info.update$B.init
+      info.update$residual.cov <- getResidual(E = E.tr, n = n.tr, rho.mat = rho.mat.2, eps = eps)
       
       for (i in 1:length(lamTh.vec)) {
-        cv.out <- update.missoNet(lamTh = lamTh.vec[i], lamB = lamB.vec[i],
-                                  Beta.maxit = Beta.maxit, Beta.thr = Beta.thr.rescale,
-                                  Theta.maxit = Theta.maxit, Theta.thr = Theta.thr,
-                                  verbose = verbose, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
-                                  info = info, init.obj = NULL)
-        info$B.init <- cv.out$Beta
-        Beta.thr.rescale <- Beta.thr * sum(abs(info$B.init))
-        E.tr <- Y.tr - X.tr %*% info$B.init
-        info$residual.cov <- getResidual(E = E.tr, n = n.tr, rho.mat = rho.mat.2, eps = eps)
+        info.update$B.init <- update.missoNet(lamTh = lamTh.vec[i], lamB = lamB.vec[i],
+                                              Beta.maxit = Beta.maxit, Beta.thr = Beta.thr.rescale,
+                                              Theta.maxit = Theta.maxit, Theta.thr = Theta.thr,
+                                              verbose = verbose, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
+                                              info = info, info.update = info.update, under.cv = TRUE)
+        Beta.thr.rescale <- Beta.thr * sum(abs(info.update$B.init))
+        E.tr <- Y.tr - X.tr %*% info.update$B.init
+        info.update$residual.cov <- getResidual(E = E.tr, n = n.tr, rho.mat = rho.mat.2, eps = eps)
         
-        E.va.sq <- (Y.va - X.va %*% cv.out$Beta)^2
+        E.va.sq <- (Y.va - X.va %*% info.update$B.init)^2
         err[k, i] <- mean(E.va.sq, na.rm = TRUE)
       }
     }
@@ -157,9 +157,10 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
       suppressMessages(snowfall::sfInit(parallel = TRUE, cpus = cpus))
     }
     
-    snowfall::sfExport("X", "Y", "init.obj", "rho", "ind", "kfold", "lamTh.vec", "lamB.vec",
-                       "Beta.maxit", "Beta.thr", "Theta.maxit", "Theta.thr", "eps", "eta")
-    par.out <- snowfall::sfClusterApplyLB(seq(1, kfold, by = 1), parWrapper)
+    par.out <- snowfall::sfClusterApplyLB(seq(1, kfold, by = 1), function(k) {
+      parWrapper(k = k, X = X, Y = Y, init.obj = init.obj, rho = rho, ind = ind, kfold = kfold, lamTh.vec = lamTh.vec, lamB.vec = lamB.vec,
+                 Beta.maxit = Beta.maxit, Beta.thr = Beta.thr, Theta.maxit = Theta.maxit, Theta.thr = Theta.thr, eps = eps, eta = eta)
+    })
     
     if (verbose > 0) {
       snowfall::sfStop()
@@ -167,9 +168,7 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
       suppressMessages(snowfall::sfStop())
     }
     
-    for (k in 1:kfold) {
-      err[k, ] <- par.out[[k]]
-    }
+    err <- do.call("rbind", par.out)
   }
   
   err.cv <- colSums(err)/kfold
@@ -209,7 +208,7 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
                              Beta.maxit = Beta.maxit * 10, Beta.thr = Beta.thr * 0.1,
                              Theta.maxit = Theta.maxit * 10, Theta.thr = Theta.thr * 0.1,
                              verbose = verbose, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
-                             info = NULL, init.obj = init.obj)
+                             info = NULL, info.update = NULL, init.obj = init.obj, under.cv = FALSE)
   out.min$lambda.Beta <- lamB.min
   out.min$lambda.Theta <- lamTh.min
   out.min$Beta <- sweep(out.min$Beta/init.obj$sdx, 2, init.obj$sdy, `*`)    ## convert back to the original scale
@@ -234,7 +233,7 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL, lambda.Beta = NULL, lambda.
                                Beta.maxit = Beta.maxit * 10, Beta.thr = Beta.thr * 0.1,
                                Theta.maxit = Theta.maxit * 10, Theta.thr = Theta.thr * 0.1,
                                verbose = verbose, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
-                               info = NULL, init.obj = init.obj)
+                               info = NULL, info.update = NULL, init.obj = init.obj, under.cv = FALSE)
     out.1se$lambda.Beta <- lamB.1se
     out.1se$lambda.Theta <- lamTh.min
     out.1se$Beta <- sweep(out.1se$Beta/init.obj$sdx, 2, init.obj$sdy, `*`)

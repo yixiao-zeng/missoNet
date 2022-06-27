@@ -1,7 +1,7 @@
 update.missoNet <- function(X, Y, lamTh, lamB,
                             Beta.maxit, Beta.thr, Theta.maxit, Theta.thr,
                             verbose, eps, eta, diag.pf,
-                            info, init.obj) {
+                            info, info.update, init.obj, under.cv) {
   if (is.null(info)) {
     n <- nrow(X)
     p <- ncol(X)
@@ -16,7 +16,6 @@ update.missoNet <- function(X, Y, lamTh, lamB,
     rho.mat.2 <- matrix(1 - init.obj$rho.vec, q, 1) %*% matrix(1 - init.obj$rho.vec, 1, q)
     diag(rho.mat.2) <- 1 - init.obj$rho.vec  # qxq
     
-    info <- NULL
     info$n <- n
     info$q <- q
     info$penalize.diagonal <- init.obj$penalize.diagonal
@@ -85,9 +84,9 @@ update.missoNet <- function(X, Y, lamTh, lamB,
     #####################################################
     # Pre-updating ends
     #####################################################
-    info$B.init <- B.init
+    info.update$B.init <- B.init
     Beta.thr <- Beta.thr.rescale
-    info$residual.cov <- residual.cov
+    info.update$residual.cov <- residual.cov
   }
   
   ################################################################################
@@ -95,15 +94,15 @@ update.missoNet <- function(X, Y, lamTh, lamB,
   ################################################################################
   if (info$penalize.diagonal) {
     lamTh.mat <- lamTh * (1 - diag(info$q)) + lamTh * diag.pf * diag(info$q)
-    Theta.out <- glasso::glasso(s = info$residual.cov, rho = lamTh.mat, thr = Theta.thr, maxit = Theta.maxit,
+    Theta.out <- glasso::glasso(s = info.update$residual.cov, rho = lamTh.mat, thr = Theta.thr, maxit = Theta.maxit,
                                 approx = FALSE, penalize.diagonal = TRUE, trace = FALSE)
   } else {
-    Theta.out <- glasso::glasso(s = info$residual.cov, rho = lamTh, thr = Theta.thr, maxit = Theta.maxit,
+    Theta.out <- glasso::glasso(s = info.update$residual.cov, rho = lamTh, thr = Theta.thr, maxit = Theta.maxit,
                                 approx = FALSE, penalize.diagonal = FALSE, trace = FALSE)
   }
   Theta <- (Theta.out$wi + t(Theta.out$wi))/2
   
-  B.out <- updateBeta(Theta = Theta, B0 = info$B.init, n = info$n, xtx = info$xtx, xty = info$til.xty,
+  B.out <- updateBeta(Theta = Theta, B0 = info.update$B.init, n = info$n, xtx = info$xtx, xty = info$til.xty,
                       lamB = lamB, eta = eta, tolin = Beta.thr, maxitrin = Beta.maxit)
   
   if (verbose == 2) {
@@ -112,7 +111,11 @@ update.missoNet <- function(X, Y, lamTh, lamB,
     cat("  Iterations for updating Beta: ", B.out$it.final, "\n\n")
   }
   
-  return(list(Beta = B.out$Bhat, Theta = Theta))
+  if(under.cv) {
+    return(B.out$Bhat)
+  } else {
+    return(list(Beta = B.out$Bhat, Theta = Theta))
+  }
 }
 
 

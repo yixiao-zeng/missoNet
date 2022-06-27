@@ -1,4 +1,5 @@
-parWrapper <- function(k) {
+parWrapper <- function(k, X, Y, init.obj, rho, ind, kfold, lamTh.vec, lamB.vec,
+                       Beta.maxit, Beta.thr, Theta.maxit, Theta.thr, eps, eta) {
   n <- nrow(X)
   p <- ncol(X)
   q <- ncol(Y)
@@ -39,23 +40,24 @@ parWrapper <- function(k) {
   info$penalize.diagonal <- init.obj$penalize.diagonal
   info$xtx <- crossprod(X.tr)
   info$til.xty <- crossprod(X.tr, Z.tr)/rho.mat.1
-  info$B.init <- init.obj$B.init * init.obj$sdx
-  Beta.thr.rescale <- Beta.thr * sum(abs(info$B.init))
-  E.tr <- Y.tr - X.tr %*% info$B.init
-  info$residual.cov <- getResidual(E = E.tr, n = n.tr, rho.mat = rho.mat.2, eps = eps)
+  
+  info.update <- NULL
+  info.update$B.init <- init.obj$B.init * init.obj$sdx
+  Beta.thr.rescale <- Beta.thr * sum(abs(info.update$B.init))
+  E.tr <- Y.tr - X.tr %*% info.update$B.init
+  info.update$residual.cov <- getResidual(E = E.tr, n = n.tr, rho.mat = rho.mat.2, eps = eps)
   
   for (i in 1:length(lamTh.vec)) {
-    cv.out <- update.missoNet(lamTh = lamTh.vec[i], lamB = lamB.vec[i],
-                              Beta.maxit = Beta.maxit, Beta.thr = Beta.thr.rescale,
-                              Theta.maxit = Theta.maxit, Theta.thr = Theta.thr,
-                              verbose = 0, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
-                              info = info, init.obj = NULL)
-    info$B.init <- cv.out$Beta
-    Beta.thr.rescale <- Beta.thr * sum(abs(info$B.init))
-    E.tr <- Y.tr - X.tr %*% info$B.init
-    info$residual.cov <- getResidual(E = E.tr, n = n.tr, rho.mat = rho.mat.2, eps = eps)
+    info.update$B.init <- update.missoNet(lamTh = lamTh.vec[i], lamB = lamB.vec[i],
+                                          Beta.maxit = Beta.maxit, Beta.thr = Beta.thr.rescale,
+                                          Theta.maxit = Theta.maxit, Theta.thr = Theta.thr,
+                                          verbose = 0, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
+                                          info = info, info.update = info.update, under.cv = TRUE)
+    Beta.thr.rescale <- Beta.thr * sum(abs(info.update$B.init))
+    E.tr <- Y.tr - X.tr %*% info.update$B.init
+    info.update$residual.cov <- getResidual(E = E.tr, n = n.tr, rho.mat = rho.mat.2, eps = eps)
     
-    E.va.sq <- (Y.va - X.va %*% cv.out$Beta)^2
+    E.va.sq <- (Y.va - X.va %*% info.update$B.init)^2
     err.fold[i] <- mean(E.va.sq, na.rm = TRUE)
   }
   
