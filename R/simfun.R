@@ -78,6 +78,10 @@ genX <- function(n, p, Sigma.X) {
       }
     }
     Sigma.X <- s^dist
+  } else {
+    if (min(eigen(Sigma.X)$value) <= 1e-7) {
+      stop("\nPlease supply a positive definite matrix for `Sigma.X`.\n")
+    }
   }
   return(mvtnorm::rmvnorm(n, mean = rep(0, p), sigma = Sigma.X, checkSymmetry = TRUE))
 }
@@ -94,8 +98,8 @@ genY <- function(X, BETAstar, Theta) {
   
   n <- nrow(X)
   q <- ncol(BETAstar)
-  if (min(eigen(Theta)$value) <= 1e-8) {
-    stop("please supply a positive definite matrix for Theta.")
+  if (min(eigen(Theta)$value) <= 1e-7) {
+    stop("\nPlease supply a positive definite matrix for `Theta`.\n")
   }
   Sigma <- solve(Theta)
   E <- mvtnorm::rmvnorm(n, rep(0, q), Sigma, checkSymmetry = TRUE)
@@ -120,7 +124,7 @@ genZ <- function(X, BETAstar, Y, rho, type) {
   } else if (type == "MAR") {
     missing <- matrix(1, n, q)
     for (j in 1:q) {
-      missing[, j][rbinom(n, size = 1, prob = rho[j] * 1/(1 + exp(-(X %*% BETAstar)[, j]))) == 1] <- NA
+      missing[, j][rbinom(n, size = 1, prob = 2 * rho[j] * 1/(1 + exp(-(X %*% BETAstar)[, j]))) == 1] <- NA
     }
     Z <- Y * missing
 

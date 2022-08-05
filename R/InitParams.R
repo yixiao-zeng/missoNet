@@ -1,25 +1,30 @@
-InitParams <- function(X, Y, rho, kfold, foldid, Theta.maxit, Theta.thr, eps, diag.pf, standardize, standardize.response) {
+InitParams <- function(X, Y, rho, kfold, foldid, Theta.maxit, Theta.thr, eps,
+                       penalize.diagonal, diag.pf, standardize, standardize.response) {
   n <- nrow(X)
   p <- ncol(X)
   q <- ncol(Y)
-  ## If n <= p (or q), the diagonal terms of Theta will be penalized
-  penalize.diagonal <- (floor(n * (kfold - 1)/kfold) <= p | floor(n * (kfold - 1)/kfold) <= q)
+  ## If n.tr <= max(p, q), the diagonal of Theta should be penalized
+  if (is.null(penalize.diagonal)) {
+    penalize.diagonal <- (floor(n * (kfold - 1)/kfold) <= max(p, q))
+  } else {
+    if ((floor(n * (kfold - 1)/kfold) <= max(p, q)) & (penalize.diagonal == FALSE)) {
+      warning("\nInsufficient sample size. It is recommended to set `penalize.diagonal = TRUE`.\n")
+    } else if ((floor(n * (kfold - 1)/kfold) > max(p, q)) & (penalize.diagonal == TRUE)) {
+      warning("\nSufficient sample size. It is recommended to set `penalize.diagonal = FALSE`.\n")
+    }
+  }
   
   mx <- apply(X, 2, mean)
   my <- apply(Y, 2, mean, na.rm = TRUE)
   
   if (standardize) {
     sdx <- apply(X, 2, sd)
-  } else {
-    sdx <- rep(1, p)
-  }
+  } else { sdx <- rep(1, p) }
   
   if (standardize.response) {
     sdy <- apply(Y, 2, sd, na.rm = TRUE)
     Y <- scale(Y, center = FALSE, scale = sdy)
-  } else {
-    sdy <- rep(1, q)
-  }
+  } else { sdy <- rep(1, q) }
   
   B.init <- matrix(0, nrow = p, ncol = q)
   lam.list <- rep(0, q)
@@ -30,7 +35,7 @@ InitParams <- function(X, Y, rho, kfold, foldid, Theta.maxit, Theta.thr, eps, di
     B.init[, j] <- coef(cv, s = cv$lambda.min)[2:(p + 1)]
     lam.list[j] <- max(cv$lambda)
   }
-  lamB.max <- max(lam.list) * 4
+  lamB.max <- max(lam.list) * 5
   
   
   if (is.null(rho)) {
@@ -42,7 +47,7 @@ InitParams <- function(X, Y, rho, kfold, foldid, Theta.maxit, Theta.thr, eps, di
   } else if (length(rho) == q) {
     rho.vec <- rho
   } else {
-    stop("rho must be a scalar or a vector of length = q.")
+    stop("\n`rho` must be a scalar or a vector of length = q.\n")
   }
   
   rho.mat <- matrix(1 - rho.vec, q, 1) %*% matrix(1 - rho.vec, 1, q)
@@ -60,17 +65,16 @@ InitParams <- function(X, Y, rho, kfold, foldid, Theta.maxit, Theta.thr, eps, di
         diag.pf <- max(abs(diag.wi))/max(abs(offdiag.wi))
       }else{
         diag.pf <- 4
-        warning("Unable to compute diag.penalty.factor, set to the default value = 4.
-Supply different values to tune results.")
+        warning("\nUnable to compute the `diag.penalty.factor`, set to the default value = 4.\n
+Users can provide a different value (usually larger) at their own discretion.\n")
       }
     }
   } else {
     diag.pf <- NULL
   }
-  lamTh.max <- max(glasso.obj$rholist) * 2
+  lamTh.max <- max(glasso.obj$rholist) * 10
   
   return(list(B.init = B.init, residual.cov.init = residual.cov.init, rho.vec = rho.vec, sdx = sdx, sdy = sdy, mx = mx, my = my,
               penalize.diagonal = penalize.diagonal, diag.pf = diag.pf, lamB.max = lamB.max, lamTh.max = lamTh.max))
 }
-
 

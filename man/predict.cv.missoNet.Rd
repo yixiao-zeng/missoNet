@@ -7,17 +7,17 @@
 \method{predict}{cv.missoNet}(object, newx = NULL, s = "lambda.min", ...)
 }
 \arguments{
-\item{object}{Fitted \code{cv.missoNet} object.}
+\item{object}{Fitted `\code{cv.missoNet}` object.}
 
-\item{newx}{Predictor matrix of new values at which predictions are to be made. \code{newx} should be in the same scale as the training data. Missing values are not allowed. Do not include a column of ones.}
+\item{newx}{A predictor matrix of new values at which predictions are to be made. `\code{newx}` should have the same scale as the training data. Missing values are not allowed and do not include a column of ones.}
 
-\item{s}{The penalty parameter lambda at which the regression coefficients for predictions are extracted. Default is \code{s = "lambda.min"} stored in the \code{cv.missoNet} object. Alternatively \code{s = "lambda.1se"} can be used.}
+\item{s}{Character, the penalty parameter `lambda` at which the regression coefficients for predictions are extracted. It supports three special values, named `\code{"lambda.min"}` (default), `\code{"lambda.Beta.1se"}` and `\code{"lambda.Theta.1se"}`.}
 
 \item{...}{Not used. Other arguments for predicting.}
 }
 \value{
-Predicted response matrix \code{newy}.
+Predicted response matrix `\code{newy}`.
 }
 \description{
-Make predictions from a \code{cv.missoNet} object
+S3 method for making predictions from a fitted `\code{cv.missoNet}` object.
 }

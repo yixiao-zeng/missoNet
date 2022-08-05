@@ -2,7 +2,7 @@
 % Please edit documentation in R/missoNet.R
 \name{missoNet}
 \alias{missoNet}
-\title{Fit missoNet with a given pair of regularization parameters}
+\title{Fit missoNet models with a series of \eqn{\lambda} values}
 \usage{
 missoNet(
   X,
@@ -11,61 +11,76 @@ missoNet(
   lambda.Theta,
   rho = NULL,
   Beta.maxit = 10000,
-  Beta.thr = 1e-05,
+  Beta.thr = 1e-06,
   eta = 0.8,
   Theta.maxit = 10000,
-  Theta.thr = 1e-05,
+  Theta.thr = 1e-06,
   eps = 1e-08,
+  penalize.diagonal = NULL,
   diag.penalty.factor = NULL,
   standardize = TRUE,
   standardize.response = TRUE,
   fit.relax = FALSE,
+  parallel = FALSE,
+  cpus = 2,
   verbose = 1
 )
 }
 \arguments{
-\item{X}{Numeric predictor matrix (n by p): columns correspond to predictor variables and rows correspond to samples. Missing values are not allowed. Do not include a column of ones.}
+\item{X}{Numeric predictor matrix (\eqn{n\times p}{n x p}): columns correspond to predictor variables and rows correspond to samples. Missing values are not allowed. Do not include a column of ones.}
 
-\item{Y}{Numeric response matrix (n by q): columns correspond to response variables and rows correspond to samples. Missing values should be coded as \code{NA} or \code{NaN}.}
+\item{Y}{Numeric response matrix (\eqn{n\times q}{n x q}): columns correspond to response variables and rows correspond to samples. Missing values should be coded as `\code{NA}`s or `\code{NaN}`s.}
 
-\item{lambda.Beta}{Numeric: a user supplied positive value for regularizing \code{Beta}.}
+\item{lambda.Beta}{A scalar or a numeric vector: an user-supplied sequence of non-negative \eqn{\lambda}{lambda} value(s) for regularizing the coefficient matrix \eqn{\mathbf{B}}{`\code{Beta}`}. Note that it must have a one-to-one correspondence with `\code{lambda.Theta}`.}
 
-\item{lambda.Theta}{Numeric: a user supplied positive value for regularizing \code{Theta}.}
+\item{lambda.Theta}{A scalar or a numeric vector: an user-supplied sequence of non-negative \eqn{\lambda}{lambda} value(s) for regularizing the precision matrix \eqn{\mathbf{\Theta}}{`\code{Theta}`}. Note that it must have a one-to-one correspondence with `\code{lambda.Beta}`.}
 
-\item{rho}{(Optional) A scalar or a numeric vector of length q: a user supplied missing probability for response variables. Default is \code{rho = NULL} and the program will compute the empirical missing rates for columns of \code{Y} and use them as the missing probability.}
+\item{rho}{(Optional) A scalar or a numeric vector of length \eqn{q}{q}: an user-supplied missing probability for response variables. Default is `\code{rho = NULL}` and the program will compute the empirical missing rates for columns of `\code{Y}` and use them as the working missing probability.}
 
-\item{Beta.maxit}{The maximum number of internal iterations allowed for updating \code{Beta}. Default is \code{Beta.maxit = 1e4}.}
+\item{Beta.maxit}{The maximum number of iterations of the FISTA algorithm. Default is `\code{Beta.maxit = 10000}`.}
 
-\item{Beta.thr}{The convergence threshold for updating \code{Beta}; default is \code{Beta.thr = 1e-5}. Iterations stop when absolute parameter change is less than \code{Beta.thr * sum(abs(Beta))}.}
+\item{Beta.thr}{The convergence threshold for updating \eqn{\mathbf{B}}{`\code{Beta}`}; default is `\code{Beta.thr = 1.0E-6}`. Iterations stop when absolute parameter change is less than `\code{Beta.thr * sum(abs(Beta))}`.}
 
-\item{eta}{Backtracking line search shrinkage factor, default is \code{eta = 0.8}. In some cases you may want to pick another \code{eta} for a faster \code{Beta} convergence based on your dataset. Note that \code{eta} must be positive and smaller than 1.}
+\item{eta}{The backtracking line search shrinkage factor, default is `\code{eta = 0.8}`. Most users can use the default value, some experienced users may want to adjust `\code{eta}` according to the dataset's properties for a faster \eqn{\mathbf{B}}{`\code{Beta}`} convergence. Note that `\code{eta}` must be in (0, 1).}
 
-\item{Theta.maxit}{The maximum number of internal iterations allowed for updating \code{Theta}. Default is \code{Theta.maxit = 1e4}.}
+\item{Theta.maxit}{The maximum number of iterations of the \code{glasso} algorithm. Default is `\code{Theta.maxit = 10000}`.}
 
-\item{Theta.thr}{The convergence threshold for updating \code{Theta}; default is \code{Theta.thr = 1e-5}. Iterations stop when average absolute parameter change is less than \code{Theta.thr * ave(abs(offdiag(Sigma)))}.}
+\item{Theta.thr}{The convergence threshold for updating \eqn{\mathbf{\Theta}}{`\code{Theta}`}; default is `\code{Theta.thr = 1.0E-6}`. Iterations stop when average absolute parameter change is less than `\code{Theta.thr * ave(abs(offdiag(S)))}`, where `S` denotes the working empirical covariance matrix.}
 
-\item{eps}{A numeric tolerance level for L1 projection; default is \code{eps = 1e-8}. If any of the eigenvalues is less than the given tolerance, the unbiased estimate of covariance is projected onto L1 ball to have \code{min(eigen(Sigma)$value) == eps}.}
+\item{eps}{A numeric tolerance level for the L1 projection of the empirical covariance matrix; default is `\code{eps = 1.0E-8}`. The empirical covariance matrix will be projected onto a L1 ball to have `\code{min(eigen(S)$value) == eps}`, if any of the eigenvalues is less than the specified tolerance. Most users can use the default value.}
 
-\item{diag.penalty.factor}{Numeric: a separate penalty factor for the diagonal entries of \code{Theta}. This is a number that multiplies \code{lambda.Theta} to allow differential shrinkage. Default is \code{NULL} and the program computes it based on an initial estimate of \code{Theta}. Can be 0 for no shrinkage. Only needed when n <= p.}
+\item{penalize.diagonal}{Logical: should the diagonal of \eqn{\mathbf{\Theta}}{`\code{Theta}`} be penalized? The default depends on the sample size \eqn{n}{n} relative to the number of predictors and responses. If \eqn{n > \text{max}(p, q)}{n > max(p, q)}, the default is `TRUE`, otherwise it is set to `FALSE`.}
 
-\item{standardize}{Logical: should the columns of \code{X} be standardized so each has unit length and zero average; default is \code{TRUE}. The parameter estimates will be returned on the original scale. If \code{X} has been standardized prior to fitting the model, you might not wish to standardize.}
+\item{diag.penalty.factor}{Numeric: a separate penalty factor for the diagonal entries of \eqn{\mathbf{\Theta}}{`\code{Theta}`} when `\code{penalize.diagonal = TRUE}`. \eqn{\lambda_\Theta}{`\code{lambda.Theta}`} is multiplied by this number to allow a differential shrinkage of the diagonal. The default is `\code{NULL}` and the program can compute it based on an initial estimate of \eqn{\mathbf{\Theta}}{`\code{Theta}`}. Could be `0` for no shrinkage (equivalent to `\code{penalize.diagonal = FALSE}`).}
 
-\item{standardize.response}{Logical: should the columns of \code{Y} be standardized so each has unit length and zero average; default is \code{TRUE}. The parameter estimates will be returned on the original scale. If \code{Y} has been standardized prior to fitting the model, you might not wish to standardize.}
+\item{standardize}{Logical: should the columns of `\code{X}` be standardized so each has unit length? The default is `\code{TRUE}`. The estimated parameters will always be returned on the original scale. If `\code{X}` has been standardized prior to fitting the model, you might not wish to standardize.}
 
-\item{fit.relax}{Logical: default is \code{FALSE}. If \code{TRUE}, the program will re-estimate a relaxed graph (\code{Theta}) without penalization, which could be useful for network analysis. WARNING: there may be convergence issues if the residual covariance matrix is not of full rank.}
+\item{standardize.response}{Logical: should the columns of `\code{Y}` be standardized so each has unit length? The default is `\code{TRUE}`. The estimated parameters will be returned on the original scale. If `\code{Y}` has been standardized prior to fitting the model, you might not wish to standardize.}
 
-\item{verbose}{Value of 0, 1 or 2. 0 -- silent; 1 -- limited tracing; 2 -- detailed tracing.}
+\item{fit.relax}{Logical: the default is `\code{FALSE}`. If `\code{TRUE}`, the program will re-estimate the edges (off-diagonal elements) in the active set of \eqn{\mathbf{\Theta}}{`\code{Theta}`} without penalization (\eqn{\lambda_\Theta=0}{`\code{lambda.Theta = 0}`}), which could be useful for further analyses of conditional inter-dependencies. WARNING: there may be convergence issues if the empirical covariance matrix is not of full rank (e.g., \eqn{n < q)}{n < q}).}
+
+\item{parallel}{Logical: the default is `\code{FALSE}`. If `\code{TRUE}`, the program uses parallel clusters to fit models at each `\code{lambda}` value.}
+
+\item{cpus}{Number of cores for parallelization. Only needed when `\code{parallel = TRUE}`.}
+
+\item{verbose}{Value of `0`, `1` or `2`. `verbose = 0` -- silent; `verbose = 1` -- limited tracing; `verbose = 2` -- detailed tracing. Limited tracing if `\code{parallel = TRUE}`.}
 }
 \value{
-This function returns a \code{list} of estimates and working parameters:
-\itemize{
-\item \code{est}: estimates using the designated regularization parameters.
-\item \code{relax.graph}: an estimate of network without penalization if \code{fit.relax = TRUE}.
-\item \code{rho}: a vector of length q: working missing probability.
-\item \code{penalize.diagonal}: logical: whether the diagonal of \code{Theta} was penalized.
-\item \code{diag.penalty.factor}: penalty factor for the diagonal when \code{penalize.diagonal} returned as \code{TRUE}.
+This function returns a `\code{list}` of estimates for each \eqn{\lambda}{lambda} pair (\eqn{\lambda_B, \lambda_\Theta}{`\code{lambda.Beta}`, `\code{lambda.Theta}`}):
+\item{\code{est.list}}{A `\code{list}` vector with the same length as \eqn{\lambda_B}{`\code{lambda.Beta}`}(\eqn{\lambda_\Theta}{`\code{lambda.Theta}`}). Each named `\code{list}` contains the following components:
+  \itemize{
+    \item \code{Beta}: the penalized estimate of the regression coefficient matrix (\eqn{p\times q}{p x q}).
+    \item \code{Theta}: the penalized estimate of the precision matrix (\eqn{q\times q}{q x q}).
+    \item \code{mu}: a vector of length \eqn{q}{q} storing the estimated intercept.
+    \item \code{lambda.Beta}: the exact \eqn{\lambda_B}{`\code{lambda.Beta}`} value used to fit the model.
+    \item \code{lambda.Theta}: the exact \eqn{\lambda_\Theta}{`\code{lambda.Theta}`} value used to fit the model.
+    \item \code{relax.net}: a relaxed estimate of the conditional network structure (\eqn{q\times q}{q x q}) if `\code{fit.relax = TRUE}`.
+  }
 }
+\item{\code{rho}}{A vector of length \eqn{q}{q} storing the working missing probability.}
+\item{\code{penalize.diagonal}}{Logical: whether the diagonal of \eqn{\mathbf{\Theta}}{`\code{Theta}`} was penalized.}
+\item{\code{diag.penalty.factor}}{The additional penalty factor for the diagonal of \eqn{\mathbf{\Theta}}{`\code{Theta}`} when `\code{penalize.diagonal = TRUE}`.}
 }
 \description{
-Fit missoNet with a given pair of regularization parameters
+Fit missoNet models with a series of \eqn{\lambda} values
 }

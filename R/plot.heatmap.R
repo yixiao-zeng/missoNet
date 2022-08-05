@@ -1,4 +1,4 @@
-plot.heatmap <- function(cv.missoNet.obj, detailed.axis, ...) {
+plot.heatmap <- function(cv.missoNet.obj, detailed.axes, ...) {
   if (!requireNamespace("ComplexHeatmap", quietly = TRUE)) {
     if (!requireNamespace("BiocManager", quietly = TRUE)) {
       install.packages("BiocManager")
@@ -25,7 +25,7 @@ plot.heatmap <- function(cv.missoNet.obj, detailed.axis, ...) {
       cvm <- cbind(cvm, cv.missoNet.obj$cvm[((l - 1) * length(lamTh.vec) + 1):(l * length(lamTh.vec))])
     }
   }
-  if (detailed.axis) {
+  if (detailed.axes) {
     rownames(cvm) <- sprintf("%.3f", lamTh.vec)
     colnames(cvm) <- sprintf("%.3f", lamB.vec)
   } else {
@@ -59,9 +59,21 @@ plot.heatmap <- function(cv.missoNet.obj, detailed.axis, ...) {
                           name = "CV.Error", # title of legend
                           ...,
                           cell_fun = function(j, i, x, y, width, height, fill) {
-                            if(j == which(sort(lamB.vec, decreasing=FALSE) == cv.missoNet.obj$est.min$lambda.Beta) 
-                               & i == which(sort(lamTh.vec, decreasing=TRUE) == cv.missoNet.obj$est.min$lambda.Theta)) {
-                              grid::grid.rect(x = x, y = y, width = width, height = height, gp = grid::gpar(col = "white", fill = NA))
+                            if (j == which(sort(lamB.vec, decreasing = FALSE) == cv.missoNet.obj$est.min$lambda.Beta) 
+                               & i == which(sort(lamTh.vec, decreasing = TRUE) == cv.missoNet.obj$est.min$lambda.Theta)) {
+                              grid::grid.rect(x = x, y = y, width = width, height = height, gp = grid::gpar(lwd = 1.5, col = "white", fill = NA))
+                            }
+                            if (!is.null(cv.missoNet.obj$estB.1se)) {
+                              if (j == which(sort(lamB.vec, decreasing = FALSE) == cv.missoNet.obj$estB.1se$lambda.Beta) 
+                                  & i == which(sort(lamTh.vec, decreasing = TRUE) == cv.missoNet.obj$estB.1se$lambda.Theta)) {
+                                grid::grid.rect(x = x, y = y, width = width, height = height, gp = grid::gpar(lwd = 1.5, lty = "dashed", col = "white", fill = NA))
+                              }
+                            }
+                            if (!is.null(cv.missoNet.obj$estTht.1se)) {
+                              if (j == which(sort(lamB.vec, decreasing = FALSE) == cv.missoNet.obj$estTht.1se$lambda.Beta) 
+                                  & i == which(sort(lamTh.vec, decreasing = TRUE) == cv.missoNet.obj$estTht.1se$lambda.Theta)) {
+                                grid::grid.rect(x = x, y = y, width = width, height = height, gp = grid::gpar(lwd = 1.5, lty = "dashed", col = "white", fill = NA))
+                              }
                             }
                           }
   )

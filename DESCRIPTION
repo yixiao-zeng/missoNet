@@ -2,19 +2,20 @@ Type: Package
 Package: missoNet
 Title: Multi-task Regression and Conditional Network Estimation with
     Missing Data
-Version: 0.0.0.9000
-Date: 2022-06-14
+Version: 0.9.0.9000
+Date: 2022-07-28
 Authors@R: 
     person("Yixiao", "Zeng", , "yixiao.zeng@qq.com", role = c("aut", "cre"))
 Description: The package 'missoNet' enables users to fit multi-task
-    gaussian regression models and estimate covariate effects by
-    leveraging the relatedness information of multiple responses
-    (outputs). Meanwhile, the algorithm learns the conditional network
-    structure among outputs in an undirected Gaussian graphical model.
+    Gaussian regression models to estimate covariate effects by
+    leveraging the relatedness information of multiple responses. 
+    Meanwhile, the algorithm can learn the conditional network
+    structure among responses in an undirected Gaussian graphical model.
     Different from existing techniques for multivariate
-    regression/multi-task learning, 'missoNet' allows missing values in
-    the output data, gives reliable estimates without requiring users to
-    have any prior knowledge for pre-processing them (e.g., imputation).
+    regression/multi-task learning, 'missoNet' allows missing data in the 
+    response matrix, it enjoys the theoretical and computational benefits 
+    of convexity and returns solutions that are comparable/close to the 
+    clean data estimates.
 License: GPL (>= 2)
 URL: https://github.com/yixiao-zeng/missoNet
 BugReports: https://github.com/yixiao-zeng/missoNet/issues
@@ -28,10 +29,13 @@ Suggests:
     circlize,
     ComplexHeatmap,
     grid,
+    knitr,
     mvtnorm,
-    plot3D
+    plot3D,
+    rmarkdown
 LinkingTo: 
     Rcpp,
     RcppArmadillo
 Encoding: UTF-8
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.1
+VignetteBuilder: knitr

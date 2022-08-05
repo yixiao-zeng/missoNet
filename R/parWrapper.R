@@ -4,7 +4,7 @@ parWrapper <- function(k, X, Y, init.obj, rho, ind, kfold, lamTh.vec, lamB.vec,
   p <- ncol(X)
   q <- ncol(Y)
   
-  err.fold <- rep(NA, length(lamTh.vec))
+  err.fold <- rep(0, length(lamTh.vec))
   
   foldind <- ind[(1 + floor((k - 1) * n/kfold)):floor(k * n/kfold)]
   X.tr <- X[-foldind, ]
@@ -17,9 +17,7 @@ parWrapper <- function(k, X, Y, init.obj, rho, ind, kfold, lamTh.vec, lamB.vec,
     rho.vec <- apply(Y.tr, 2, function(x) {
       sum(is.na(x))/n.tr
     })
-  } else {
-    rho.vec <- init.obj$rho.vec
-  }
+  } else { rho.vec <- init.obj$rho.vec }
   rho.mat.1 <- t(matrix(rep(1 - rho.vec, p), q, p))  # pxq
   rho.mat.2 <- matrix(1 - rho.vec, q, 1) %*% matrix(1 - rho.vec, 1, q)
   diag(rho.mat.2) <- 1 - rho.vec  # qxq
@@ -63,5 +61,4 @@ parWrapper <- function(k, X, Y, init.obj, rho, ind, kfold, lamTh.vec, lamB.vec,
   
   return(err.fold)
 }
-
 

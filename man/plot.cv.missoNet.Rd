@@ -4,17 +4,17 @@
 \alias{plot.cv.missoNet}
 \title{Plot the cross-validation errors produced by \code{cv.missoNet}}
 \usage{
-\method{plot}{cv.missoNet}(x, type = c("cv.heatmap", "cv.scatter"), detailed.axis = TRUE, ...)
+\method{plot}{cv.missoNet}(x, type = c("cv.heatmap", "cv.scatter"), detailed.axes = TRUE, ...)
 }
 \arguments{
-\item{x}{Fitted \code{cv.missoNet} object.}
+\item{x}{Fitted `\code{cv.missoNet}` object.}
 
-\item{type}{Type of plot, can be either \code{"cv.heatmap"} or \code{"cv.scatter"}. Default is \code{type = "cv.heatmap"}.}
+\item{type}{Type of plot, can be either `\code{"cv.heatmap"}` (default) or `\code{"cv.scatter"}`.}
 
-\item{detailed.axis}{Logical: should the detailed axes be plotted? Default is \code{plot.axis = TRUE}.}
+\item{detailed.axes}{Logical: should the detailed axes be plotted? The default is `TRUE`.}
 
-\item{...}{Other graphical arguments used by \code{ComplexHeatmap}.}
+\item{...}{Other graphical arguments used by `\code{ComplexHeatmap::Heatmap}`.}
 }
 \description{
-Plot the cross-validation errors produced by \code{cv.missoNet}
+S3 method for plotting the mean cross-validation error surface from a fitted `\code{cv.missoNet}` object.
 }

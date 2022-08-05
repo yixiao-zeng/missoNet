@@ -22,6 +22,6 @@
 #' @importFrom Rcpp sourceCpp
 #' @importFrom graphics par
 #' @importFrom stats coef complete.cases quantile rbinom rnorm runif sd
-#' @importFrom utils install.packages
+#' @importFrom utils install.packages setTxtProgressBar txtProgressBar
 NULL
 #> NULL

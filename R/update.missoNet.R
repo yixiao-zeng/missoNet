@@ -31,7 +31,8 @@ update.missoNet <- function(X, Y, lamTh, lamB,
     # Pre-updating several times due to a cold start
     #####################################################
     if (verbose == 2) {
-      cat("  Begin to pre-update due to a cold start.\n")
+      cat("  --------------- Pre-updating ---------------\n")
+      cat("\titer\t|\t| lik(t + 1) - lik(t) |\n")
     }
     B.init <- init.obj$B.init * init.obj$sdx
     Beta.thr.rescale <- Beta.thr * sum(abs(B.init))
@@ -47,14 +48,14 @@ update.missoNet <- function(X, Y, lamTh, lamB,
     lik.new <- sum(diag(1/n * (til.yty - til.ytx %*% B.init - crossprod(B.init, info$til.xty)
                                + crossprod(B.init, info$xtx) %*% B.init) %*% diag(1, q)))
     - determinant(diag(1, q), logarithm = TRUE)$mod[1] + sum(abs(lamTh.mat * diag(1, q))) + sum(abs(lamB.mat * B.init))
-    lik.thr <- lik.new * 1e-06
+    lik.thr <- lik.new * 1e-07
     lik.old <- lik.new + lik.thr + 1
     
     s <- 0
     while(s < 50) {
       if(abs(lik.new - lik.old) < lik.thr) {
         if (verbose == 2) {
-          cat("  Pre-update completed.\n\n")
+          cat("  --------------------------------------------\n")
         }
         break
       } else {
@@ -76,7 +77,7 @@ update.missoNet <- function(X, Y, lamTh, lamB,
         - determinant(Theta, logarithm = TRUE)$mod[1] + sum(abs(lamTh.mat * Theta)) + sum(abs(lamB.mat * B.init))
         
         if (verbose == 2) {
-          cat("    Pre-update iteration ", (s + 1), " -- likelihood change: ", abs(lik.new - lik.old), "\n")
+          cat(sprintf("\t%d\t|\t%f\n", (s + 1), abs(lik.new - lik.old)))
         }
         s <- s + 1
       }
@@ -106,9 +107,9 @@ update.missoNet <- function(X, Y, lamTh, lamB,
                       lamB = lamB, eta = eta, tolin = Beta.thr, maxitrin = Beta.maxit)
   
   if (verbose == 2) {
-    cat("  lambda.Theta: ", lamTh, ";  lambda.Beta: ", lamB, "\n")
-    cat("  Iterations for updating Theta ", Theta.out$niter, "\n")
-    cat("  Iterations for updating Beta: ", B.out$it.final, "\n\n")
+    cat("  `lambda.Theta`:", lamTh, "   `lambda.Beta`:", lamB, "\n")
+    cat("  # iters for updating `Theta`: ", Theta.out$niter, "\n")
+    cat("  # iters for updating `Beta`: ", B.out$it.final, "\n\n")
   }
   
   if(under.cv) {
@@ -117,5 +118,4 @@ update.missoNet <- function(X, Y, lamTh, lamB,
     return(list(Beta = B.out$Bhat, Theta = Theta))
   }
 }
-
 
