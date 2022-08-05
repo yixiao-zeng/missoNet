@@ -102,7 +102,7 @@ png(file = "vismis.png", width = 1900, height = 1300, res = 260)
 suppressWarnings(visdat::vis_miss(as.data.frame(sim.dat$Z)))
 dev.off()
 ```
-```{r, echo = FALSE, fig.align = 'center', out.width = "80%"}
+```{r, echo = FALSE, fig.align = 'left', out.width = "80%"}
 knitr::include_graphics(system.file("extdata", "vismis.png", package = "missoNet"))
 ```
 
@@ -141,33 +141,33 @@ cvfit <- cv.missoNet(X = X.tr, Y = Z.tr, kfold = 5,
                      fit.1se = TRUE, parallel = TRUE, cpus = 2,
                      permute = TRUE, with.seed = 433, verbose = 0)
 ```
-```{r, include = FALSE}
-library(snowfall, quietly = TRUE)
-cvfit <- cv.missoNet(X = X.tr, Y = Z.tr, kfold = 5,
-                     fit.1se = TRUE, parallel = TRUE, cpus = 2,
-                     permute = TRUE, with.seed = 433, verbose = 0)
-```
 
 Note that we do not explicitly specify the regularization parameters $\lambda_B$ and $\lambda_\Theta$. In this case, a grid of $\lambda_B$ and $\lambda_\Theta$ values in a (hopefully) reasonable range will be computed and used by the program. Users can also choose to provide one of them such that the program will compute the other one. Generally, it is difficult at the beginning to feed suitable $\lambda$ sequences, so we __suggest__ users start analysis using `cv.missoNet`, and let the program compute appropriate $\lambda_B$s and $\lambda_\Theta$s itself then pick the optimal combination of them at which the smallest mean CV error is achieved.
 
 `cv.missoNet` returns a `cv.missoNet` object, a list with all the ingredients of the cross-validated fit. We can execute the plot method
-```{r, fig.align = 'center', fig.height = 4, fig.width = 5.9, dev = "svg"}
+```{r, eval = FALSE}
 ## The exact values of mean CV errors along with upper and lower standard deviation bounds 
 ## can be accessed via `cvfit$cvm`, `cvfit$cvup` and `cvfit$cvlo`, respectively.
 plot(cvfit)
+```
+```{r, echo = FALSE, fig.align = 'left', out.width = "80%"}
+knitr::include_graphics(system.file("extdata", "cvfitHeat.png", package = "missoNet"))
 ```
 
 to visualize mean CV error in a heatmap style. The white solid box marks out the position of the smallest mean CV error with corresponding $\lambda_B$ and $\lambda_\Theta$ (`lambda.min`), and the white dashed boxes indicate the largest $\lambda_B$ and $\lambda_\Theta$ at which the mean CV error is within one standard error of the minimum (`lambda.Beta.1se` and `lambda.Theta.1se`), by fixing the other one at `lambda.min`. We often use this "one-standard-error" rule when selecting the most parsimonious model; this acknowledges the fact that the CV surface is estimated with error, so error on the side of parsimony is preferable.
 
 We can also plot it in the form of scatter diagram:
-```{r, fig.align = 'center', fig.height = 4, fig.width = 5.9, dev = "svg"}
+```{r, eval = FALSE}
 plot(cvfit, type = "cv.scatter")
+```
+```{r, echo = FALSE, fig.align = 'left', out.width = "80%"}
+knitr::include_graphics(system.file("extdata", "cvfitScat.png", package = "missoNet"))
 ```
 
 After cross-validation, $\mathbf{B}^*$ and $\mathbf{\Theta}^*$ can be estimated at these three special $\lambda$ values -- `lambda.min`, `lambda.Beta.1se` and `lambda.Theta.1se`, the corresponding results along with the exact $\lambda$ values are stored in separate lists: `est.min`, `estB.1se` and `estTht.1se` (`estB.1se` and `estTht.1se` are not `NULL` only if the argument `fit.1se = TRUE` when calling `cv.missoNet`).
 
 Let's extract the estimates of model parameters at `lambda.min` and `lambda.Beta.1se` then plot them aside the ground truth $\mathbf{B}^*$ and $\mathbf{\Theta}^*$:
-```{r, fig.align = 'center', fig.show = "hold", fig.height = 2.4, fig.width = 6.9, dev = "svg"}
+```{r, eval = FALSE}
 ## define a plotting function
 plot_heatmap <- function(est, col, legend = FALSE, lgd_name, title) {
   return(ComplexHeatmap::Heatmap(est, cluster_rows = FALSE, cluster_columns = FALSE,
@@ -210,13 +210,24 @@ Theta_hat_1se_ht <- plot_heatmap(Theta_hat_1se, col, legend = TRUE, lgd_name = "
 Beta_star_ht + Beta_hat_min_ht + Beta_hat_1se_ht
 Theta_star_ht + Theta_hat_min_ht + Theta_hat_1se_ht
 ```
+```{r, echo = FALSE, fig.align = 'left', out.width = "100%"}
+knitr::include_graphics(system.file("extdata", "cvfitEst1.png", package = "missoNet"))
+```
+```{r, echo = FALSE, fig.align = 'left', out.width = "100%"}
+knitr::include_graphics(system.file("extdata", "cvfitEst2.png", package = "missoNet"))
+```
 
 Like other regression methods, predictions can be made based on the fitted `cv.missoNet` object as well. The code below gives prediction for a new input matrix `newx` at `lambda.min` (`s = "lambda.Beta.1se"` and `s = "lambda.Theta.1se"` is available only when `fit.1se = TRUE`):
-```{r}
+```{r, eval = FALSE}
 ## prediction on the validation set
 ## `s` can also be "lambda.Beta.1se" or "lambda.Theta.1se"
+## newy = mu + newx %*% Beta
 newy <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.min")
-head(newy, 3)
+
+cat("dim(newy):", dim(newy))
+```
+```{r, echo = FALSE}
+cat("dim(newy): 30 12")
 ```
 
 Users now should be able to fit **missoNet** models with the functions introduced so far. There are many more arguments in the package that give users a great deal of flexibility. To learn more, move on to the next section. In the section for real data application, we demonstrate a complete process of analyzing a neuroimaging and genetic dataset using **missoNet**, we __highly recommend__ interested users to browse this content.
@@ -343,13 +354,13 @@ cvfit.BM <- cv.missoNet(X = SNP[tr, ], Y = BM.mis[tr, ], kfold = 5, rho = NULL,
                         permute = TRUE, with.seed = 433,
                         parallel = TRUE, cpus = 3, verbose = 0)
 ```
-```{r, echo = FALSE}
-load(system.file("extdata", "cvfitBM.rda", package = "missoNet"))
-```
 
 Plot the heatmap of standardized mean CV error:
-```{r, fig.align = 'center', fig.height = 4, fig.width = 5.9, dev = "svg"}
+```{r, eval = FALSE}
 plot(cvfit.BM)
+```
+```{r, echo = FALSE, fig.align = 'left', out.width = "80%"}
+knitr::include_graphics(system.file("extdata", "cvfitBM.png", package = "missoNet"))
 ```
 
 Now we can adjust the $\lambda$ ranges for a further fine search according to the figure above. We noticed that the current optimal combination of $\lambda_{B}$ and $\lambda_\Theta$ achieving the smallest mean CV error is about (0.24, 0.62), while the largest values of $\lambda_B$ and $\lambda_\Theta$ for coarse searching are around 2.70 and 30.00, respectively. Therefore, we decide to shrink the `lamTheta.scale.factor` from `3` to `0.3` as we believe 3.00 is a more reasonable choice for the upper boundary of $\lambda_\Theta$. For the same reason, the smallest values of $\lambda_B$ and $\lambda_\Theta$ are determined to be 0.027 (= 2.70 * 0.01) and 0.03 (= 3.00 * 0.01) by setting `lamBeta.min.ratio` and `lamTheta.min.ratio` to `0.01`.
@@ -367,17 +378,22 @@ cvfit2.BM <- cv.missoNet(X = SNP[tr, ], Y = BM.mis[tr, ], kfold = 5,
                          permute = TRUE, with.seed = 433,
                          parallel = TRUE, cpus = 3, verbose = 0)
 ```
-```{r, echo = FALSE}
-load(system.file("extdata", "cvfit2BM.rda", package = "missoNet"))
-```
 
 Plot the standardized mean CV error of this refitted model, `detailed.axes = FALSE` can prevent axes to get squeezed together:
-```{r, fig.align = 'center', fig.height = 4, fig.width = 5.9, dev = "svg"}
-cat("\n`lambda.min`:
+```{r, eval = FALSE}
+cat("`lambda.min`:
   - lambda.Beta:", cvfit2.BM$est.min$lambda.Beta, "
   - lambda.Theta:", cvfit2.BM$est.min$lambda.Theta)
 
 plot(cvfit2.BM, detailed.axes = FALSE)
+```
+```{r, echo = FALSE}
+cat("`lambda.min`:
+  - lambda.Beta: 0.198283
+  - lambda.Theta: 0.573265")
+```
+```{r, echo = FALSE, fig.align = 'left', out.width = "80%"}
+knitr::include_graphics(system.file("extdata", "cvfit2BM.png", package = "missoNet"))
 ```
 
 We found the new `lambda.min` = (0.20, 0.57) is actually very close to the one from the coarse search (0.24, 0.62), proving that a single search can provide considerable accuracy most of the time. For the sake of brevity, we shall skip the discussion of `lambda.1se` here. 
@@ -416,7 +432,7 @@ corrplot::corrplot(pcor.mat$estimate, p.mat = pcor.mat$p.value,
                    tl.cex = 0.5, tl.col = "black", mar = c(.5, .1, 2, .1),
                    title = "Partial correlation matrix (unclustered)")
 ```
-```{r, echo = FALSE, fig.align = 'center', out.width = "100%"}
+```{r, echo = FALSE, fig.align = 'left', out.width = "100%"}
 # knitr::include_graphics(paste("vignetteFigs", "BMcomb.png", sep = .Platform$file.sep))
 knitr::include_graphics(system.file("extdata", "BMcomb.png", package = "missoNet"))
 ```
@@ -437,13 +453,17 @@ ComplexHeatmap::pheatmap(Beta_hat,
                          border_color = NA, border = TRUE, name = "values", cluster_rows = TRUE, cluster_cols = FALSE,
                          column_title = expression(paste(hat(bold(Beta)), " at `lambda.min` (unclustered)")))
 ```
-```{r, echo = FALSE, fig.align = 'center', fig.height = 4.8, fig.width = 6.6, dev = "svg"}
+```{r, eval = FALSE, include = FALSE}
 set.seed(34)  # seed for legend colors
 ComplexHeatmap::pheatmap(cvfit2.BM$est.min$Beta,
                          annotation_row = data.frame("Gene" = cvfit2.BM$Gene, row.names = rownames(cvfit2.BM$est.min$Beta)),
                          color = circlize::colorRamp2(c(-0.05,0,0.05), c("blue","white","red")), show_rownames = FALSE,
                          border_color = NA, border = TRUE, name = "values", cluster_rows = TRUE, cluster_cols = FALSE,
                          column_title = expression(paste(hat(bold(Beta)), " at `lambda.min` (clustered)")))
+```
+```{r, echo = FALSE, fig.align = 'left', out.width = "80%"}
+# knitr::include_graphics(paste("vignetteFigs", "BMcomb.png", sep = .Platform$file.sep))
+knitr::include_graphics(system.file("extdata", "cvfit2BMclustB.png", package = "missoNet"))
 ```
 
 The figure depicts a very large proportion of coefficients with zero values, and there is an obvious clustering of the contributing SNPs with respect to the genes (see row-wise annotation), implying potential pathways between certain SNPs and changes in the local structures of brain.
