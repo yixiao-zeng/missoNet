@@ -18,7 +18,14 @@
 #' 
 #' 
 #' ## Plot the (standardized) mean cross-validated errors in a heatmap.
+#' \dontrun{
 #' plot(cvfit)
+#' }
+#' 
+#' ## Plot the (standardized) mean cross-validated errors in a scatterplot.
+#' \dontrun{
+#' plot(cvfit, type = "cv.scatter", detailed.axes = FALSE)
+#' }
 
 plot.cv.missoNet <- function(x, type = c("cv.heatmap", "cv.scatter"), detailed.axes = TRUE, ...) {
   type <- match.arg(type)

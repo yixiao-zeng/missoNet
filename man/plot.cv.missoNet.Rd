@@ -25,11 +25,14 @@ cvfit <- cv.missoNet(X = sim.dat$X, Y = sim.dat$Z, kfold = 5, fit.1se = TRUE)
 
 
 ## Plot the (standardized) mean cross-validated errors in a heatmap.
+\dontrun{
 plot(cvfit)
-
+}
 
 ## Plot the (standardized) mean cross-validated errors in a scatterplot.
+\dontrun{
 plot(cvfit, type = "cv.scatter", detailed.axes = FALSE)
+}
 }
 \author{
 Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca}, Celia M.T. Greenwood and Archer Yi Yang.
