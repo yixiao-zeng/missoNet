@@ -4,7 +4,7 @@
 
 # missoNet: Multi-task Regression and Conditional Network Estimation with Missing Values in the Tasks
 
-`missoNet` is a R package that fits penalized multi-task Gaussian regression -- that is, with multiple 
+`missoNet` is an R package that fits penalized multi-task Gaussian regression -- that is, with multiple 
 correlated tasks or response variables -- to simultaneously estimate the covariate effects on all tasks 
 and the conditional network structure among the response variables via penalized maximum likelihood in 
 an undirected Gaussian graphical model. In contrast to most penalized multi-task regression / conditional 
@@ -41,7 +41,7 @@ An example of how to use the package:
 
 ```r
 # Simulate a dataset with response values missing completely 
-# at random (MCAR), the overall missing rate is around 10%.
+# at random (MCAR), the overall missing rate is around 10%
 sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
 tr <- 1:240  # Training set indices
 va <- 241:300  # Validation set indices

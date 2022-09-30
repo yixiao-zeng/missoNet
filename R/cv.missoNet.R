@@ -137,10 +137,6 @@
 #'
 #' ## Plot the (standardized) mean cross-validated errors in a heatmap.
 #' plot(cvfit)
-#' 
-#' 
-#' ## Plot the (standardized) mean cross-validated errors in a scatterplot.
-#' plot(cvfit, type = "cv.scatter")
 #'
 #'
 #' ## Extract the estimates at "lambda.min".
