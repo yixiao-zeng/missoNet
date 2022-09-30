@@ -2,22 +2,38 @@
 % Please edit documentation in R/predict.cv.missoNet.R
 \name{predict.cv.missoNet}
 \alias{predict.cv.missoNet}
-\title{Make predictions from a \code{cv.missoNet} object}
+\title{Make predictions from a cv.missoNet object}
 \usage{
 \method{predict}{cv.missoNet}(object, newx = NULL, s = "lambda.min", ...)
 }
 \arguments{
-\item{object}{Fitted `\code{cv.missoNet}` object.}
+\item{object}{A fitted \code{'cv.missoNet'} object.}
 
-\item{newx}{A predictor matrix of new values at which predictions are to be made. `\code{newx}` should have the same scale as the training data. Missing values are not allowed and do not include a column of ones.}
+\item{newx}{A predictor matrix of new values at which predictions are to be made. The columns of \code{'newx'} should have the same standardization flags as the original input for training the model. Missing values are not allowed. \code{'newx'} should not include a column of ones for an intercept.}
 
-\item{s}{Character, the penalty parameter `lambda` at which the regression coefficients for predictions are extracted. It supports three special values, named `\code{"lambda.min"}` (default), `\code{"lambda.Beta.1se"}` and `\code{"lambda.Theta.1se"}`.}
+\item{s}{Character string, the regularization parameter pair \eqn{\lambda} = (\eqn{\lambda_B}, \eqn{\lambda_\Theta}) at which the coefficients are extracted for making predictions. It supports three special strings, named "\code{lambda.min}" (default), "\code{lambda.1se.Beta}" and "\code{lambda.1se.Theta}".}
 
 \item{...}{Not used. Other arguments for predicting.}
 }
 \value{
-Predicted response matrix `\code{newy}`.
+The matrix of predicted values: \code{'newy = mu_hat + newx \%*\% Beta_hat'}.
 }
 \description{
-S3 method for making predictions from a fitted `\code{cv.missoNet}` object.
+S3 method for making predictions of response values from a fitted \code{'cv.missoNet'} object.
+}
+\examples{
+## Perform a five-fold cross-validation on a simulated dataset.
+sim.dat <- generateData(n = 200, p = 10, q = 10, rho = 0.1, missing.type = "MCAR")
+tr <- 1:160  ## Training set indices
+va <- 161:200  ## Validation set indices
+cvfit <- cv.missoNet(X = sim.dat$X[tr, ], Y = sim.dat$Z[tr, ], kfold = 5, fit.1se = TRUE)
+
+
+## Make predictions of new response values.
+newy1 <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.min")
+newy2 <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.1se.Beta")
+newy3 <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.1se.Theta")
+}
+\author{
+Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca}, Celia M.T. Greenwood and Archer Yi Yang.
 }

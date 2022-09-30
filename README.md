@@ -2,23 +2,30 @@
 [![R-CMD-check](https://github.com/yixiao-zeng/missoNet/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/yixiao-zeng/missoNet/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-# missoNet: multi-task regression and conditional network estimation with missing data.
+# missoNet: Multi-task Regression and Conditional Network Estimation with Missing Values in the Tasks
 
-The package **missoNet** enables users to fit multi-task Gaussian regression models 
-to estimate covariate effects by leveraging the relatedness information of multiple responses (outputs). 
-Meanwhile, the algorithm can learn the conditional network structure among outputs in an undirected Gaussian graphical model.
+`missoNet` is a R package that fits penalized multi-task Gaussian regression -- that is, with multiple 
+correlated tasks or response variables -- to simultaneously estimate the covariate effects on all tasks 
+and the conditional network structure among the response variables via penalized maximum likelihood in 
+an undirected Gaussian graphical model. In contrast to most penalized multi-task regression / conditional 
+graphical lasso methods, `missoNet` has the capability of obtaining estimates even when the response data 
+is corrupted by missing values. The method automatically enjoys the theoretical and computational benefits 
+of convexity, and returns solutions that are comparable/close to the estimates without any missing values.
 
-Different from existing techniques for multivariate regression/multi-task learning, **missoNet** allows missing data in the 
-output matrix, it enjoys the theoretical and computational benefits of convexity and returns solutions that are 
-comparable/close to the clean data estimates.
-
-The package includes methods for cross-validation, and functions for prediction and plotting. It has function arguments in the 
-same style as those of **glmnet**, making it easy for experienced users to get started with.
+The package includes functions for data simulation, model fitting, cross-validation, and visualization of 
+results, as well as predictions in new data. The function arguments are in the same style as those of 
+`glmnet`, making it easy for experienced users to get started.
 
 
 ## Installation
 
-Install the development version of `missoNet` from GitHub:
+To install the package `missoNet` from CRAN, type the following command in the R console:
+
+```{r}
+install.packages("missoNet")
+```
+
+Or install the development version of `missoNet` from GitHub:
 
 ```r
 if(!require("devtools")) {
@@ -33,28 +40,31 @@ devtools::install_github("yixiao-zeng/missoNet")
 An example of how to use the package:
 
 ```r
-## generate a simulated dataset with overall 
-## missing rate = 0.1, missing mechanism = "MCAR"
+# Simulate a dataset with response values missing completely 
+# at random (MCAR), the overall missing rate is around 10%.
 sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
-tr <- 1:240  ## training set
-va <- 241:300  ## validation set
+tr <- 1:240  # Training set indices
+va <- 241:300  # Validation set indices
+X.tr <- sim.dat$X[tr, ]  # Predictor matrix
+Y.tr <- sim.dat$Z[tr, ]  # Corrupted response matrix
 
-## use `cv.missoNet` to do a five-fold cross-validation 
-cvfit <- cv.missoNet(X = sim.dat$X[tr, ], Y = sim.dat$Z[tr, ], kfold = 5)
+# Use cv.missoNet to do a five-fold cross-validation on the training data
+cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5)
 
-## or train the model in parallel
-library(snowfall)
-cvfit <- cv.missoNet(X = sim.dat$X[tr, ], Y = sim.dat$Z[tr, ], kfold = 5,
-                     parallel = TRUE, cpus = min(parallel::detectCores()-1, 5)) 
+# Or compute the cross-validation folds in parallel
+cl <- parallel::makeCluster(parallel::detectCores() - 1)
+cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5,
+                     parallel = TRUE, cl = cl)
+parallel::stopCluster(cl)
 
-## plot the heatmap of the cross-validation error
+# Plot the standardized mean cross-validated errors in a heatmap
 plot(cvfit)
 
-## parameters estimated `lambda.min` that gives the smallest CV error
-B_hat <- cvfit$est.min$Beta
-Tht_hat <- cvfit$est.min$Theta
+# Extract the estimates at "lambda.min" that gives the minimum cross-validated error
+Beta_hat <- cvfit$est.min$Beta
+Theta_hat <- cvfit$est.min$Theta
 
-## make prediction
+# Make predictions of response values on the validation set
 newy <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.min")
 ```
 

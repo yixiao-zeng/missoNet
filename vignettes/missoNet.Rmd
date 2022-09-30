@@ -1,9 +1,15 @@
 ---
 title: "An Introduction to missoNet"
 author:
-  - Yixiao Zeng
+  - Yixiao Zeng,  Celia M. T. Greenwood
 date: "`r format(Sys.time(), '%B %d, %Y')`"
-output: rmarkdown::html_vignette
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    theme: united
+    highlight: tango
 bibliography: missoNet_refs.bib
 nocite: '@*'
 vignette: >
@@ -19,34 +25,35 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Introduction
+# Introduction
 
-**missoNet** is a package that fits multi-task regression and estimates the conditional network structure among multiple correlated outputs (response variables) via penalized maximum likelihood. **missoNet** allows missing data in the output matrix, it enjoys the theoretical and computational benefits of convexity and returns solutions that are comparable/close to the clean data estimates.  
+**missoNet** is a package that fits penalized multi-task Gaussian regression -- that is, with multiple correlated tasks or response variables -- to simultaneously estimate the covariate effects on all tasks and the conditional network structure among the response variables via penalized maximum likelihood in an undirected Gaussian graphical model. In contrast to most penalized multi-task regression / conditional graphical lasso methods, **missoNet** has the capability of obtaining estimates even when the response data 
+is corrupted by missing values. The method automatically enjoys the theoretical and computational benefits of convexity, and returns solutions that are comparable/close to the estimates without any missing values.
 
 **missoNet** assumes the model
 $$
-\mathbf{Y} = \mathbf{X}\mathbf{B}^* + \mathbf{E},\ \ \mathbf{E}_{i\cdot} \stackrel{iid}{\sim} \mathcal{MVN}(\mathbf{0},(\mathbf{\Theta}^*)^{-1})\ \ \forall i = 1,...,n,
+\mathbf{Y} = \mathbf{X}\mathbf{B}^* + \mathbf{E},\ \ \mathbf{E}_{i\cdot} \stackrel{iid}{\sim} \mathcal{MVN}(0_q,(\mathbf{\Theta}^*)^{-1})\ \ \forall i = 1,...,n,
 $$
-where $\mathbf{Y} \in \mathbb{R}^{n\times q}$ and $\mathbf{X} \in \mathbb{R}^{n\times p}$ denotes the centered output (response) matrix and input (predictor) matrix, respectively. $\mathbf{E}_{i\cdot} \in \mathbb{R}^{q}$ is the $i$-th row of the error matrix. $n, p, q$ denotes the sample size, the number of predictors and the number of responses. The regression coefficient matrix $\mathbf{B}^* \in \mathbb{R}^{p\times q}$ and the precision (inverse covariance) matrix $\mathbf{\Theta}^* \in \mathbb{R}^{q\times q}$ are parameters to be estimated. Note that the entries of $\mathbf{\Theta}^*$ have a one-to-one correspondence with partial correlations. That is, the random variables $Y_j$ and $Y_k$ are conditionally independent given $X$ and all other remaining variables in $Y$ iff the corresponding partial correlation coefficient is zero.
+where $\mathbf{Y} \in \mathbb{R}^{n\times q}$ and $\mathbf{X} \in \mathbb{R}^{n\times p}$ represent the centered response data matrix and predictor data matrix, respectively (thus the intercepts are omitted). $\mathbf{E}_{i\cdot} \in \mathbb{R}^{q}$ is the $i$th row ($i$th sample) of the error matrix and is drawn from a multivariate Gaussian distribution. $n, p, q$ denote the sample size, the number of predictors and the number of responses, respectively. The regression coefficient matrix $\mathbf{B}^* \in \mathbb{R}^{p\times q}$ and the precision (inverse covariance) matrix $\mathbf{\Theta}^* \in \mathbb{R}^{q\times q}$ are parameters to be estimated in this model. Note that the entries of $\mathbf{\Theta}^*$ have a one-to-one correspondence with partial correlations. That is, the random variables $Y_j$ and $Y_k$ are conditionally independent (i.e. $\mathbf{\Theta}^*_{jk} = 0$) given $X$ and all other remaining variables in $Y$ iff the corresponding partial correlation coefficient is zero.
 
-This method solves a penalized MLE problem
+To estimate the parameters, **missoNet** solves a penalized MLE problem:
 $$
 (\hat{\mathbf{\Theta}},\hat{\mathbf{B}}) = \underset{\mathbf{\Theta} \succeq 0,\ \mathbf{B}}{\text{argmin}}\ 
 \mathrm{tr}\left[\frac{1}{n}(\mathbf{Y} - \mathbf{XB})^\top(\mathbf{Y} - \mathbf{XB}) \mathbf{\Theta}\right] 
 - \mathrm{log}|\mathbf{\Theta}| + \lambda_{\Theta}(\|\mathbf{\Theta}\|_{1,\mathrm{off}} + 1_{n\leq \mathrm{max}(p,q)} \|\mathbf{\Theta}\|_{1,\mathrm{diag}}) + \lambda_{B}\|\mathbf{B}\|_1.
 $$
-$\mathbf{B}^*$ that mapping inputs to outputs and $\mathbf{\Theta}^*$ that revealing the outputs' conditional dependencies are estimated for the lasso penalty -- $\lambda_B$ and $\lambda_\Theta$, over a grid of values (on the log scale) covering the entire range of possible solutions. To learn more about sparse multi-task regression with inverse covariance estimation using clean data, see [MRCE](https://cran.r-project.org/web/packages/MRCE/index.html).
+$\mathbf{B}^*$ that mapping predictors to responses and $\mathbf{\Theta}^*$ that revealing the responses' conditional dependencies are estimated for the lasso penalties -- $\lambda_B$ and $\lambda_\Theta$, over a grid of values (on the log scale) covering the entire range of possible solutions. To learn more about sparse multi-task regression with inverse covariance estimation using datasets without missing values, see [MRCE](https://cran.r-project.org/web/packages/MRCE/index.html).
 
-However, missingness in real data is inevitable, many standard methods of multi-task learning either assume the data is fully-observed (eg. MRCE), or dealing with missing data through some likelihood-based methods such as EM algorithm (e.g, [cglasso](https://cran.r-project.org/web/packages/cglasso/index.html)). A Challenge in this context is the possible non-convexity of associated optimization problem with missing data, as well as the high computational cost from iteratively updating parameters. 
+However, missingness in real data is inevitable. Most multi-task regression / conditional graphical lasso methods either assume the data is fully-observed (eg. MRCE), or deal with missing data through a likelihood-based method such as the EM algorithm (e.g, [cglasso](https://cran.r-project.org/web/packages/cglasso/index.html)). An important challenge in this context is the possible non-convexity of the associated optimization problem when there is missing data, as well as the high computational cost from iteratively updating the estimations for parameters.
 
-**missoNet** aims to handle a specific class of datasets that the output matrix $\mathbf{Y}$ contains missing data which is missing at random (MAR). To use **missoNet**, users do not need to possess additional knowledge for pre-processing missing data (e.g., imputation) nor selections of regularization parameters, the method provides an unified framework for automatically solving a convex modification of the multi-task learning problem defined above using corrupted datasets.
+**missoNet** aims to handle a specific class of datasets where the response matrix $\mathbf{Y}$ contains data which is missing at random (MAR). To use **missoNet**, users do not need to possess additional knowledge for pre-processing missing data (e.g., imputation) nor for selection of regularization parameters ($\lambda_B$ and $\lambda_\Theta$), the method provides a unified framework for automatically solving a convex modification of the multi-task learning problem defined above, using corrupted datasets.
 
-The package includes methods for cross-validation, and functions for prediction and plotting. It has function arguments in the same style as those of **glmnet**, making it easy for experienced users to get started with.
+The package includes functions for data simulation, model fitting, cross-validation, and visualization of results, as well as predictions in new data. The function arguments are in the same style as those of **glmnet**, making it easy for experienced users to get started.
 
 
-## Installation
+# Installation
 
-To install the package **missoNet** from CRAN, type the following command in R console:
+To install the package **missoNet** from CRAN, type the following command in the R console:
 ```{r, echo = TRUE, eval = FALSE}
 install.packages("missoNet")
 ```
@@ -59,7 +66,7 @@ devtools::install_github("yixiao-zeng/missoNet")
 ```
 
 
-## Quick Start
+# Quick Start
 
 The purpose of this section is to give users a general overview of the functions and their usages. We will briefly go over the main functions, basic operations and outputs.
 
@@ -68,33 +75,34 @@ First, we load the **missoNet** package:
 library(missoNet)
 ```
 
-We will use a simulated dataset for illustration. To generate a set of data containing missing values, we can simply call the built-in function `generateData`:
+We will use a synthetic dataset for illustration. To generate a set of data with missing response values, we can simply call the built-in function `generateData`:
 ```{r}
-## specify a random seed for reproducibility
-## the missing mechanism can also be "MCAR" or "MNAR"
+## Specify a random seed for reproducibility.
+## The overall missing rate in the response matrix is around 10%.
+## The missing mechanism can also be "MCAR" or "MNAR".
 sim.dat <- generateData(n = 150, p = 15, q = 12, rho = 0.1, missing.type = "MAR", with.seed = 1512)
 
-tr <- 1:120  ## training set
-va <- 121:150  ## validation set
+tr <- 1:120  ## Training set indices
+va <- 121:150  ## Validation set indices
 ```
 
 This command returns an object containing all necessary components for analysis including: 
 
-* `X`, `Y`: An input matrix $\mathbf{X} \in \mathbb{R}^{n\times p}$ and a clean output matrix $\mathbf{Y} \in \mathbb{R}^{n\times q}$, in which rows correspond to samples and columns correspond to variables. 
+* `'X'`, `'Y'`: an predictor matrix $\mathbf{X} \in \mathbb{R}^{n\times p}$ and a complete (clean) response matrix $\mathbf{Y} \in \mathbb{R}^{n\times q}$, in which rows correspond to samples and columns correspond to variables. The rows of $\mathbf{Y}$ is sampled from $\mathcal{MVN}(X\mathbf{B}^*,(\mathbf{\Theta}^*)^{-1})$.
 
-* `Beta`, `Theta`: $\mathbf{Y}$ is sampled from $\mathcal{MVN}(\mathbf{X}\mathbf{B}^*,(\mathbf{\Theta}^*)^{-1})$, where $\mathbf{B}^* \in \mathbb{R}^{p\times q}$ and $\mathbf{\Theta}^* \in \mathbb{R}^{q\times q}$ are the generated true parameters and will be estimated (see the later section for more details of their sparse structures). 
+* `'Beta'`, `'Theta'`: the true parameters $\mathbf{B}^* \in \mathbb{R}^{p\times q}$ and $\mathbf{\Theta}^* \in \mathbb{R}^{q\times q}$ for the generative model that will be estimated later (see the later section for more details on their structures and sparsity). 
 
-* `Z`: A corrupted output matrix $\mathbf{Z} \in \mathbb{R}^{n\times q}$ is defined as: for all $i=1,\dots,n$ and $j=1,\dots,q$, $\mathbf{Z}_{ij}=$`NA` if $\mathbf{M}_{ij}=1$, otherwise $\mathbf{Z}_{ij}=\mathbf{Y}_{ij}$, where $\mathbf{M} \in \mathbb{R}^{n\times q}$ is an indicator matrix of missingness. 
+* `'Z'`: a corrupted response matrix $\mathbf{Z} \in \mathbb{R}^{n\times q}$ having elements $\mathbf{Z}_{ij}$ ($\forall\ i=1,...,n,\ \ j=1,...,q$) which is either `NA` or equal to $\mathbf{Y}_{ij}$.
 
-Column-wise (or global) missing probability and missing mechanism are specified by `rho` and `missing.type`, respectively. `rho` can be a scalar or a vector of length $q$, here `rho = 0.1` indicates an overall missing rate of around 10%. 
+The probabilities of missingness for the response variables and the missing mechanism are specified by `'rho'` and `'missing.type'`, respectively. `'rho'` can be a scalar or a vector of length $q$. In the code above, `'rho' = 0.1` indicates an overall missing rate of around 10%. In addition to `"MAR"`, the `'missing.type'` can also be `"MCAR"` or `"MNAR"`, see the later section for more details on how missing values are generated under different mechanisms.
 
-__Note 1__: the program only accepts missing values that are coded as either `NA`s or `NaN`s.
+> **_NOTE 1:_** the program only accepts missing values that are coded as either `NA`s or `NaN`s.
 
-__Note 2__: although the program can make an estimate under $n \leq \text{max}(p,q)$, it is likely to result in a slow convergence rate and excessive estimation variance. Therefore, we suggest that (both predictor and response) variables can be filtered based on some of their properties before any model is fitted. For example in genomics, where the $\mathbf{X}$ matrix can be very wide, we often filter features based on variance.
+> **_NOTE 2:_** although the program will provide estimates even when $n \leq \text{max}(p,q)$, convergence is likely to be rather slow, and the variance of estimation is likely to be excessively large. Therefore, we __suggest__ that both the predictor columns and the response columns be reduced (filtered) if possible, prior to fitting any models. For example in genomics, where $\mathbf{X}$ can very wide (i.e. large $p$), we often filter features based on variance or coefficient of variation.
 
-We can easily visualize how missing data distributes in the corrupted output matrix $\mathbf{Z}$ using package **visdat**:
+We can easily visualize how missing data is distributed in the corrupted response matrix $\mathbf{Z}$ using package **visdat**:
 ```{r, eval = FALSE}
-Z <- sim.dat$Z
+Z <- sim.dat$Z  ## Corrupted response matrix
 visdat::vis_miss(as.data.frame(Z))
 ```
 ```{r, include = FALSE, eval = FALSE}
@@ -108,55 +116,66 @@ knitr::include_graphics(system.file("extdata", "vismis.png", package = "missoNet
 
 A single model can be fitted using the most basic call to `missoNet`:
 ```{r}
-## using the training set to fit the model
-## `lambda.Beta` and `lambda.Theta` are arbitrarily set to 0.1
-## `verbose = 0` suppresses printing messages
-X.tr <- sim.dat$X[tr, ]
-Z.tr <- sim.dat$Z[tr, ]
+## Training set
+X.tr <- sim.dat$X[tr, ]  ## Predictor matrix
+Z.tr <- sim.dat$Z[tr, ]  ## Corrupted response matrix
+
+## Using the training set to fit the model.
+## 'lambda.Beta' and 'lambda.Theta' are arbitrarily set to 0.1.
+## 'verbose' = 0 suppresses printing of messages.
 fit <- missoNet(X = X.tr, Y = Z.tr, lambda.Beta = 0.1, lambda.Theta = 0.1, verbose = 0)
 ```
 
-Or more commonly used by fitting with a grid of values (numeric vector) for $\lambda_B$ and $\lambda_\Theta$, which have __one-to-one correspondence__:
+However, `missoNet` should be more commonly used with a grid of values for $\lambda_B$ and $\lambda_\Theta$. The two penalty vectors must have the same length, and the `missoNet` function will be called with each consecutive pair of values -- i.e., with the first elements of the two vectors, then with the second elements, etc.
 ```{r}
 lambda.Beta.vec <- 10^(seq(from = 0, to = -1, length.out = 10))  ## 10 values on the log scale, from 1 to 0.1
-lambda.Theta.vec <- rep(0.1, 10)  ## for each value of lambda.Beta, lambda.Theta remains constant at 0.1
+lambda.Theta.vec <- rep(0.1, 10)  ## For each value of 'lambda.Beta', 'lambda.Theta' remains constant at 0.1
 fit_list <- missoNet(X = X.tr, Y = Z.tr, lambda.Beta = lambda.Beta.vec, lambda.Theta = lambda.Theta.vec, verbose = 0)
 ```
 
-The command above returns a sequence of models for users to choose from. In many cases, users may prefer the software to select one of them. Cross-validation is perhaps the simplest and most widely used method for this task. `cv.missoNet` is the main function to do cross-validation, along with supporting methods such as `plot` and `predict`.
+The command above returns a sequence of models for users to choose from. In many cases, users may prefer that the software selects the best fit among them. Cross-validation is perhaps the simplest and most widely used method for this task. `cv.missoNet` is the main function to do cross-validation, along with supporting methods such as `plot` and `predict`.
 
-Here we use `cv.missoNet` to do a five-fold cross-validation (CV), samples will be permuted before splitting into multiple folds. For reproducibility, we assign a random seed to the permutation.
+Here we use `cv.missoNet` to perform a five-fold cross-validation, samples will be permuted before splitting into multiple folds. For reproducibility, we assign a random seed to the permutation.
 ```{r}
+## If 'permute' = FALSE, the samples will be split into k-folds in their original orders,
+## i.e., the first (n/'kfold') samples will be assigned to the first fold an so on.
+
 cvfit <- cv.missoNet(X = X.tr, Y = Z.tr, kfold = 5,
                      lambda.Beta = lambda.Beta.vec, lambda.Theta = lambda.Theta.vec,
                      permute = TRUE, with.seed = 433, verbose = 0)
 ```
 
-The program has warned us that the range of $\lambda_\Theta$ is inappropriate, we need to supply a sequence of $\lambda_\Theta$ covering larger values. However, picking a suitable range of such hyperparameters may require experience or trial and error, the program has provided us with a simpler way to solve this problem. 
+The program has warned us that the range of $\lambda_\Theta$ is inappropriate so that we need to supply a sequence of $\lambda_\Theta$ covering larger values. However, picking a suitable range for such hyperparameters may require experience or a series of trials and errors. Therefore, `cv.missoNet` provides a smarter way to solve this problem.
 
-Let's fit the cross-validation model again, this time all folds run in parallel on two CPU cores. Parallelization of **missoNet** relies on package **snowfall**, so make sure load the package beforehand.
+Let's fit the cross-validation model again, this time running all folds in parallel on two CPU cores. The parallelization of **missoNet** models relies on package **parallel**, so make sure the parallel clusters have been registered beforehand.
 ```{r, eval = FALSE}
-library(snowfall, quietly = TRUE)
+## 'fit.1se = TRUE' tells the program to make additional estimates of the parameters 
+## at the largest values of 'lambda.Beta' and 'lambda.Theta' respectively according to 
+## the one-standard-error rule.
+
+cl <- parallel::makeCluster(2)
 cvfit <- cv.missoNet(X = X.tr, Y = Z.tr, kfold = 5,
-                     fit.1se = TRUE, parallel = TRUE, cpus = 2,
+                     fit.1se = TRUE, parallel = TRUE, cl = cl,
                      permute = TRUE, with.seed = 433, verbose = 0)
+parallel::stopCluster(cl)
 ```
 
-Note that we do not explicitly specify the regularization parameters $\lambda_B$ and $\lambda_\Theta$. In this case, a grid of $\lambda_B$ and $\lambda_\Theta$ values in a (hopefully) reasonable range will be computed and used by the program. Users can also choose to provide one of them such that the program will compute the other one. Generally, it is difficult at the beginning to feed suitable $\lambda$ sequences, so we __suggest__ users start analysis using `cv.missoNet`, and let the program compute appropriate $\lambda_B$s and $\lambda_\Theta$s itself then pick the optimal combination of them at which the smallest mean CV error is achieved.
+Note that we have not explicitly specified the regularization parameters $\lambda_B$ and $\lambda_\Theta$ in the command above. In this case, a grid of $\lambda_B$ and $\lambda_\Theta$ values in a (hopefully) reasonable range will be computed and used by the program. Users can even provide just one of $\lambda_B$ and $\lambda_\Theta$ vectors such that the program will compute the other. Generally, it is difficult at the beginning to choose suitable $\lambda$ sequences, so we __suggest__ users start analysis using `cv.missoNet`, and let the program compute the appropriate $\lambda_B$ and $\lambda_\Theta$ values itself, and then automatically pick the optimal combination of them at which the minimum cross-validated error is achieved.
 
-`cv.missoNet` returns a `cv.missoNet` object, a list with all the ingredients of the cross-validated fit. We can execute the plot method
+`cv.missoNet` returns a `'cv.missoNet'` object, a list with all the ingredients of the cross-validated fit. We can execute the `plot` method
 ```{r, eval = FALSE}
-## The exact values of mean CV errors along with upper and lower standard deviation bounds 
-## can be accessed via `cvfit$cvm`, `cvfit$cvup` and `cvfit$cvlo`, respectively.
+## The values of mean cross-validated errors along with upper and lower standard deviation bounds 
+## can be accessed via 'cvfit$cvm', 'cvfit$cvup' and 'cvfit$cvlo', respectively.
+
 plot(cvfit)
 ```
 ```{r, echo = FALSE, fig.align = 'left', out.width = "80%"}
 knitr::include_graphics(system.file("extdata", "cvfitHeat.png", package = "missoNet"))
 ```
 
-to visualize mean CV error in a heatmap style. The white solid box marks out the position of the smallest mean CV error with corresponding $\lambda_B$ and $\lambda_\Theta$ (`lambda.min`), and the white dashed boxes indicate the largest $\lambda_B$ and $\lambda_\Theta$ at which the mean CV error is within one standard error of the minimum (`lambda.Beta.1se` and `lambda.Theta.1se`), by fixing the other one at `lambda.min`. We often use this "one-standard-error" rule when selecting the most parsimonious model; this acknowledges the fact that the CV surface is estimated with error, so error on the side of parsimony is preferable.
+to visualize the mean cross-validated error in a heatmap style. The white solid box marks out the position of the minimum mean cross-validated error with corresponding $\lambda_B$ and $\lambda_\Theta$ (`"lambda.min"` := $({\lambda_B}_\text{min}, {\lambda_\Theta}_\text{min})$), and the white dashed boxes indicate the largest $\lambda_B$ and $\lambda_\Theta$ at which the mean cross-validated error is within one standard error of the minimum, by fixing the other one at `"lambda.min"` (i.e., `"lambda.1se.Beta"` := $({\lambda_B}_\text{1se}, {\lambda_\Theta}_\text{min})$ and `"lambda.1se.Theta"` := $({\lambda_B}_\text{min}, {\lambda_\Theta}_\text{1se})$). We often use this "one-standard-error" rule when selecting the most parsimonious model; this acknowledges the fact that the cross-validation surface is estimated with error, so error on the side of parsimony is preferable.
 
-We can also plot it in the form of scatter diagram:
+We can also plot the errors in the form of scattergram:
 ```{r, eval = FALSE}
 plot(cvfit, type = "cv.scatter")
 ```
@@ -164,11 +183,11 @@ plot(cvfit, type = "cv.scatter")
 knitr::include_graphics(system.file("extdata", "cvfitScat.png", package = "missoNet"))
 ```
 
-After cross-validation, $\mathbf{B}^*$ and $\mathbf{\Theta}^*$ can be estimated at these three special $\lambda$ values -- `lambda.min`, `lambda.Beta.1se` and `lambda.Theta.1se`, the corresponding results along with the exact $\lambda$ values are stored in separate lists: `est.min`, `estB.1se` and `estTht.1se` (`estB.1se` and `estTht.1se` are not `NULL` only if the argument `fit.1se = TRUE` when calling `cv.missoNet`).
+After cross-validation, $\mathbf{B}^*$ and $\mathbf{\Theta}^*$ can be estimated at three special $\lambda$ pairs discussed above -- `"lambda.min"`, `"lambda.1se.Beta"` and `"lambda.1se.Theta"`. The corresponding results, along with the $\lambda$ values, are stored in three separate lists: `'est.min'`, `'est.1se.B'` and `'est.1se.Tht'` (`'est.1se.B'` and `'est.1se.Tht'` are `NULL` unless the argument `'fit.1se' = TRUE` when calling `cv.missoNet`).
 
-Let's extract the estimates of model parameters at `lambda.min` and `lambda.Beta.1se` then plot them aside the ground truth $\mathbf{B}^*$ and $\mathbf{\Theta}^*$:
+Let's extract the estimates of the model parameters $\hat{\mathbf{B}}$ and $\hat{\mathbf{\Theta}}$ at `"lambda.min"` and `"lambda.1se.Beta"` then plot them beside the ground truth $\mathbf{B}^*$ and $\mathbf{\Theta}^*$:
 ```{r, eval = FALSE}
-## define a plotting function
+## Define a plotting function
 plot_heatmap <- function(est, col, legend = FALSE, lgd_name, title) {
   return(ComplexHeatmap::Heatmap(est, cluster_rows = FALSE, cluster_columns = FALSE,
                                  col = col, show_heatmap_legend = legend, name = lgd_name,
@@ -177,19 +196,19 @@ plot_heatmap <- function(est, col, legend = FALSE, lgd_name, title) {
                                  border = TRUE, column_title = title))
 }
 
-## color space
+## Color space
 col <- circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red"))
 
 ## Beta*
 Beta_star <- sim.dat$Beta
 Beta_star_ht <- plot_heatmap(Beta_star, col, title = expression(paste(bold(Beta), "*")))
 
-## Beta_hat at `lambda.min`
+## Beta_hat at "lambda.min"
 Beta_hat_min <- cvfit$est.min$Beta
 Beta_hat_min_ht <- plot_heatmap(Beta_hat_min, col, title = expression(paste(hat(bold(Beta)), " at `lambda.min`")))
 
-## Beta_hat at `lambda.Beta.1se`
-Beta_hat_1se <- cvfit$estB.1se$Beta
+## Beta_hat at "lambda.1se.Beta"
+Beta_hat_1se <- cvfit$est.1se.B$Beta
 Beta_hat_1se_ht <- plot_heatmap(Beta_hat_1se, col, legend = TRUE, lgd_name = "values",
                                 title = expression(paste(hat(bold(Beta)), " at `lambda.Beta.1se`")))
 
@@ -197,16 +216,16 @@ Beta_hat_1se_ht <- plot_heatmap(Beta_hat_1se, col, legend = TRUE, lgd_name = "va
 Theta_star <- sim.dat$Theta
 Theta_star_ht <- plot_heatmap(Theta_star, col, title = expression(paste(bold(Theta), "*")))
 
-## Theta_hat at `lambda.min`
+## Theta_hat at "lambda.min"
 Theta_hat_min <- cvfit$est.min$Theta
 Theta_hat_min_ht <- plot_heatmap(Theta_hat_min, col, title = expression(paste(hat(bold(Theta)), " at `lambda.min`")))
   
-## Theta_hat at `lambda.Beta.1se`
-Theta_hat_1se <- cvfit$estB.1se$Theta
+## Theta_hat at "lambda.1se.Beta"
+Theta_hat_1se <- cvfit$est.1se.B$Theta
 Theta_hat_1se_ht <- plot_heatmap(Theta_hat_1se, col, legend = TRUE, lgd_name = "values",
-                                 title =expression(paste(hat(bold(Theta)), " at `lambda.Beta.1se`")))
+                                 title = expression(paste(hat(bold(Theta)), " at `lambda.Beta.1se`")))
 
-## plot
+## Plot
 Beta_star_ht + Beta_hat_min_ht + Beta_hat_1se_ht
 Theta_star_ht + Theta_hat_min_ht + Theta_hat_1se_ht
 ```
@@ -217,11 +236,13 @@ knitr::include_graphics(system.file("extdata", "cvfitEst1.png", package = "misso
 knitr::include_graphics(system.file("extdata", "cvfitEst2.png", package = "missoNet"))
 ```
 
-Like other regression methods, predictions can be made based on the fitted `cv.missoNet` object as well. The code below gives prediction for a new input matrix `newx` at `lambda.min` (`s = "lambda.Beta.1se"` and `s = "lambda.Theta.1se"` is available only when `fit.1se = TRUE`):
+Like other regression methods, predictions can be made based on the fitted `'cv.missoNet'` object as well. The code below gives predictions for a new input matrix `'newx'` at `"lambda.min"` (`'s' = "lambda.1se.Beta"` and `'s' = "lambda.1se.Theta"` is available only when `'fit.1se' = TRUE`):
 ```{r, eval = FALSE}
-## prediction on the validation set
-## `s` can also be "lambda.Beta.1se" or "lambda.Theta.1se"
-## newy = mu + newx %*% Beta
+## Prediction on the validation dataset: newy = mu + newx %*% Beta.
+
+## 's' can also be "lambda.1se.Beta" or "lambda.1se.Theta"
+## (why 's' but not 'lambda'? Because we follow the naming rules of glmnet).
+
 newy <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.min")
 
 cat("dim(newy):", dim(newy))
@@ -230,85 +251,94 @@ cat("dim(newy):", dim(newy))
 cat("dim(newy): 30 12")
 ```
 
-Users now should be able to fit **missoNet** models with the functions introduced so far. There are many more arguments in the package that give users a great deal of flexibility. To learn more, move on to the next section. In the section for real data application, we demonstrate a complete process of analyzing a neuroimaging and genetic dataset using **missoNet**, we __highly recommend__ interested users to browse this content.
+Users now should be able to use **missoNet** package with the functions introduced so far. There are many more arguments in the functions that give users a great deal of flexibility. To learn more, move on to the next section. In the section on a real data application, we demonstrate a complete process of analyzing a neuroimaging and genetic dataset using **missoNet**, and we __highly recommend__ interested users to browse this content.
 
 
-## Other Commonly Used Function Arguments
+# Other Commonly Used Function Arguments
 
-**missoNet** provides other arguments for users to customize the fit, we introduce some commonly used arguments here (check the help pages for more information).
+**missoNet** includes a variety of functions for data simulation, goodness-of-fit evaluation, regularization parameter tuning, and visualization of results, as well as predictions in new data. In addition to the basic function arguments introduced so far, there are some other commonly used arguments available for users to customize the fit.
 
-### `cv.missoNet`
+## `cv.missoNet`
 
-* `rho`: a scalar or numeric vector for the missing probability of response variables. Default is `rho = NULL` and the program will compute the empirical missing rates for columns of `Y` and use them as the working missing probability; the user-supplied value overrides this.
+* `'rho'`: (optional) a scalar or a numeric vector of length $q$ for the missing probabilities of the response variables. The default is `'rho' = NULL` and the program will compute the empirical missing rates for each of the columns of `'Y'` and use them as the working missing probabilities; a user-supplied `'rho'` overrides this default. The default setting should suffice in most cases; note that misspecified missing probabilities would introduce biases into the model. Use the global assignment for an overall missing probability (i.e. a scalar `'rho'`) with care, because it might introduce extra errors especially when the outcomes `'Y'` has highly unbalanced missing rates across variables.
 
-* `lambda.Beta` and `lambda.Theta` are optional user-supplied sequences of $\lambda$ values (will be automatically arranged in a descending order internally). When $\lambda$s are automatically generated (`lambda.Beta/lambda.Theta = NULL`), the sequences can be controlled by the following arguments:
-    + `lamBeta.min.ratio`/`lamTheta.min.ratio`: the smallest value of $\lambda$ will be the data-derived `lambda.max` multiplied by this positive ratio. This argument controls the width of the generated $\lambda$ sequence by trimming its smallest end. The default depends on the sample size $n$ relative to the number of predictors $p$/responses $q$. If $n>p$/$n>q$, the default is 1.0E-4 otherwise it is 1.0E-2. A very small value of `lamBeta.min.ratio`/`lamTheta.min.ratio` may significantly increase the runtime and lead to a saturated fit when $n \leq p$/$n \leq q$.
-    + `n.lamBeta`/`n.lamTheta`: the program generates `n.lamBeta`/`n.lamTheta` values linear on the log scale from the largest down to the smallest. If $n>p$/$n>q$, the default is 40 otherwise it is 20. Try to avoid directly supplying a very large number since the program will fit `n.lamBeta * n.lamTheta` models in total for each fold of cross-validation. Instead, users can adopt a strategy of "coarse + fine" search, see the next section for an example.
-   + `lamBeta.scale.factor`/`lamTheta.scale.factor`: a positive multiplication factor controlling the overall magnitudes of the entire $\lambda$ sequence. This argument plays the role of shifting the $\lambda$ sequence on the log scale, the default is `1` and a typical usage is when the program warns that the generated $\lambda$ sequence has an inappropriate range (too large or too small), so that the optimal selection of $\lambda$ from cross-validation is close to the boundaries of the search range.
+* `'lambda.Beta'` and `'lambda.Theta'` are (optional) user-supplied sequences of regularization parameters for the lasso penalties, $\lambda_B$ and $\lambda_\Theta$, among which the cross-validation procedure searches. When `'lambda.Beta' = NULL` and/or `'lambda.Theta' = NULL` (the default), a grid of $\lambda_B$ and/or $\lambda_\Theta$ in a (hopefully) reasonable range will be computed and used by the program. In this case, the following arguments can be used to adjust the range of sequence as well as the density of grid (__considering the limited space, similar control arguments are discussed together, below "/" serves as a separator between $\lambda_B$ and $\lambda_\Theta$__):
+    + `'lamBeta.min.ratio'` / `'lamTheta.min.ratio'`: the smallest value of $\lambda_B$ / $\lambda_\Theta$ is calculated as the data-derived $\text{max}(\lambda_B)$ / $\text{max}(\lambda_\Theta)$ multiplied by this positive ratio. This argument controls the width of the generated lambda sequence by trimming its smallest end. The default depends on the sample size $n$ relative to the number of predictors $p$ / responses $q$. If $n>p$ / $n>q$, the default is `'lamBeta.min.ratio' = 1.0E-4` / `'lamTheta.min.ratio' = 1.0E-4`, otherwise it is `1.0E-2` / `1.0E-2`. A very small value of `'lamBeta.min.ratio'` / `'lamTheta.min.ratio'` may significantly increase runtime and lead to a saturated fit when $n \leq p$ / $n \leq q$.
+    + `'n.lamBeta'` / `'n.lamTheta'`: the program generates `'n.lamBeta'` / `'n.lamTheta'` values linear on the log scale from $\text{max}(\lambda_B)$ / $\text{max}(\lambda_\Theta)$ down to ($\text{max}(\lambda_B)*$`'lamBeta.min.ratio'`) / ($\text{max}(\lambda_\Theta)*$`'lamTheta.min.ratio'`). If $n>p$ / $n>q$, the default is `'n.lamBeta' = 40` / `'n.lamTheta' = 40`, otherwise it is `20` / `20`. This argument controls the density of the generated lambda sequence. Avoid supplying a very large number to both `'n.lamBeta'` and `'n.lamTheta'` at the same time, because the program will fit (`'n.lamBeta'`$*$`'n.lamTheta'`) models in total for each fold of the cross-validation, thus the complexity grows in $\mathcal{O}(n^2)$. Instead, users can adopt a dynamic search strategy, see the next section for an example.
+   + `'lamBeta.scale.factor'` / `'lamTheta.scale.factor'`: a positive multiplication factor controlling the overall magnitude of the entire $\lambda_B$ / $\lambda_\Theta$ sequence. This argument plays the role of scaling the lambda sequence (or shifting it on the log scale), the default is `'lamBeta.scale.factor' = 1` / `'lamTheta.scale.factor' = 1` and a typical usage is when the program has warned that the magnitudes of the $\lambda_B$ / $\lambda_\Theta$ values are inappropriate (either too large or too small), so that the optimal value of $\lambda_B$ / $\lambda_\Theta$ selected by the cross-validation is close to either boundary of the search range.
 
-* `standardize` and `standardize.response` are logical flags for standardization of variables in $\mathbf{X}$ and $\mathbf{Y}$ to have unit variance (the default) prior to fitting the model. The estimated parameters are always returned on the original scale. **missoNet** computes appropriate $\lambda$ sequences relying on standardization. If users wish to compare the results with those of other softwares, it is suggested to supply a dataset standardized beforehand (using `scale()` or similar functions) then set `standardize` and `standardize.response` to `FALSE`.
+* `'standardize'` and `'standardize.response'` are logical flags (the defaults are `TRUE`) for standardization of variables in `'X'` and `'Y'` to have unit variances prior to fitting the model. The estimated results are always returned on the original scale. `cv.missoNet` computes appropriate lambda sequences relying on standardization. If users wish to compare the results with those of other softwares, it is suggested to supply the program with datasets which have been standardized beforehand (by using `'scale()'` or similar functions), then set `'standardize'` and `'standardize.response'` to `FALSE`.
 
-* `fit.1se` is a logical flag telling the program should $\mathbf{B}^*$ and $\mathbf{\Theta}^*$ be estimated at the largest `lambda.Beta` and `lambda.Theta` respectively according to the one-standard-error rule? Default is `fit.1se = FALSE`, then `estB.1se` and `estTht.1se` in the returned object will be `NULL`.
+* `'fit.1se'` is a logical flag (the default is `FALSE`) telling the program whether $\mathbf{B}^*$ and $\mathbf{\Theta}^*$ need to be estimated at `"lambda.1se.Beta"`:=$({\lambda_B}_\text{1se}, {\lambda_\Theta}_\text{min})$ and `"lambda.1se.Theta"`:=$({\lambda_B}_\text{min}, {\lambda_\Theta}_\text{1se})$, where ${\lambda_B}_\text{1se}$ and ${\lambda_\Theta}_\text{1se}$ are the largest $\lambda_B$ and $\lambda_\Theta$ respectively at which the mean cross-validated error is within one standard error of the minimum, while the other one is fixed at `"lambda.min"`:=$({\lambda_B}_\text{min}, {\lambda_\Theta}_\text{min})$. The corresponding estimation results are stored in `'est.1se.B'` and `'est.1se.Tht'` inside the returned object.
 
-* `fit.relax`: if `TRUE`, the program will have an additional debiased estimate of the network structure by re-estimating the edges in the active set (non-zero off-diagonal elements) of $\hat{\mathbf{\Theta}}$ without penalization (`lambda.Theta = 0`), which could be useful for some conditional inter-dependencies analyses. This "relaxed" fit is stored in `relax.net`. WARNING: there may be convergence issues if the working empirical covariance matrix is not of full rank (e.g., $n < q$).
+* `'fit.relax'`: if `TRUE` (the default is `FALSE`), the program will re-estimate the edges in the active set (i.e. non-zero off-diagonal elements) of $\hat{\mathbf{\Theta}}$ without penalization ($\lambda_\Theta$ = 0), such a debiased estimate of the network structure could be useful for some interdependency analyses. This "relaxed" fit is stored in `'relax.net'`. WARNING: there may be convergence issues if the working empirical covariance matrix is not of full rank (e.g., $n < q$).
 
-* `verbose`: can be 0, 1 or 2. `verbose = 0` -- silent; `verbose = 1` -- limited tracing; `verbose = 2` -- detailed tracing. Default is `verbose = 1`, set to `2` if you wish to track algorithm convergence.
+* `'verbose'`: can be value of `0`, `1` or `2`. `'verbose' = 0` -- silent mode; `'verbose' = 1` (the default) -- limited tracing with progress bars; `'verbose' = 2` -- detailed tracing. Note that displaying the progress bars slightly increases the computation overhead compared to the silent mode. The detailed tracing should be used for monitoring progress only when the program runs extremely slowly, and it is not supported under `'parallel' = TRUE`.
+
+* `'parallel'` and `'cl'`: if `'parallel' = TRUE`, the program uses clusters to compute all folds of the cross-validation in parallel. Users must first register parallel clusters by using `parallel::makeCluster('nCores')` and supply the created cluster object to `'cl'`. One way to determine the number of cores for parallelization could be `'nCores' = min(parallel::detectCores()-1, ceiling(kfold/2))`. Note that if `'verbose' == 1` and `'nCores' == 'kfold'`, the progress bar for the cross-validation process will jump directly from 0 to 100, because the computations for all folds start and end at approximately the same time in a homogeneous machine.
 
 
-### `generateData`
+## `missoNet`
+
+`missoNet` shares most arguments with `cv.missoNet` except that `'lambda.Beta'` and `'lambda.Theta'` are not optional for `missoNet`. Instead, users must specify either a scalar or a vector for both `'lambda.Beta'` and `'lambda.Theta'`; the vectors must have the same length. `missoNet` will be called with each consecutive pair of `'lambda.Beta'` and `'lambda.Theta'` -- i.e., with the first elements of the two vectors (`'lambda.Beta[1]'`, `'lambda.Theta[1]'`), then with the second elements (`'lambda.Beta[2]'`, `'lambda.Theta[2]'`), etc.
+
+
+## `generateData`
 
 `generateData` provides a convenient way for users to quickly generate simulation data and get started to build their own analysis frameworks.
 
-Given the predictor matrix $\mathbf{X}$ and the true parameters $\mathbf{B}^*$ and $\mathbf{\Theta}^*$, a clean response matrix $\mathbf{Y}$ is generated by sampling from $\mathcal{MVN}(\mathbf{X}\mathbf{B}^*,(\mathbf{\Theta}^*)^{-1})$. A matched missing-data version $\mathbf{Z}$ has elements $\mathbf{Z}_{ij} = 1_{\mathbf{M}_{ij}=0}\mathbf{Y}_{ij}$, where $\mathbf{M}$ is a indicator matrix of missingness parameterized by missing proportion `rho` and missing mechanism `missing.type`. Users can also directly provide the error matrix $\mathbf{E}$, then the generating process will be simplified to $\mathbf{Y} = \mathbf{X}\mathbf{B}^* + \mathbf{E}$, meanwhile the argument `Theta` (for $\mathbf{\Theta}^*$) is ignored.
+Given the predictor matrix $\mathbf{X}$ and the true parameters $\mathbf{B}^*$ and $\mathbf{\Theta}^*$, a response matrix $\mathbf{Y}$ without missing values is generated by $\mathbf{Y} = \mathbf{X}\mathbf{B}^* + \mathbf{E}$, where the rows of $\mathbf{E}$ are sampled from $\mathcal{MVN}(0_q,(\mathbf{\Theta}^*)^{-1})$. A corrupted response matrix $\mathbf{Z} := f_{\mathbf{M}}(\mathbf{Y})$ has elements $\mathbf{Z}_{ij}$ = `NA` if $\mathbf{M}_{ij} = 1$, otherwise $\mathbf{Z}_{ij} = \mathbf{Y}_{ij}$. $\mathbf{M}$ is a indicator matrix of missingness having the same dimension as $\mathbf{Y}$ and parameterized by `'rho'` and `'missing.type'`, see below for details.
 
-* `Beta`: (optional) a user-supplied true regression coefficient matrix $\mathbf{B}^*$ ($p \times q$). If `Beta = NULL` (the default), a dense matrix will first be created by setting each element to a random draw from `rnorm(0, 1)`, then a sparse $\mathbf{B}^*$ is generated by randomly assigning zeros to some elements in this matrix. There are two kinds of sparsity controlled by arguments `Beta.row.sparsity` and `Beta.elem.sparsity`:
-    + `Beta.row.sparsity`: a Bernoulli parameter between 0 and 1 controlling the approximate proportion of non-zero rows in $\mathbf{B}^*$.
-    + `Beta.elem.sparsity`: a Bernoulli parameter between 0 and 1 controlling the approximate proportion of non-zero elements in those non-zero rows (i.e., rows that are not all zeros).
+* `'Beta'`: (optional) a user-supplied true regression coefficient matrix $\mathbf{B}^*$ ($p \times q$). If `'Beta' = NULL` (the default), a dense ($p \times q$) matrix will first be created by setting each element to a random draw from $\mathcal{N}(0, 1)$, then a sparse $\mathbf{B}^*$ is generated by randomly assigning zeros to some of the elements in this matrix. There are two kinds of sparsity that can be controlled by using the following arguments if $\mathbf{B}^*$ is automatically generated:
+    + `'Beta.row.sparsity'`: a Bernoulli parameter between 0 and 1 controlling the approximate proportion of rows where at least one element could be nonzero in $\mathbf{B}^*$.
+    + `'Beta.elm.sparsity'`: a Bernoulli parameter between 0 and 1 controlling the approximate proportion of nonzero elements among the rows of $\mathbf{B}^*$ where not all elements are zeros.
 
-* `Theta`: (optional) a user-supplied (positive definite) true precision matrix $\mathbf{\Theta}^*$ ($q \times q$). Default is `Theta = NULL` and the program will generate a block-structured $\mathbf{\Theta}^*$ having four blocks corresponding to four types of network structures: independent, weak graph, strong graph and chain. Only needed when `E = NULL`.
+* `'Theta'`: (optional) a user-supplied (positive definite) true precision matrix $\mathbf{\Theta}^*$ ($q \times q$) for sampling the error matrix $\mathbf{E} \sim \mathcal{MVN}(0_q,(\mathbf{\Theta}^*)^{-1})$. The default is `'Theta' = NULL` and the program will generate a block-structured $\mathbf{\Theta}^*$ having four blocks corresponding to four types of network structures: independent, weak graph, strong graph and chain. This argument is only needed when `'E' = NULL`.
 
-* `Sigma.X`: (optional) a user-supplied (positive definite) covariance matrix ($p \times p$) for generating the input matrix $\mathbf{X} \sim \mathcal{MVN}(\boldsymbol{0}, \mathbf{\Sigma}_X)$. If `Sigma.X = NULL` (the default), generate $\mathbf{X}$ using an AR(1) covariance with 0.7 autocorrelation. Only needed when `X = NULL`.
+* `'Sigma.X'`: (optional) a user-supplied (positive definite) covariance matrix ($p \times p$) for sampling the predictor matrix $\mathbf{X} \sim \mathcal{MVN}(0_p, \mathbf{\Sigma}_X)$. If `'Sigma.X' = NULL` (the default), the function will generate $\mathbf{X}$ using an AR(1) covariance matrix with 0.7 autocorrelation (i.e. $[\mathbf{\Sigma}_X]_{jk} = 0.7^{|j-k|}$). This argument is only needed when `'X' = NULL`.
 
-* `rho`: a scalar or a vector of length $q$ specifying the approximate proportion of missing values in each column of $\mathbf{Z}$. Note that a scalar will be automatically converted to a vector filled with same values.
+* `'rho'`: a scalar or a vector of length $q$ specifying the approximate proportion of missing values in each column of $\mathbf{Z}$. Note that a scalar will be automatically converted to a vector filled with the same values.
 
-* `missing.type`: this argument determines how the corrupted output matrix $\mathbf{Z}$ is generated based on $\mathbf{Y}$, can be one of `"MCAR"`, `"MAR"` and `"MNAR"`:
-    + `"MCAR"`: missing completely at random. For all $i=1,\dots,n$ and $j=1,\dots,q$: $\mathbf{Y}_{ij}$ is missing if $\mathbf{M}_{ij}=1$, where $\mathbf{M}_{ij}$ are i.i.d. Bernoulli draws with probability `rho[j]`;
-    + `"MAR"`: missing at random. For all $i=1,\dots,n$ and $j=1,\dots,q$: $\mathbf{Y}_{ij}$ is missing if $\mathbf{M}_{ij}=1$, where $\mathbf{M}_{ij}$ are random Bernoulli draws with probability `rho[j]*2*`$\frac{1}{1+e^{-[\mathbf{X}\mathbf{B}^*]_{ij}}}$;
-    + `"MNAR"`: missing not at random. For all $i=1,\dots,n$ and $j=1,\dots,q$: $\mathbf{Y}_{ij}$ is missing if $\mathbf{M}_{ij}=1$, where $\mathbf{M}_{ij}=1_{\mathbf{Y}_{ij} < T^{j}}(\mathbf{Y}_{ij})$, in which $T^{j} = Q$(`rho[j]`) is the `rho[j]`-quantile of $\mathbf{Y}_{\cdot j}$.
+* `'missing.type'`: this argument determines how the missing values in the corrupted response matrix $\mathbf{Z}$ are randomly generated, can be one of `"MCAR"`, `"MAR"` and `"MNAR"`:
+    + `"MCAR"`: missing completely at random. For all $i=1,\dots,n$ and $j=1,\dots,q$: $\mathbf{Z}_{ij}$ = `NA` if $\mathbf{M}_{ij}=1$, otherwise $\mathbf{Z}_{ij}$ = $\mathbf{Y}_{ij}$, where $\mathbf{M}_{ij}$ are i.i.d. Bernoulli draws with probability `'rho[j]'`;
+    + `"MAR"`: missing at random. For all $i=1,\dots,n$ and $j=1,\dots,q$: $\mathbf{Z}_{ij}$ = `NA` if $\mathbf{M}_{ij}=1$, otherwise $\mathbf{Z}_{ij}$ = $\mathbf{Y}_{ij}$, where $\mathbf{M}_{ij}$ are Bernoulli draws with probability (`'rho[j]'`$*\frac{c}{1+e^{-[\mathbf{X}\mathbf{B}^*]_{ij}}}$), in which $c$ is a constant correcting the missing rate of the $j$th column of $\mathbf{Y}$ back to the level of `'rho[j]'`;
+    + `"MNAR"`: missing not at random. For all $i=1,\dots,n$ and $j=1,\dots,q$: $\mathbf{Z}_{ij}$ = `NA` if $\mathbf{M}_{ij}=1$, otherwise $\mathbf{Z}_{ij}$ = $\mathbf{Y}_{ij}$, where $\mathbf{M}_{ij} = 1 \cdot (\mathbf{Y}_{ij} < T^j)$, in which $T^{j} = \mathcal{Q}$(`'rho[j]'`, $\mathbf{Y}_{\cdot j}$) is the `'rho[j]'`-quantile of $\mathbf{Y}_{\cdot j}$. In other words, $\mathbf{Y}_{ij}$ will be missing if it is smaller than the `'rho[j]'`-quantile of the $j$th column of $\mathbf{Y}$.
 
 <ul>
-Imagine a dummy variable $\text{miss}_{(Y)}$. Under MCAR, $\text{miss}_{(Y)}$ is not related to $Y$ or to $X$; under MAR, $\text{miss}_{(Y)}$ is related to $X$, but not related to $Y$ after $X$ is controlled; under MNAR, $\text{miss}_{(Y)}$ is related to $Y$ itself, even after $X$ is controlled.
+Of the aforementioned missing data mechanisms, MCAR is random, and the other two are systematic. Imagine a dummy variable $\text{miss}_{(Y)}$. Under MCAR, $\text{miss}_{(Y)}$ is not related to $Y$ or to $X$; under MAR, $\text{miss}_{(Y)}$ is related to $X$, but not related to $Y$ after $X$ is controlled; under MNAR, $\text{miss}_{(Y)}$ is related to $Y$ itself, even after $X$ is controlled.
 </ul>
 
 
-### `plot`
+## `plot`
 
-* `detailed.axes` is a logical flag telling the plotting function should detailed axes be plotted? Default is `detailed.axes = TRUE`, set to `FALSE` when the $\lambda$ values are too dense (e.g., assign a large number to `n.lamBeta`/`n.lamTheta`).
+* `'detailed.axes'` is a logical flag telling the plotting function whether detailed axes should be plotted. The default is `'detailed.axes' = TRUE`, set to `FALSE` when the $\lambda$ values are too dense (e.g., if you have assigned a large number to `'n.lamBeta'` or `'n.lamTheta'`).
 
 
-## An Application to Structural Neuroimaging and Genetic Data
+# An Application to Structural Neuroimaging and Genetic Data
 
-In this section, we will apply **missoNet** to a relatively high-dimensional dataset -- `bgsmtr_example_data`, as a part of the `bgsmtr` package, obtained from the Alzheimer’s Disease Neuroimaging Initiative (ADNI-1) database.
+In this section, we will apply **missoNet** to a relatively high-dimensional dataset -- `bgsmtr_example_data`, as a part of the **bgsmtr** package, obtained from the Alzheimer’s Disease Neuroimaging Initiative (ADNI-1) database.
 
-This example dataset consists of 15 structural neuromaging measures and 486 single nucleotide polymorphisms (SNPs) determined from a sample of 632 subjects. Importantly, the 486 SNPs cover 33 genes deemed associated with Alzheimer's disease. In this case, $\mathbf{X}$ is a 632-by-486 matrix containing minor allele counts (i.e., 0, 1 or 2) for 486 SNPs of the 632 subjects. $\mathbf{Y}$ is a 632-by-15 matrix containing volumetric and cortical thickness measures for 15 regions of interest. For more details, see Greenlaw et al. (2017) [<doi:10.1093/bioinformatics/btx215>](https://academic.oup.com/bioinformatics/article/33/16/2513/3611271?login=false) and [bgsmtr](https://cran.r-project.org/web/packages/bgsmtr/index.html).
+This example dataset consists of 15 structural neuromaging measures and 486 single nucleotide polymorphisms (SNPs) determined from a sample of 632 subjects. Importantly, the 486 SNPs cover 33 genes deemed associated with Alzheimer's disease. In this case, $\mathbf{X}$ is a 632-by-486 matrix containing minor allele counts (i.e. 0, 1 or 2) for 486 SNPs on the 632 subjects. $\mathbf{Y}$ is a 632-by-15 matrix containing volumetric and cortical thickness measures for 15 regions of interest. For more details, see Greenlaw et al. (2017) [<doi:10.1093/bioinformatics/btx215>](https://academic.oup.com/bioinformatics/article/33/16/2513/3611271?login=false) and [bgsmtr](https://cran.r-project.org/web/packages/bgsmtr/index.html).
 
-First load the dataset and randomly split it into training and validation set. As a demonstration, we only use the SNPs with large variance (i.e., variance in the top 50% among all SNPs, $p$ = 243) as the predictor variables.
+First let's load the dataset and randomly split the data into training and validation sets. As a demonstration, we only use the SNPs with large variance (i.e. variance in the top 50% among all SNPs, $p$ = 243) as the predictor variables. In most practical cases, this kind of unsupervised filtering of variables for dimension reduction before analyses can help the algorithm make faster progress and get more robust results.
 ```{r, eval = FALSE}
+## Load data
 library(bgsmtr, quietly = TRUE)
 data(bgsmtr_example_data)
 
-## transpose data matrix to make rows correspond to 
-## samples and columns correspond to variables
-SNP <- t(bgsmtr_example_data$SNP_data)
-BM <- t(bgsmtr_example_data$BrainMeasures)
+## Transpose data matrix to make rows correspond to 
+## samples and columns correspond to variables.
+SNP <- t(bgsmtr_example_data$SNP_data)  ## Predictor matrix
+BM <- t(bgsmtr_example_data$BrainMeasures)  ## Response matrix
 
-## unsupervised filtering of top 50% variables
-SNP_subset <- apply(SNP, 2, var) > quantile(apply(SNP, 2, var), 0.5)
+## Unsupervised filtering of the top 50% variables.
+SNP_var <- apply(SNP, 2, var)
+SNP_subset <- SNP_var > quantile(SNP_var, 0.5)
 SNP <- SNP[ ,SNP_subset]
 
-set.seed(123)  ## a random seed for reproducibility
-tr <- sample(1:632, 550, replace = FALSE)  ## training set
-va <- c(1:632)[-tr]  ## validation set
+set.seed(123)  ## A random seed for reproducibility
+tr <- sample(1:632, 550, replace = FALSE)  ## Training set indices
+va <- c(1:632)[-tr]  ## Validation set indices
 
 cat("dim(SNP):", dim(SNP[tr, ]), "
 dim(BM):", dim(BM[tr, ]))
@@ -318,13 +348,15 @@ cat("dim(SNP): 550 243
 dim(BM): 550 15")
 ```
 
-Since this is a clean dataset, we manually add a little MCAR missing data to the matrix of brain measures with Bernoulli missing probability 0.05:
+Since this dataset does not contain missing values, we manually drop around 5% of values in the matrix of brain measures (outcomes) following the MCAR mechanism:
 ```{r, eval = FALSE}
-## generate the indicator matrix of missingness
+## Generate the indicator matrix of missingness.
 M <- matrix(1, nrow(BM), ncol(BM))
-NA.pos <- do.call("cbind", lapply(1:ncol(BM), function(x) {rbinom(nrow(BM), size = 1, prob = 0.05) == 1}))
-M[NA.pos] <- NA  ## all missing values should be coded as NAs or NaNs
-
+NA.pos <- do.call("cbind", lapply(1:ncol(BM), function(x) {
+  rbinom(nrow(BM), size = 1, prob = 0.05) == 1
+}))
+## All missing values should be coded as 'NA's or 'NaN's.
+M[NA.pos] <- NA
 BM.mis = BM * M
 
 cat(BM.mis[1:6, 5:8])
@@ -339,23 +371,30 @@ V5           -887.40929       -6789.0606      0.09203347       0.098447465
 V6            354.12157               NA     -0.32757347       0.310694508")
 ```
 
-We start analysis with a large-scope coarse search along the $\lambda$ surface by setting `lamBeta.scale.factor` and `lamTheta.scale.factor` to `3` (to magnify the `lambda.max`), while `lamBeta.min.ratio` and `lamTheta.min.ratio` are given a small value `1e-4` (the default) to ensure that the search domain covers the entire area of all possible solutions. As a rough search, the number of $\lambda$ values usually does not need to be very large, because we only need an approximate range of $\lambda$ where the smallest CV error is most likely to exist.
+We remark that this is a challenging task because the relatively small sample size and the existences of non-Gaussian variables make the estimation results have large variances, and heavily depend on how the data is split for the cross-validation, which is very likely to result in difficulty in convergence and abnormal cross-validation behaviors (e.g., the optimal area for $\lambda := (\lambda_B, \lambda_\Theta)$ is heavily skewed towards the boundary of the search domain). Therefore, we adopt a dynamic strategy of "coarse + fine" search here to avoid the unnecessary over-searching in those areas with obviously excessive cross-validated errors.
 
-We train the model without explicitly specifying the working missing probability `rho` (even if we know) and the $\lambda$ values (`lambda.Beta = NULL` and `lambda.Theta = NULL`), which is more in line with the real-world usage. Though many arguments take the defaults, we still try to assign as many commonly used as possible here.
-
-__NOTE__: this is a challenging task because the brain measures have completely different orders of magnitude and do not follow multivariate Gaussian very well, which is very likely to lead to a slow convergence rate and abnormal CV error behaviors (e.g., the optimal area is heavily skewed towards the boundaries of the search domain). Therefore, we adopt a strategy of "coarse + fine" search here to avoid unnecessary over-searches in the areas with obviously excessive errors. Even so, actually not all data needs such tedious two-step processing, we did this simply because of the high computational cost of this dataset that we knew beforehand, and sometimes the `lambda.min` may be not in the "safety" (middle) area depending on the data split.
+We first perform a large-scope coarse search for the optimal lambda pair $({\lambda_B}_\text{min}^\text{coarse}, {\lambda_\Theta}_\text{min}^\text{coarse})$ that achieves the minimum cross-validated error using `cv.missoNet`. We set `'lamBeta.scale.factor' = 3` and `'lamTheta.scale.factor' = 3` (the default is `1`) to raise the upper boundaries of the search ranges for $\lambda_B$ and $\lambda_\Theta$ (i.e. $\text{max}(\lambda_B)$ and $\text{max}(\lambda_\Theta)$) a little bit, meanwhile `'lamBeta.min.ratio'` and `'lamTheta.min.ratio'` are given a small value `1E-4` (the default) close to zero to ensure that the entire ranges of all possible solutions are covered. As a rough search, the number of lambda values (`'n.lamBeta'` and `'n.lamTheta'`) usually does not need to be very large, because we only need approximate ranges of $\lambda_B$ and $\lambda_\Theta$ where $({\lambda_B}_\text{min}^\text{coarse}, {\lambda_\Theta}_\text{min}^\text{coarse})$ is most likely to exist.
 ```{r, eval = FALSE}
-cvfit.BM <- cv.missoNet(X = SNP[tr, ], Y = BM.mis[tr, ], kfold = 5, rho = NULL,
-                        lambda.Beta = NULL, lambda.Theta = NULL,
+## Model I (the coarse-grid fit)
+
+## To be more in line with real-world usage, the model is trained without 
+## specified missing probability ('rho' = NULL, even though we know it is 0.05) 
+## and lambda sequences ('lambda.Beta' = NULL, 'lambda.Theta' = NULL), in which 
+## case the program will automatically determine reasonable values for users.
+
+cl <- parallel::makeCluster(3)
+cvfit.BM <- cv.missoNet(X = SNP[tr, ], Y = BM.mis[tr, ], kfold = 5, 
+                        rho = NULL, lambda.Beta = NULL, lambda.Theta = NULL,
                         lamBeta.min.ratio = 1e-4, lamTheta.min.ratio = 1e-4,
                         n.lamBeta = 20, n.lamTheta = 20,
                         lamBeta.scale.factor = 3, lamTheta.scale.factor = 3,
                         standardize = TRUE, standardize.response = TRUE,
                         permute = TRUE, with.seed = 433,
-                        parallel = TRUE, cpus = 3, verbose = 0)
+                        parallel = TRUE, cl = cl, verbose = 0)
+parallel::stopCluster(cl)
 ```
 
-Plot the heatmap of standardized mean CV error:
+Then we plot the heatmap of the standardized mean cross-validated errors:
 ```{r, eval = FALSE}
 plot(cvfit.BM)
 ```
@@ -363,32 +402,48 @@ plot(cvfit.BM)
 knitr::include_graphics(system.file("extdata", "cvfitBM.png", package = "missoNet"))
 ```
 
-Now we can adjust the $\lambda$ ranges for a further fine search according to the figure above. We noticed that the current optimal combination of $\lambda_{B}$ and $\lambda_\Theta$ achieving the smallest mean CV error is about (0.24, 0.62), while the largest values of $\lambda_B$ and $\lambda_\Theta$ for coarse searching are around 2.70 and 30.00, respectively. Therefore, we decide to shrink the `lamTheta.scale.factor` from `3` to `0.3` as we believe 3.00 is a more reasonable choice for the upper boundary of $\lambda_\Theta$. For the same reason, the smallest values of $\lambda_B$ and $\lambda_\Theta$ are determined to be 0.027 (= 2.70 * 0.01) and 0.03 (= 3.00 * 0.01) by setting `lamBeta.min.ratio` and `lamTheta.min.ratio` to `0.01`.
+Now we can choose better ranges of $\lambda_B$ and $\lambda_\Theta$ for a further fine-grid search according to the figure above. We observed that the current optimal $\lambda$ = $({\lambda_B}_\text{min}^\text{coarse}, {\lambda_\Theta}_\text{min}^\text{coarse})$ achieving the minimum cross-validated error (white box) is about (0.24, 0.62), while $\text{max}(\lambda_B)$ and $\text{max}(\lambda_\Theta)$ are around 2.66 (appropriate) and 29.94 (too large), respectively. Therefore, we decide to shrink `'lamTheta.scale.factor'` from `3` to `0.3` (= 3/10) as we believe 2.99 (= 29.94/10) is a more appropriate upper boundary for $\lambda_\Theta$. `'lamBeta.scale.factor'` can remain at `3` so that $\text{max}(\lambda_B)$ will still be 2.66. For the same reason, the new $\text{min}(\lambda_B)$ and $\text{min}(\lambda_\Theta)$ are determined to be 0.027 (= $2.66*0.01$) and 0.030 (= $2.99*0.01$) respectively by setting `'lamBeta.min.ratio' = 0.01` and `'lamTheta.min.ratio' = 0.01`.
 
-Because we are going to do a fine search, the number of $\lambda$ values can be slightly increased. Typically we suggest `n.X = -log10(X.min.ratio) * c`, where `c` $\in$ [10, 20] (`X` is a placeholder for `lamBeta` or `lamTheta`), to achieve a balance between the computational precision and speed.
+> **_TIPS:_** Sometimes the lambda sequences automatically computed by the program may have inappropriate ranges, if the optimal lambda pair `"lambda.min"` := $({\lambda_B}_\text{min}, {\lambda_\Theta}_\text{min})$ selected by the cross-validation is located at the boundary of the search domain, users can use the arguments `'x.scale.factor'` and/or `'x.min.ratio'` to shift and/or zoom the search ranges accordingly.
 
-__TIPS__: More often, real data may produce strange error shapes such that the optimal $\lambda$ pair (`lambda.min`) may appear at the boundaries of the search domain. In this case, users need to adjust the `scale.factor` and/or the `min.ratio` to shift and/or zoom the search ranges of $\lambda_B$ and $\lambda_\Theta$ accordingly.
+Because we are going to do a fine-grid search, the number of lambda values can be slightly increased (here we increase `'n.lamBeta'` and `'n.lamTheta'` from `20` to `40`). Typically we suggest `'n.x' = -log10('x.min.ratio') * c`, where `c` $\in$ [10, 20] (`x` is a placeholder for `lamBeta` or `lamTheta`), to achieve a balance between the computational fidelity and speed.
 ```{r, eval = FALSE}
-## for brevity, arguments take the defaults are not specified explicitly
+## Model II (the fine-grid fit)
+
+## For brevity, arguments taking the defaults are not specified explicitly.
+cl <- parallel::makeCluster(3)
 cvfit2.BM <- cv.missoNet(X = SNP[tr, ], Y = BM.mis[tr, ], kfold = 5,
                          lamBeta.min.ratio = 0.01, lamTheta.min.ratio = 0.01,
                          n.lamBeta = 40, n.lamTheta = 40,
                          lamBeta.scale.factor = 3, lamTheta.scale.factor = 0.3,
-                         fit.relax = TRUE, fit.1se = FALSE,
-                         permute = TRUE, with.seed = 433,
-                         parallel = TRUE, cpus = 3, verbose = 0)
+                         fit.relax = TRUE, permute = TRUE, with.seed = 433,
+                         parallel = TRUE, cl = cl, verbose = 0)
+parallel::stopCluster(cl)
+
+## Certainly, users can specify the lambda values (linear on the log scale) by themselves
+## for the cross-validation search rather than use the control arguments. The following 
+## commands should return almost the same results as the above ones (subtle difference 
+## comes from rounding the float numbers).
+
+# cl <- parallel::makeCluster(3)
+# cvfit2.BM <- cv.missoNet(X = SNP[tr, ], Y = BM.mis[tr, ], kfold = 5,
+#                          lambda.Beta = 10^(seq(from = log10(2.66), to = log10(2.66*0.01), length.out = 40)),
+#                          lambda.Theta = 10^(seq(from = log10(2.99), to = log10(2.99*0.01), length.out = 40)),
+#                          fit.relax = TRUE, permute = TRUE, with.seed = 433,
+#                          parallel = TRUE, cl = cl, verbose = 0)
+# parallel::stopCluster(cl)
 ```
 
-Plot the standardized mean CV error of this refitted model, `detailed.axes = FALSE` can prevent axes to get squeezed together:
+Plot the standardized mean cross-validated errors of this refitted model, `'detailed.axes' = FALSE` can prevent axes to get squeezed together:
 ```{r, eval = FALSE}
-cat("`lambda.min`:
+cat("\"lambda.min\":
   - lambda.Beta:", cvfit2.BM$est.min$lambda.Beta, "
   - lambda.Theta:", cvfit2.BM$est.min$lambda.Theta)
 
 plot(cvfit2.BM, detailed.axes = FALSE)
 ```
 ```{r, echo = FALSE}
-cat("`lambda.min`:
+cat("\"lambda.min\":
   - lambda.Beta: 0.198283
   - lambda.Theta: 0.573265")
 ```
@@ -396,11 +451,11 @@ cat("`lambda.min`:
 knitr::include_graphics(system.file("extdata", "cvfit2BM.png", package = "missoNet"))
 ```
 
-We found the new `lambda.min` = (0.20, 0.57) is actually very close to the one from the coarse search (0.24, 0.62), proving that a single search can provide considerable accuracy most of the time. For the sake of brevity, we shall skip the discussion of `lambda.1se` here. 
+We found the new `"lambda.min"` = $({\lambda_B}_\text{min}^\text{fine}, {\lambda_\Theta}_\text{min}^\text{fine})$ is (0.20, 0.57), which is actually very close to the one from the coarse search $({\lambda_B}_\text{min}^\text{coarse}, {\lambda_\Theta}_\text{min}^\text{coarse})$ = (0.24, 0.62), showing that one single search is able to provide reasonable accuracy most of the time as long as sufficiently large search ranges are given.
 
-As we did before, the estimated parameters $\hat{\mathbf{B}}$ and $\hat{\mathbf{\Theta}}$ at `lambda.min` can be visualized in the form of heatmap:
+As we did before, the estimated parameters $\hat{\mathbf{B}}$ and $\hat{\mathbf{\Theta}}$ at the new `"lambda.min"` can be visualized by heatmaps. For the sake of brevity, we shall skip the discussion of `"lambda.1se.Beta"` and `"lambda.1se.Theta"` here. 
 ```{r, eval = FALSE}
-## Theta_hat at `lambda.min`
+## Theta_hat at "lambda.min"
 Theta_hat <- cvfit2.BM$est.min$Theta
 rownames(Theta_hat) <- colnames(Theta_hat) <- colnames(BM)
 col <- circlize::colorRamp2(c(-2, 0, 2), c("blue", "white", "red"))
@@ -408,7 +463,7 @@ ht1 <- plot_heatmap(Theta_hat, col = col, legend = TRUE, lgd_name = "values",
                     title = expression(paste(hat(bold(Theta)), " at `lambda.min` (unclustered)")))
 plot(ht1)
 
-## Beta_hat at `lambda.min`
+## Beta_hat at "lambda.min"
 Beta_hat <- cvfit2.BM$est.min$Beta
 colnames(Beta_hat) <- colnames(BM)
 col <- circlize::colorRamp2(c(-0.05, 0, 0.05), c("blue", "white", "red"))
@@ -416,7 +471,7 @@ ht2 <- plot_heatmap(Beta_hat, col = col, legend = TRUE, lgd_name = "values",
                     title = expression(paste(hat(bold(Beta)), " at `lambda.min` (unclustered)")))
 plot(ht2)
 
-## relaxed network
+## Relaxed network
 relax.net <- cvfit2.BM$est.min$relax.net
 rownames(relax.net) <- colnames(relax.net) <- colnames(BM)
 col <- circlize::colorRamp2(c(-4, 0, 4), c("blue", "white", "red"))
@@ -424,9 +479,9 @@ ht3 <- plot_heatmap(relax.net, col = col, legend = TRUE, lgd_name = "values",
                     title = "Relaxed fit of network (unclustered)")
 plot(ht3)
 
-## plot the partial correlation matrix of the 15 neuroimaging measures
-## must use a complete dataset, here we use the clean data
-pcor.mat <- ppcor::pcor(BM)
+## Plot the partial correlation matrix of the 15 neuroimaging measures.
+## Must supply a dataset without missing values, so we use the original dataset here.
+pcor.mat <- ppcor::pcor(BM)  ## Not BM.mis
 corrplot::corrplot(pcor.mat$estimate, p.mat = pcor.mat$p.value, 
                    sig.level = 0.01, insig = "blank", 
                    tl.cex = 0.5, tl.col = "black", mar = c(.5, .1, 2, .1),
@@ -437,13 +492,13 @@ corrplot::corrplot(pcor.mat$estimate, p.mat = pcor.mat$p.value,
 knitr::include_graphics(system.file("extdata", "BMcomb.png", package = "missoNet"))
 ```
 
-The conditional network structure can be represented by an undirected graph $\mathcal{G}$, consisting of a set of vertices $V$ and a set of edges $E$, where an edge connects a pair of variables if and only if they are conditionally dependent. One important feature of **missoNet** is that the program supports fitting a relaxed conditional graphical model upon response variables (by setting `fit.relax = TRUE`). The active edges (non-zero off-diagonal elements) of $\hat{\mathbf{\Theta}}$ will be re-estimated without penalization (`lambda.Theta = 0`), such a debiased estimate of the network structure would be useful for exploring the conditional inter-dependencies among traits of interest.
+The conditional network structure $\hat{\mathbf{\Theta}}$ can be represented by an undirected graph $\mathcal{G}$, consisting of a set of vertices $V$ and a set of edges $E$, where an edge connects a pair of variables ($Y_j$ and $Y_k$) if and only if they are conditionally dependent ($\hat{\mathbf{\Theta}}_{jk} \neq 0$). One important feature of **missoNet** is that the program supports fitting a relaxed conditional graphical model upon response variables (by setting `'fit.relax' = TRUE`). The active edges (non-zero off-diagonal elements) of $\hat{\mathbf{\Theta}}$ will be re-estimated without penalization (`'lambda.Theta' = 0`), such a debiased estimate of the network structure would be useful for exploring the conditional interdependencies among traits of interest.
 
-The two figures in the second row above show the relaxed conditional network and partial correlation matrix of the 15 neuroimaging measures. As will be readily seen that **missoNet** sharply reduces potential noisy dependencies compared with the naive partial correlation analysis (insignificant correlations $p>0.01$ were not plotted), by regressing on SNPs and adjusting for the genetic effects, which helps us better focus on those truly important, and non-genetic induced connections. Moreover, we have to emphasize that unlike the traditional partial correlation analysis requesting complete datasets (although pair-wise complete cases can be used, the results tend to be biased), **missoNet** substantially reduces the difficulty of data acquisition and processing by allowing for missing values.
+The two figures in the second row above show the relaxed conditional network and the partial correlation matrix of the 15 neuroimaging measures. As will be readily seen that **missoNet** sharply simplifies dependencies compared with the naive partial correlation analysis below right (insignificant correlations with $p>0.01$ were not plotted), by regressing on SNPs and adjusting for the genetic effects, which helps us better focus on those truly important, and non-genetic induced connections in brain. Moreover, we have to emphasize that unlike the traditional partial correlation analysis which requires complete datasets (although pair-wise complete cases can be used, the results tend to be biased), **missoNet** substantially reduces the difficulty of data acquisition and processing by allowing for missing values in the tasks.
 
-Clustering the coefficient matrix $\hat{\mathbf{B}}$ by rows (SNPs) in an unsupervised manner:
+If we cluster the estimated coefficient matrix $\hat{\mathbf{B}}$ by rows (SNPs) in an unsupervised manner:
 ```{r, eval = FALSE}
-colnames(Beta_hat) <- colnames(BM)  ## brain measure names
+colnames(Beta_hat) <- colnames(BM)  ## Brain measure names
 rownames(Beta_hat) <- colnames(SNP)  ## SNP names
 Gene_groups <- bgsmtr_example_data$SNP_groups[SNP_subset]
 
@@ -451,10 +506,10 @@ ComplexHeatmap::pheatmap(Beta_hat,
                          annotation_row = data.frame("Gene" = Gene_groups, row.names = rownames(Beta_hat)),
                          color = circlize::colorRamp2(c(-0.05,0,0.05), c("blue","white","red")), show_rownames = FALSE,
                          border_color = NA, border = TRUE, name = "values", cluster_rows = TRUE, cluster_cols = FALSE,
-                         column_title = expression(paste(hat(bold(Beta)), " at `lambda.min` (unclustered)")))
+                         column_title = expression(paste(hat(bold(Beta)), " at `lambda.min` (clustered)")))
 ```
 ```{r, eval = FALSE, include = FALSE}
-set.seed(34)  # seed for legend colors
+set.seed(34)  # Seed for legend colors
 ComplexHeatmap::pheatmap(cvfit2.BM$est.min$Beta,
                          annotation_row = data.frame("Gene" = cvfit2.BM$Gene, row.names = rownames(cvfit2.BM$est.min$Beta)),
                          color = circlize::colorRamp2(c(-0.05,0,0.05), c("blue","white","red")), show_rownames = FALSE,
@@ -466,36 +521,39 @@ ComplexHeatmap::pheatmap(cvfit2.BM$est.min$Beta,
 knitr::include_graphics(system.file("extdata", "cvfit2BMclustB.png", package = "missoNet"))
 ```
 
-The figure depicts a very large proportion of coefficients with zero values, and there is an obvious clustering of the contributing SNPs with respect to the genes (see row-wise annotation), implying potential pathways between certain SNPs and changes in the local structures of brain.
+The figure above depicts a very large proportion of coefficients with zero values, and there is an obvious clustering of the contributing SNPs with respect to the genes (see row-wise annotation), implying potential pathways between certain SNPs and changes in the local structures of brain.
 
-Finally, we end this section by training the model on the clean data:
+Finally, we end this section by refitting the model using the original dataset without missing values:
 ```{r, eval = FALSE}
-## all arguments are kept unchanged
-## only BM.mis -> BM
+## Model III (the complete-data fit)
+
+## All arguments are kept unchanged compared to model II, except BM.mis -> BM.
+cl <- parallel::makeCluster(3)
 cvfit3.BM <- cv.missoNet(X = SNP[tr, ], Y = BM[tr, ], kfold = 5,
                          lamBeta.min.ratio = 0.01, lamTheta.min.ratio = 0.01,
                          n.lamBeta = 40, n.lamTheta = 40,
                          lamBeta.scale.factor = 3, lamTheta.scale.factor = 0.3,
-                         fit.relax = FALSE, fit.1se = FALSE,
-                         permute = TRUE, with.seed = 433,
-                         parallel = TRUE, cpus = 3, verbose = 0)
+                         fit.relax = TRUE, permute = TRUE, with.seed = 433,
+                         parallel = TRUE, cl = cl, verbose = 0)
+parallel::stopCluster(cl)
 ```
 
-Then we can assess the prediction performance of the models trained using the corrupted vs. clean data. As expected, there is no obvious difference between the two models with regard to the mean absolute prediction error (MAE) on the validation set, since we generated missing data simply following MCAR.
+Then we can assess the prediction performance of the models trained using the corrupted vs. complete dataset.
 ```{r, eval = FALSE}
-## predictions on the validation set
-newy.mis <- predict(cvfit2.BM, newx = SNP[va, ], s = "lambda.min")
-newy <- predict(cvfit3.BM, newx = SNP[va, ], s = "lambda.min")
+## Predictions on the validation dataset
+newy.model2 <- predict(cvfit2.BM, newx = SNP[va, ], s = "lambda.min")
+newy.model3 <- predict(cvfit3.BM, newx = SNP[va, ], s = "lambda.min")
 
-cat("MAE on the validation set:
-  - Model II (corrupted):", mean(abs(BM[va, ] - newy.mis)), "
-  - Model III (clean):", mean(abs(BM[va, ] - newy)))
+cat("MAE on the validation dataset:
+  - Model II (corrupted):", mean(abs(BM[va, ] - newy.model2)), "
+  - Model III (complete):", mean(abs(BM[va, ] - newy.model3)))
 ```
 ```{r, echo = FALSE}
-cat("MAE on the validation set:
+cat("MAE on the validation dataset:
   - Model II (corrupted): 2543.588
-  - Model III (clean): 2543.591")
+  - Model III (complete): 2543.591")
 ```
 
+As expected, there is no obvious difference between the two models with regard to the mean absolute prediction error (MAE) on the validation dataset, since we generated the missing data simply following the MCAR mechanism. Real missing data usually falls on a continuum between one extreme -- where the systematic missingness pattern depends entirely on the observed data (pure MAR), and the other extreme -- where the systematic missingness pattern depends entirely on the missing data (pure MNAR). Even in this case, **missoNet** can still provide good enough estimates compared with those algorithms that cannot tolerate missing values.
 
-## References
+# References

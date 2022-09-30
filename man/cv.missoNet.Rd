@@ -32,93 +32,200 @@ cv.missoNet(
   permute = TRUE,
   with.seed = NULL,
   parallel = FALSE,
-  cpus = 2,
+  cl = NULL,
   verbose = 1
 )
 }
 \arguments{
-\item{X}{Numeric predictor matrix (\eqn{n\times p}{n x p}): columns correspond to predictor variables and rows correspond to samples. Missing values are not allowed. Do not include a column of ones.}
+\item{X}{Numeric predictor matrix (\eqn{n\times p}): columns correspond to predictor variables and rows correspond to samples. Missing values are not allowed. There is no need for centering or scaling of the variables. \code{'X'} should not include a column of ones for an intercept.}
 
-\item{Y}{Numeric response matrix (\eqn{n\times q}{n x q}): columns correspond to response variables and rows correspond to samples. Missing values should be coded as `\code{NA}`s or `\code{NaN}`s.}
+\item{Y}{Numeric response matrix (\eqn{n\times q}): columns correspond to response variables and rows correspond to samples. Missing values should be coded as either \code{'NA'}s or \code{'NaN'}s. There is no need for centering or scaling of the variables.}
 
-\item{kfold}{Number of folds -- the default is `\code{5}`.}
+\item{kfold}{Number of folds for cross-validation -- the default is \code{'5'}.}
 
-\item{rho}{(Optional) A scalar or a numeric vector of length \eqn{q}{q}: an user-supplied missing probability for response variables. Default is `\code{rho = NULL}` and the program will compute the empirical missing rates for columns of `\code{Y}` and use them as the working missing probability.}
+\item{rho}{(Optional) A scalar or a numeric vector of length \eqn{q}: the elements are user-supplied probabilities of missingness for the response variables. The default is \code{'rho = NULL'} and the program will compute the empirical missing rates for each of the columns of \code{'Y'} and use them as the working missing probabilities. The default setting should suffice in most cases; misspecified missing probabilities would introduce biases into the model.}
 
-\item{lambda.Beta}{(Optional) Numeric vector: an user-supplied sequence of non-negative \eqn{\lambda}{`\code{lambda}`} values for regularizing \eqn{\mathbf{B}}{`\code{Beta}`} from which the CV procedure searches. Default is `\code{lambda.Beta = NULL}` and the program computes an appropriate \eqn{\lambda_B}{`\code{lambda.Beta}`} sequence based on `\code{n.lamBeta}` and `\code{lamBeta.min.ratio}`, supplying a vector overrides this. The sequence supplied will be automatically arranged in a descending order internally.}
+\item{lambda.Beta}{(Optional) Numeric vector: a user-supplied sequence of non-negative values for \eqn{\lambda_B} penalizing the elements of the coefficient matrix \eqn{\mathbf{B}} among which the cross-validation procedure searches. The default is \code{'lambda.Beta = NULL'}, in which case the program computes an appropriate range of \eqn{\lambda_B} values using \code{'n.lamBeta'} and \code{'lamBeta.min.ratio'}. Supplying a vector overrides this default. Note that the supplied sequence will be automatically arranged, internally, in a descending order.}
 
-\item{lambda.Theta}{(Optional) Numeric vector: an user-supplied sequence of non-negative \eqn{\lambda}{`\code{lambda}`} values for regularizing \eqn{\mathbf{\Theta}}{`\code{Theta}`} from which the CV procedure searches. Default is `\code{lambda.Theta = NULL}` and the program computes an appropriate \eqn{\lambda_\Theta}{`\code{lambda.Theta}`} sequence based on `\code{n.lamTheta}` and `\code{lamTheta.min.ratio}`, supplying a vector overrides this. The sequence supplied will be automatically arranged in a descending order internally.}
+\item{lambda.Theta}{(Optional) Numeric vector: a user-supplied sequence of non-negative values for \eqn{\lambda_\Theta} penalizing the (off-diagonal) elements of the precision matrix \eqn{\mathbf{\Theta}} among which the cross-validation procedure searches. The default is \code{'lambda.Theta = NULL'}, in which case the program computes an appropriate range of \eqn{\lambda_\Theta} values using \code{'n.lamTheta'} and \code{'lamTheta.min.ratio'}. Supplying a vector overrides this default. Note that the supplied sequence will be automatically arranged, internally, in a descending order.}
 
-\item{lamBeta.min.ratio}{The smallest value of \eqn{\lambda_B}{`\code{lambda.Beta}`} will be the data-derived `\code{lambda.Beta.max}` multiplied by `\code{lamBeta.min.ratio}`. The default depends on the sample size \eqn{n}{n} relative to the number of predictors \eqn{p}{p}. If \eqn{n > p}{n > p}, the default is `1.0E-4`, otherwise it is `1.0E-2`. A very small value of `\code{lamBeta.min.ratio}` may significantly increase the runtime and lead to a saturated fit in the \eqn{n \leq p}{n <= p} case. Only needed when `\code{lambda.Beta = NULL}`.}
+\item{lamBeta.min.ratio}{The smallest value of \eqn{\lambda_B} is calculated as the data-derived \eqn{\mathrm{max}(\lambda_B)} multiplied by \code{'lamBeta.min.ratio'}. The default depends on the sample size, \eqn{n}, relative to the number of predictors, \eqn{p}. If \eqn{n > p}, the default is \code{'1.0E-4'}, otherwise it is \code{'1.0E-2'}. A very small value of \code{'lamBeta.min.ratio'} may significantly increase runtime and lead to a saturated fit in the \eqn{n \leq p} case. This is only needed when \code{'lambda.Beta = NULL'}.}
 
-\item{lamTheta.min.ratio}{The smallest value of \eqn{\lambda_\Theta}{`\code{lambda.Theta}`} will be the data-derived `\code{lambda.Theta.max}` multiplied by `\code{lamTheta.min.ratio}`. The default depends on the sample size \eqn{n}{n} relative to the number of responses \eqn{q}{q}. If \eqn{n > q}{n > q}, the default is `1.0E-4`, otherwise it is `1.0E-2`. A very small value of `\code{lamTheta.min.ratio}` may significantly increase the runtime and lead to a saturated fit in the \eqn{n \leq q}{n <= q} case. Only needed when `\code{lambda.Theta = NULL}`.}
+\item{lamTheta.min.ratio}{The smallest value of \eqn{\lambda_\Theta} is calculated as the data-derived \eqn{\mathrm{max}(\lambda_\Theta)} multiplied by \code{'lamTheta.min.ratio'}. The default depends on the sample size, \eqn{n}, relative to the number of responses, \eqn{q}. If \eqn{n > q}, the default is \code{'1.0E-4'}, otherwise it is \code{'1.0E-2'}. A very small value of \code{'lamTheta.min.ratio'} may significantly increase runtime and lead to a saturated fit in the \eqn{n \leq q} case. This is only needed when \code{'lambda.Theta = NULL'}.}
 
-\item{n.lamBeta}{The number of \eqn{\lambda_B}{`\code{lambda.Beta}`} values. If \eqn{n > p}{n > p}, the default is `40`, otherwise it is `20`. Avoid supplying a huge number since the program will fit `n.lamBeta * n.lamTheta` models in total for each fold of CV, typically we suggest `n.lamBeta = -log10(lamBeta.min.ratio) * c`, where `c` \eqn{\in} [10, 20]. Only needed when `\code{lambda.Beta = NULL}`.}
+\item{n.lamBeta}{The number of \eqn{\lambda_B} values. If \eqn{n > p}, the default is \code{'40'}, otherwise it is \code{'20'}. Avoid supplying an excessively large number since the program will fit (\code{'n.lamBeta'} \code{*} \code{'n.lamTheta'}) models in total for each fold of the cross-validation. Typically we suggest \code{'n.lamBeta' = -log10('lamBeta.min.ratio') * c}, where \code{c} \eqn{\in} [\code{10}, \code{20}]. This is only needed when \code{'lambda.Beta = NULL'}.}
 
-\item{n.lamTheta}{The number of \eqn{\lambda_\Theta}{`\code{lambda.Theta}`} values. If \eqn{n > q}{n > q}, the default is `40`, otherwise it is `20`. Avoid supplying a huge number since the program will fit `n.lamBeta * n.lamTheta` models in total for each fold of CV, typically we suggest `n.lamTheta = -log10(lamTheta.min.ratio) * c`, where `c` \eqn{\in} [10, 20]. Only needed when `\code{lambda.Theta = NULL}`.}
+\item{n.lamTheta}{The number of \eqn{\lambda_\Theta} values. If \eqn{n > q}, the default is \code{'40'}, otherwise it is \code{'20'}. Avoid supplying an excessively large number since the program will fit (\code{'n.lamBeta'} \code{*} \code{'n.lamTheta'}) models in total for each fold of the cross-validation. Typically we suggest \code{'n.lamTheta' = -log10('lamTheta.min.ratio') * c}, where \code{c} \eqn{\in} [\code{10}, \code{20}]. This is only needed when \code{'lambda.Theta = NULL'}.}
 
-\item{lamBeta.scale.factor}{A positive multiplication factor for scaling the entire \eqn{\lambda_B}{`\code{lambda.Beta}`} sequence; the default is `1`. A typical usage scenario is when the optimal selection of \eqn{\lambda_B}{`\code{lambda.Beta}`} approaches the boundaries of the search range. Only needed when `\code{lambda.Beta = NULL}`.}
+\item{lamBeta.scale.factor}{A positive multiplication factor for scaling the entire \eqn{\lambda_B} sequence; the default is \code{'1'}. A typical usage is when the magnitudes of the auto-computed \eqn{\lambda_B} values are inappropriate. For example, this factor would be needed if the optimal value of \eqn{\lambda_B} selected by the cross-validation (i.e. \eqn{{\lambda_B}_\mathrm{min}} with the minimum cross-validated error) approaches either boundary of the search range. This is only needed when \code{'lambda.Beta = NULL'}.}
 
-\item{lamTheta.scale.factor}{A positive multiplication factor for scaling the entire \eqn{\lambda_\Theta}{`\code{lambda.Theta}`} sequence; the default is `1`. A typical usage scenario is when the optimal selection of \eqn{\lambda_\Theta}{`\code{lambda.Theta}`} approaches the boundaries of the search range. Only needed when `\code{lambda.Theta = NULL}`.}
+\item{lamTheta.scale.factor}{A positive multiplication factor for scaling the entire \eqn{\lambda_\Theta} sequence; the default is \code{'1'}. A typical usage is when the magnitudes of the auto-computed \eqn{\lambda_\Theta} values are inappropriate. For example, this factor would be needed if the optimal value of \eqn{\lambda_\Theta} selected by the cross-validation (i.e. \eqn{{\lambda_\Theta}_\mathrm{min}} with the minimum cross-validated error) approaches either boundary of the search range. This is only needed when \code{'lambda.Theta = NULL'}.}
 
-\item{Beta.maxit}{The maximum number of iterations of the FISTA algorithm. Default is `\code{Beta.maxit = 1000}`.}
+\item{Beta.maxit}{The maximum number of iterations of the fast iterative shrinkage-thresholding algorithm (FISTA) for updating \eqn{\hat{\mathbf{B}}}. The default is \code{'Beta.maxit = 1000'}.}
 
-\item{Beta.thr}{The convergence threshold for updating \eqn{\mathbf{B}}{`\code{Beta}`}; default is `\code{Beta.thr = 1.0E-4}`. Iterations stop when absolute parameter change is less than `\code{Beta.thr * sum(abs(Beta))}`.}
+\item{Beta.thr}{The convergence threshold of the FISTA algorithm for updating \eqn{\hat{\mathbf{B}}}; the default is \code{'Beta.thr = 1.0E-4'}. Iterations stop when the absolute parameter change is less than (\code{'Beta.thr'} \code{*} \code{sum(abs(}\eqn{\hat{\mathbf{B}}}\code{))}).}
 
-\item{eta}{The backtracking line search shrinkage factor, default is `\code{eta = 0.8}`. Most users can use the default value, some experienced users may want to adjust `\code{eta}` according to the dataset's properties for a faster \eqn{\mathbf{B}}{`\code{Beta}`} convergence. Note that `\code{eta}` must be in (0, 1).}
+\item{eta}{The backtracking line search shrinkage factor; the default is \code{'eta = 0.8'}. Most users will be able to use the default value, some experienced users may want to tune \code{'eta'} according to the properties of a specific dataset for a faster convergence of the FISTA algorithm. Note that \code{'eta'} must be in (0, 1).}
 
-\item{Theta.maxit}{The maximum number of iterations of the \code{glasso} algorithm. Default is `\code{Theta.maxit = 1000}`.}
+\item{Theta.maxit}{The maximum number of iterations of the \sQuote{\code{\link{glasso}}} algorithm for updating \eqn{\hat{\mathbf{\Theta}}}. The default is \code{'Theta.maxit = 1000'}.}
 
-\item{Theta.thr}{The convergence threshold for updating \eqn{\mathbf{\Theta}}{`\code{Theta}`}; default is `\code{Theta.thr = 1.0E-4}`. Iterations stop when average absolute parameter change is less than `\code{Theta.thr * ave(abs(offdiag(S)))}`, where `S` denotes the working empirical covariance matrix.}
+\item{Theta.thr}{The convergence threshold of the \sQuote{\code{\link{glasso}}} algorithm for updating \eqn{\hat{\mathbf{\Theta}}}; the default is \code{'Theta.thr = 1.0E-4'}. Iterations stop when the average absolute parameter change is less than (\code{'Theta.thr'} \code{*} \code{ave(abs(offdiag(}\eqn{\hat{\mathbf{\Sigma}}}\code{)))}), where \eqn{\hat{\mathbf{\Sigma}}} denotes the empirical working covariance matrix.}
 
-\item{eps}{A numeric tolerance level for the L1 projection of the empirical covariance matrix; default is `\code{eps = 1.0E-8}`. The empirical covariance matrix will be projected onto a L1 ball to have `\code{min(eigen(S)$value) == eps}`, if any of the eigenvalues is less than the specified tolerance. Most users can use the default value.}
+\item{eps}{A numeric tolerance level for the L1 projection of the empirical covariance matrix; the default is \code{'eps = 1.0E-8'}. The empirical covariance matrix will be projected onto a L1 ball to have \code{min(eigen(}\eqn{\hat{\mathbf{\Sigma}}}\code{)$value)} == \code{'eps'}, if any of the eigenvalues is less than the specified tolerance. Most users will be able to use the default value.}
 
-\item{penalize.diagonal}{Logical: should the diagonal of \eqn{\mathbf{\Theta}}{`\code{Theta}`} be penalized? The default depends on the sample size \eqn{n}{n} relative to the number of predictors and responses. If \eqn{n > \text{max}(p, q)}{n > max(p, q)}, the default is `TRUE`, otherwise it is set to `FALSE`.}
+\item{penalize.diagonal}{Logical: should the diagonal elements of \eqn{\mathbf{\Theta}} be penalized? The default depends on the sample size, \eqn{n}, relative to the number of predictors and responses. If \eqn{n > \mathrm{max}(p, q)}, the default is \code{'TRUE'}, otherwise it is set to \code{'FALSE'}. Most users will be able to use the default setting.}
 
-\item{diag.penalty.factor}{Numeric: a separate penalty factor for the diagonal entries of \eqn{\mathbf{\Theta}}{`\code{Theta}`} when `\code{penalize.diagonal = TRUE}`. \eqn{\lambda_\Theta}{`\code{lambda.Theta}`} is multiplied by this number to allow a differential shrinkage of the diagonal. The default is `\code{NULL}` and the program can compute it based on an initial estimate of \eqn{\mathbf{\Theta}}{`\code{Theta}`}. Could be `0` for no shrinkage (equivalent to `\code{penalize.diagonal = FALSE}`).}
+\item{diag.penalty.factor}{Numeric: a separate penalty multiplication factor for the diagonal elements of \eqn{\mathbf{\Theta}} when \code{'penalize.diagonal = TRUE'}. \eqn{\lambda_\Theta} is multiplied by this number to allow a differential shrinkage of the diagonal elements. The default is \code{'NULL'} and the program will guess a value based on an initial estimate of \eqn{\mathbf{\Theta}}. This factor could be \code{'0'} for no shrinkage (equivalent to \code{'penalize.diagonal = FALSE'}). Most users will be able to use the default value.}
 
-\item{standardize}{Logical: should the columns of `\code{X}` be standardized so each has unit length? The default is `\code{TRUE}`. The estimated parameters will always be returned on the original scale. If `\code{X}` has been standardized prior to fitting the model, you might not wish to standardize.}
+\item{standardize}{Logical: should the columns of \code{'X'} be standardized so each has unit variance? The default is \code{'TRUE'}. The estimated results will always be returned on the original scale. \sQuote{\code{cv.missoNet}} computes appropriate \eqn{\lambda} sequences relying on standardization, if \code{'X'} has been standardized prior to fitting the model, you might not wish to standardize it inside the algorithm.}
 
-\item{standardize.response}{Logical: should the columns of `\code{Y}` be standardized so each has unit length? The default is `\code{TRUE}`. The estimated parameters will be returned on the original scale. If `\code{Y}` has been standardized prior to fitting the model, you might not wish to standardize.}
+\item{standardize.response}{Logical: should the columns of \code{'Y'} be standardized so each has unit variance? The default is \code{'TRUE'}. The estimated results will always be returned on the original scale. \sQuote{\code{cv.missoNet}} computes appropriate \eqn{\lambda} sequences relying on standardization, if \code{'Y'} has been standardized prior to fitting the model, you might not wish to standardize it inside the algorithm.}
 
-\item{fit.1se}{Logical: should the model be refitted at the largest \eqn{\lambda_B}{`\code{lambda.Beta}`} and \eqn{\lambda_\Theta}{`\code{lambda.Theta}`} according to the one-standard-error rule? The default is `\code{FALSE}`.}
+\item{fit.1se}{Logical: the default is \code{'FALSE'}. If \code{'TRUE'}, two additional models will be fitted with the largest values of \eqn{\lambda_B} and \eqn{\lambda_\Theta} respectively at which the cross-validated error is within one standard error of the minimum.}
 
-\item{fit.relax}{Logical: the default is `\code{FALSE}`. If `\code{TRUE}`, the program will re-estimate the edges (off-diagonal elements) in the active set of \eqn{\mathbf{\Theta}}{`\code{Theta}`} without penalization (\eqn{\lambda_\Theta=0}{`\code{lambda.Theta = 0}`}), which could be useful for further analyses of conditional inter-dependencies. WARNING: there may be convergence issues if the empirical covariance matrix is not of full rank (e.g., \eqn{n < q)}{n < q}).}
+\item{fit.relax}{Logical: the default is \code{'FALSE'}. If \code{'TRUE'}, the program will re-estimate the edges in the active set (i.e. nonzero off-diagonal elements) of the network structure \eqn{\hat{\mathbf{\Theta}}} without penalization (\eqn{\lambda_\Theta=0}). This debiased estimate of \eqn{\mathbf{\Theta}} could be useful for some interdependency analyses. WARNING: there may be convergence issues if the empirical covariance matrix is not of full rank (e.g., \eqn{n < q)}).}
 
-\item{permute}{Logical: should the subject indices for CV be permuted? The default is `\code{TRUE}`.}
+\item{permute}{Logical: should the subject indices for the cross-validation be permuted? The default is \code{'TRUE'}.}
 
-\item{with.seed}{A random seed for permutation.}
+\item{with.seed}{A random seed for the permutation.}
 
-\item{parallel}{Logical: the default is `\code{FALSE}`. If `\code{TRUE}`, the program uses parallel clusters to fit each fold of CV.}
+\item{parallel}{Logical: the default is \code{'FALSE'}. If \code{'TRUE'}, the program uses clusters to compute the cross-validation folds in parallel. Must register parallel clusters beforehand, see examples below.}
 
-\item{cpus}{Number of cores for parallelization. Only needed when `\code{parallel = TRUE}`.}
+\item{cl}{A cluster object created by \sQuote{\code{parallel::makeCluster}} for parallel evaluations. This is only needed when \code{'parallel = TRUE'}.}
 
-\item{verbose}{Value of `0`, `1` or `2`. `verbose = 0` -- silent; `verbose = 1` -- limited tracing; `verbose = 2` -- detailed tracing. Limited tracing if `\code{parallel = TRUE}`.}
+\item{verbose}{Value of \code{'0'}, \code{'1'} or \code{'2'}. \code{'verbose = 0'} -- silent; \code{'verbose = 1'} (the default) -- limited tracing with progress bars; \code{'verbose = 2'} -- detailed tracing. Note that displaying the progress bars slightly increases the computation overhead compared to the silent mode. The detailed tracing should be used for monitoring progress only when the program runs extremely slowly, and it is not supported under \code{'parallel = TRUE'}.}
 }
 \value{
-This function returns a `\code{cv.missoNet}` object containing a named `\code{list}` with all the ingredients of the cross-validated fit:
-\item{\code{est.min}}{A list of parameters estimated at `\code{lambda.min}` that gives the smallest mean CV error. It consists of the following components:
+This function returns a \code{'cv.missoNet'} object containing a named \code{'list'} with all the ingredients of the cross-validated fit:
+\item{\code{est.min}}{A \code{'list'} of results estimated at "\code{lambda.min}" := (\eqn{{\lambda_B}_\mathrm{min}, {\lambda_\Theta}_\mathrm{min}}) that gives the minimum mean cross-validated error. It consists of the following components:
   \itemize{
-      \item \code{Beta}: the penalized estimate of the regression coefficient matrix (\eqn{p\times q}{p x q}).
-      \item \code{Theta}: the penalized estimate of the precision matrix (\eqn{q\times q}{q x q}).
-      \item \code{mu}: a vector of length \eqn{q}{q} storing the estimated intercept.
-      \item \code{lambda.Beta}: the exact \eqn{\lambda_B}{`\code{lambda.Beta}`} value used to fit the model.
-      \item \code{lambda.Theta}: the exact \eqn{\lambda_\Theta}{`\code{lambda.Theta}`} value used to fit the model.
-      \item \code{relax.net}: a relaxed estimate of the conditional network structure (\eqn{q\times q}{q x q}) if `\code{fit.relax = TRUE}`.
+      \item \code{Beta}: the penalized estimate of the regression coefficient matrix \eqn{\hat{\mathbf{B}}} (\eqn{p\times q}).
+      \item \code{Theta}: the penalized estimate of the precision matrix \eqn{\hat{\mathbf{\Theta}}} (\eqn{q\times q}).
+      \item \code{mu}: a vector of length \eqn{q} storing the model intercept \eqn{\hat{\mu}}.
+      \item \code{lambda.Beta}: the value of \eqn{\lambda_B} (i.e. \eqn{{\lambda_B}_\mathrm{min}}) used to fit the model.
+      \item \code{lambda.Theta}: the value of \eqn{\lambda_\Theta} (i.e. \eqn{{\lambda_\Theta}_\mathrm{min}}) used to fit the model.
+      \item \code{relax.net}: the relaxed (debiased) estimate of the conditional network structure \eqn{\hat{\mathbf{\Theta}}_\mathrm{rlx}} (\eqn{q\times q}) if \code{'fit.relax = TRUE'} when calling \sQuote{\code{cv.missoNet}}.
   }
 }
-\item{\code{estB.1se}}{A list of parameters estimated at `\code{lambda.Beta.1se}` if `\code{fit.1se = TRUE}`. `\code{lambda.Beta.1se}` is the largest \eqn{\lambda_B}{`\code{lambda.Beta}`} at which the mean CV error is within one standard error of the minimum, by fixing \eqn{\lambda_\Theta}{`\code{lambda.Theta}`} at `\code{lambda.min}`. It consists of the same components as `\code{est.min}`.}
-\item{\code{estTht.1se}}{A list of parameters estimated at `\code{lambda.Theta.1se}` if `\code{fit.1se = TRUE}`. `\code{lambda.Theta.1se}` is the largest \eqn{\lambda_\Theta}{`\code{lambda.Theta}`} at which the mean CV error is within one standard error of the minimum, by fixing \eqn{\lambda_B}{`\code{lambda.Beta}`} at `\code{lambda.min}`. It consists of the same components as `\code{est.min}`.}
-\item{\code{rho}}{A vector of length \eqn{q}{q} storing the working missing probability.}
+\item{\code{est.1se.B}}{A \code{'list'} of results estimated at "\code{lambda.1se.Beta}" := (\eqn{{\lambda_B}_\mathrm{1se}, {\lambda_\Theta}_\mathrm{min}}) if \code{'fit.1se = TRUE'} when calling \sQuote{\code{cv.missoNet}}. "\code{lambda.1se.Beta}" refers to the largest \eqn{\lambda_B} at which the mean cross-validated error is within one standard error of the minimum, by fixing \eqn{\lambda_\Theta} at \eqn{{\lambda_\Theta}_\mathrm{min}}. This \code{'list'} consists of the same components as \code{'est.min'}.}
+\item{\code{est.1se.Tht}}{A \code{'list'} of results estimated at "\code{lambda.1se.Theta}" := (\eqn{{\lambda_B}_\mathrm{min}, {\lambda_\Theta}_\mathrm{1se}}) if \code{'fit.1se = TRUE'} when calling \sQuote{\code{cv.missoNet}}. "\code{lambda.1se.Theta}" refers to the largest \eqn{\lambda_\Theta} at which the mean cross-validated error is within one standard error of the minimum, by fixing \eqn{\lambda_B} at \eqn{{\lambda_B}_\mathrm{min}}. This \code{'list'} consists of the same components as \code{'est.min'}.}
+\item{\code{rho}}{A vector of length \eqn{q} storing the working missing probabilities for the \eqn{q} response variables.}
 \item{\code{fold.index}}{The subject indices identifying which fold each observation is in.}
-\item{\code{lambda.Beta.vec}}{A long vector of length `\code{n.lamBeta * n.lamTheta}` from which the CV procedure searches.}
-\item{\code{lambda.Theta.vec}}{A long vector of length `\code{n.lamBeta * n.lamTheta}` from which the CV procedure searches.}
-\item{\code{cvm}}{A long vector of standardized mean CV error that has a one to one correspondence with `\code{lambda.Beta.vec}` and `\code{lambda.Theta.vec}`.}
-\item{\code{cvup}}{Upper cross-validated error.}
-\item{\code{cvlo}}{Lower cross-validated error.}
-\item{\code{penalize.diagonal}}{Logical: whether the diagonal of \eqn{\mathbf{\Theta}}{`\code{Theta}`} was penalized.}
-\item{\code{diag.penalty.factor}}{The additional penalty factor for the diagonal of \eqn{\mathbf{\Theta}}{`\code{Theta}`} when `\code{penalize.diagonal = TRUE}`.}
+\item{\code{lambda.Beta.vec}}{A flattened vector of length (\code{'n.lamBeta'} \code{*} \code{'n.lamTheta'}) storing the \eqn{\lambda_B} values along the regularization path. More specifically, \code{'lambda.Beta.vec' = rep('lambda.Beta', each = 'n.lamTheta')}.}
+\item{\code{lambda.Theta.vec}}{A flattened vector of length (\code{'n.lamBeta'} \code{*} \code{'n.lamTheta'}) storing the \eqn{\lambda_\Theta} values along the regularization path. More specifically, \code{'lambda.Theta.vec' = rep('lambda.Theta', times = 'n.lamBeta')}.}
+\item{\code{cvm}}{A flattened vector of length (\code{'n.lamBeta'} \code{*} \code{'n.lamTheta'}) storing the (standardized) mean cross-validated errors along the regularization path.}
+\item{\code{cvup}}{Upper cross-validated errors.}
+\item{\code{cvlo}}{Lower cross-validated errors.}
+\item{\code{penalize.diagonal}}{Logical: whether the diagonal elements of \eqn{\mathbf{\Theta}} were penalized.}
+\item{\code{diag.penalty.factor}}{The additional penalty multiplication factor for the diagonal elements of \eqn{\mathbf{\Theta}} when \code{'penalize.diagonal'} was returned as \code{'TRUE'}.}
 }
 \description{
-Cross-validation for missoNet
+This function performs k-fold cross-validation for \sQuote{\code{\link{missoNet}}}. The regularization path is computed 
+for all possible combinations of values given in the two regularization parameter sequences, namely \eqn{\lambda_B} and \eqn{\lambda_\Theta}. 
+\sQuote{\code{cv.missoNet}} will select the most suitable model among all cross-validated fits along the path.
+See the details of \sQuote{\code{\link{missoNet}}} for the model definition. 
+To help users, the \sQuote{\code{cv.missoNet}} function is designed to automatically determine the likely ranges 
+of the regularization parameters over which the cross-validation searches.
+}
+\details{
+The \sQuote{\code{cv.missoNet}} function fits \sQuote{\code{\link{missoNet}}} models (\code{'kfold'} \code{*} \code{'n.lamBeta'} \code{*} \code{'n.lamTheta'}) 
+times in the whole cross-validation process. That is, for the \eqn{k}th-fold (\eqn{k=1,...,K}) computation, the models are fitted at each of 
+the all (\code{'n.lamBeta'} \code{*} \code{'n.lamTheta'}) possible regularization parameter pairs (\eqn{\lambda_B}, \eqn{\lambda_\Theta}), with the \eqn{k}th 
+fold of the training data omitted. The errors are accumulated, and the averaged errors as well as the standard deviations are computed over all folds. 
+Note that the results of \sQuote{\code{cv.missoNet}} are random, since the samples are randomly split into k-folds. Users can eliminate this randomness 
+by setting \code{'permute = FALSE'}, or by explicitly assigning a random seed to the permutation of samples.
+
+A user-supplied sequence for \eqn{\lambda_B} and/or \eqn{\lambda_\Theta} is permitted, 
+otherwise the program computes an appropriate range of values for the regularization parameters using other control arguments.
+Note that \sQuote{\code{cv.missoNet}} standardizes \code{'X'} and \code{'Y'} to have unit variances before computing its \eqn{\lambda} 
+sequences (and then unstandardizes the resulting coefficients); if you wish to reproduce/compare results with those of other softwares, 
+it is best to supply pre-standardized \code{'X'} and \code{'Y'}. If the algorithm is running slowly, track its progress with \code{'verbose = 2'}. 
+In most cases, choosing a sparser grid for the regularization parameters (e.g. smaller \code{'n.lamBeta'} and/or \code{'n.lamTheta'}) or setting \code{'Beta.thr = 1.0E-3'} (or even bigger) 
+allows the algorithm to make faster progress.
+
+After cross-validation, the regression coefficient matrix \eqn{\mathbf{B}} and the precision matrix \eqn{\mathbf{\Theta}} can be 
+estimated at three special \eqn{\lambda} pairs, by reapplying \sQuote{\code{missoNet}} to the entire training dataset:
+\enumerate{
+  \item "\code{lambda.min}" := (\eqn{{\lambda_B}_\mathrm{min}, {\lambda_\Theta}_\mathrm{min}}), at which the minimum mean cross-validated error is achieved;
+  \item "\code{lambda.1se.Beta}" := (\eqn{{\lambda_B}_\mathrm{1se}, {\lambda_\Theta}_\mathrm{min}}), where \eqn{{\lambda_B}_\mathrm{1se}} is the largest \eqn{\lambda_B} at which the mean cross-validated error is within one standard error of the minimum;
+  \item "\code{lambda.1se.Theta}" := (\eqn{{\lambda_B}_\mathrm{min}, {\lambda_\Theta}_\mathrm{1se}}), where \eqn{{\lambda_\Theta}_\mathrm{1se}} is the largest \eqn{\lambda_\Theta} at which the mean cross-validated error is within one standard error of the minimum.
+}
+The corresponding estimates, along with the \eqn{\lambda} values, are stored in three separate lists inside the returned object: 
+\code{'est.min'}, \code{'est.1se.B'} and \code{'est.1se.Tht'} (\code{'est.1se.B'} and \code{'est.1se.Tht'} are \code{'NULL'} 
+unless the argument \code{'fit.1se = TRUE'} when calling \sQuote{\code{cv.missoNet}}).
+
+The \sQuote{\code{cv.missoNet}} function returns an R object of S3 class \code{'cv.missoNet'} for which there are a set of accessory functions available.
+The plotting function \sQuote{\code{\link{plot.cv.missoNet}}} can be used to graphically identify the optimal pair of the regularization parameters, 
+and the prediction function \sQuote{\code{\link{predict.cv.missoNet}}} can be used to make predictions of response values given new input \code{'X'}. 
+See the vignette for examples.
+}
+\examples{
+## Simulate a dataset with response values missing completely 
+## at random (MCAR), the overall missing rate is around 10\%.
+sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
+tr <- 1:240  ## Training set indices
+va <- 241:300  ## Validation set indices
+X.tr <- sim.dat$X[tr, ]
+Y.tr <- sim.dat$Z[tr, ]  ## Corrupted response matrix
+
+
+## Perform a five-fold cross-validation WITH specified 'lambda.Beta' and 'lambda.Theta'.
+## 'standardize' and 'standardize.response' are 'TRUE' by default.
+lamB.vec <- 10^(seq(from = 0, to = -1, length.out = 5))
+lamTht.vec <- 10^(seq(from = 0, to = -1, length.out = 5))
+cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5,
+                     lambda.Beta = lamB.vec, lambda.Theta = lamTht.vec)
+                     
+                     
+## Perform a five-fold cross-validation WITHOUT specified 'lambda.Beta' and 'lambda.Theta'.
+## < This simplest command should be a good start for most analyses >.
+cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5)
+
+
+## Perform a five-fold cross-validation WITHOUT specified 'lambda.Beta' and 'lambda.Theta'. 
+## Use PRE-STANDARDIZED training data if you wish to compare the results with other softwares. 
+## There is no need for centering of variables.
+X.tr.std <- scale(X.tr, center = FALSE, scale = apply(X.tr, 2, sd, na.rm = TRUE))
+Y.tr.std <- scale(Y.tr, center = FALSE, scale = apply(Y.tr, 2, sd, na.rm = TRUE))
+cvfit.std <- cv.missoNet(X = X.tr.std, Y = Y.tr.std, kfold = 5,
+                         standardize = FALSE, standardize.response = FALSE)
+
+
+## Compute the cross-validation folds in parallel on a cluster with two cores.
+## 'fit.1se = TRUE' tells the program to make additional estimates of the parameters 
+## at the largest 'lambda.Beta' / 'lambda.Theta' according to the one-standard-error rule.
+cl <- parallel::makeCluster(2)
+cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5,
+                     parallel = TRUE, cl = cl, fit.1se = TRUE)
+parallel::stopCluster(cl)
+
+
+## Plot the (standardized) mean cross-validated errors in a heatmap.
+plot(cvfit)
+
+
+## Plot the (standardized) mean cross-validated errors in a scatterplot.
+plot(cvfit, type = "cv.scatter")
+
+
+## Extract the estimates at "lambda.min".
+Beta.hat1 <- cvfit$est.min$Beta
+Theta.hat1 <- cvfit$est.min$Theta
+
+## Extract the estimates at "lambda.1se.Beta" (if 'fit.1se = TRUE').
+Beta.hat2 <- cvfit$est.1se.B$Beta
+Theta.hat2 <- cvfit$est.1se.B$Theta
+
+## Extract the estimates at "lambda.1se.Theta" (if 'fit.1se = TRUE').
+Beta.hat3 <- cvfit$est.1se.Tht$Beta
+Theta.hat3 <- cvfit$est.1se.Tht$Theta
+
+
+## Make predictions of response values at "lambda.min".
+## 's' = "lambda.1se.Beta" or 's' = "lambda.1se.Theta"
+## is supported if 'fit.1se = TRUE' when calling cv.missoNet.
+newy <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.min")
+}
+\author{
+Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca}, Celia M.T. Greenwood and Archer Yi Yang.
 }

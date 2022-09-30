@@ -31,7 +31,7 @@ update.missoNet <- function(X, Y, lamTh, lamB,
     # Pre-updating several times due to a cold start
     #####################################################
     if (verbose == 2) {
-      cat("  --------------- Pre-updating ---------------\n")
+      cat("  ---------------- Warming-up -----------------\n")
       cat("\titer\t|\t| lik(t + 1) - lik(t) |\n")
     }
     B.init <- init.obj$B.init * init.obj$sdx
@@ -55,7 +55,7 @@ update.missoNet <- function(X, Y, lamTh, lamB,
     while(s < 50) {
       if(abs(lik.new - lik.old) < lik.thr) {
         if (verbose == 2) {
-          cat("  --------------------------------------------\n")
+          cat("  ---------------------------------------------\n")
         }
         break
       } else {

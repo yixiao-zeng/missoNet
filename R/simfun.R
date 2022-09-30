@@ -66,6 +66,8 @@ genTheta <- function(q) {
 ###################################
 genX <- function(n, p, Sigma.X) {
   if (!requireNamespace("mvtnorm", quietly = TRUE)) {
+    cat("\nRunning this function for the first time, downloading the necessary dependencies...\n\n")
+    Sys.sleep(2)
     install.packages("mvtnorm")
     requireNamespace("mvtnorm", quietly = TRUE)
   }
@@ -92,6 +94,8 @@ genX <- function(n, p, Sigma.X) {
 ###################################
 genY <- function(X, BETAstar, Theta) {
   if (!requireNamespace("mvtnorm", quietly = TRUE)) {
+    cat("\nRunning this function for the first time, downloading the necessary dependencies...\n\n")
+    Sys.sleep(2)
     install.packages("mvtnorm")
     requireNamespace("mvtnorm", quietly = TRUE)
   }

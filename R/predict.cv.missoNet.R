@@ -1,38 +1,53 @@
-#' Make predictions from a \code{cv.missoNet} object
+#' Make predictions from a cv.missoNet object
 #'
-#' S3 method for making predictions from a fitted `\code{cv.missoNet}` object.
+#' S3 method for making predictions of response values from a fitted \code{'cv.missoNet'} object.
 #'
-#' @param object Fitted `\code{cv.missoNet}` object.
-#' @param newx A predictor matrix of new values at which predictions are to be made. `\code{newx}` should have the same scale as the training data. Missing values are not allowed and do not include a column of ones.
-#' @param s Character, the penalty parameter `lambda` at which the regression coefficients for predictions are extracted. It supports three special values, named `\code{"lambda.min"}` (default), `\code{"lambda.Beta.1se"}` and `\code{"lambda.Theta.1se"}`. 
+#' @param object A fitted \code{'cv.missoNet'} object.
+#' @param newx A predictor matrix of new values at which predictions are to be made. The columns of \code{'newx'} should have the same standardization flags as the original input for training the model. Missing values are not allowed. \code{'newx'} should not include a column of ones for an intercept.
+#' @param s Character string, the regularization parameter pair \eqn{\lambda} = (\eqn{\lambda_B}, \eqn{\lambda_\Theta}) at which the coefficients are extracted for making predictions. It supports three special strings, named "\code{lambda.min}" (default), "\code{lambda.1se.Beta}" and "\code{lambda.1se.Theta}". 
 #' @param ... Not used. Other arguments for predicting.
 #' 
-#' @return Predicted response matrix `\code{newy}`.
+#' @return The matrix of predicted values: \code{'newy = mu_hat + newx \%*\% Beta_hat'}.
 #' 
 #' @method predict cv.missoNet
 #' @export
+#' 
+#' @author Yixiao Zeng \email{yixiao.zeng@@mail.mcgill.ca}, Celia M.T. Greenwood and Archer Yi Yang.
+#' 
+#' @examples
+#' ## Perform a five-fold cross-validation on a simulated dataset.
+#' sim.dat <- generateData(n = 200, p = 10, q = 10, rho = 0.1, missing.type = "MCAR")
+#' tr <- 1:160  ## Training set indices
+#' va <- 161:200  ## Validation set indices
+#' cvfit <- cv.missoNet(X = sim.dat$X[tr, ], Y = sim.dat$Z[tr, ], kfold = 5, fit.1se = TRUE)
+#' 
+#' 
+#' ## Make predictions of new response values.
+#' newy1 <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.min")
+#' newy2 <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.1se.Beta")
+#' newy3 <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.1se.Theta")
 
 predict.cv.missoNet <- function(object, newx = NULL, s = "lambda.min", ...) {
   if (is.null(newx)) {
-    stop("\nPlease supply a predictor matrix (n by p) having the same scale as the training data.\n")
+    stop("\nPlease supply a predictor matrix (n' x p) for `newx`.\n")
   }
   n <- nrow(newx)
   if (s == "lambda.min") {
     return(rep(1, n) %*% t(object$est.min$mu) + newx %*% object$est.min$Beta)
-  } else if (s == "lambda.Beta.1se") {
-    if (is.null(object$estB.1se)) {
-      stop("\n`lambda.Beta.1se` not found. Please make sure `fit.1se = TRUE` and `estB.1se` is not `NULL`.\n")
+  } else if (s == "lambda.1se.Beta") {
+    if (is.null(object$est.1se.B)) {
+      stop("\n`lambda.1se.Beta` not found. Please make sure that `fit.1se = TRUE` and `est.1se.B` is not `NULL`.\n")
     } else {
-      return(rep(1, n) %*% t(object$estB.1se$mu) + newx %*% object$estB.1se$Beta)
+      return(rep(1, n) %*% t(object$est.1se.B$mu) + newx %*% object$est.1se.B$Beta)
     }
-  } else if (s == "lambda.Theta.1se") {
-    if (is.null(object$estTht.1se)) {
-      stop("\n`lambda.Theta.1se` not found. Please make sure `fit.1se = TRUE` and `estTht.1se` is not `NULL`.\n")
+  } else if (s == "lambda.1se.Theta") {
+    if (is.null(object$est.1se.Tht)) {
+      stop("\n`lambda.1se.Theta` not found. Please make sure that `fit.1se = TRUE` and `est.1se.Tht` is not `NULL`.\n")
     } else {
-      return(rep(1, n) %*% t(object$estTht.1se$mu) + newx %*% object$estTht.1se$Beta)
+      return(rep(1, n) %*% t(object$est.1se.Tht$mu) + newx %*% object$est.1se.Tht$Beta)
     }
   } else {
-    stop('\nInvalid input for `s`, `s` should be one of `"lambda.min"`, `"lambda.Beta.1se"` or `"lambda.Theta.1se"`.\n')
+    stop('\nInvalid input for `s`, `s` should be one of `"lambda.min"`, `"lambda.1se.Beta"` or `"lambda.1se.Theta"`.\n')
   }
 }
 

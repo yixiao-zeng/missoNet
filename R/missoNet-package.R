@@ -1,19 +1,15 @@
 #' Multi-task regression and conditional network estimation with missing data
 #'
 #' \tabular{ll}{ Package: \tab missoNet\cr Type: \tab Package\cr Version: \tab
-#' 0.0.0.9000\cr Date: \tab 2022-06-25\cr License: \tab GPL-2\cr }
-#' The package 'missoNet' provides three categories of important functions:
-#' cv.missoNet/missoNet; plot/predict and generateData.
+#' 1.0.0\cr Date: \tab 2022-09-30\cr License: \tab GPL (>= 2)\cr }
 #'
 #' @section missoNet functions:
 #' \describe{
-#'   \item{cv.missoNet}{fit missoNet with the optimal regularization parameters selected 
-#'     by a k-fold cross-validation over a grid of \code{lambda} values.}
-#'   \item{missoNet}{fit missoNet with a given pair of regularization parameters.}
-#'   \item{plot}{S3 method for plotting the cross-validation errors from a "cv.missoNet" object.}
-#'   \item{predict}{S3 method for making predictions from a "cv.missoNet" object.}
-#'   \item{generateData}{generate simulation data by specifying a certain type of missing mechanism 
-#'     and missing probability.}
+#'   \item{missoNet}{Fit a series of \sQuote{\code{\link{missoNet}}} models with user-supplied regularization parameter pairs for the lasso penalties, (\eqn{\lambda_B}, \eqn{\lambda_\Theta}).}
+#'   \item{cv.missoNet}{Perform k-fold cross-validation for \sQuote{\code{\link{missoNet}}} over a grid of (auto-computed) regularization parameter pairs.}
+#'   \item{plot}{S3 method for plotting the cross-validation errors from a fitted \code{'cv.missoNet'} object.}
+#'   \item{predict}{S3 method for making predictions of response values from a fitted \code{'cv.missoNet'} object.}
+#'   \item{generateData}{Quickly generate synthetic data for simulation studies.}
 #' }
 #'
 #' @docType package

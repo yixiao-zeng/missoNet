@@ -35,7 +35,7 @@ InitParams <- function(X, Y, rho, kfold, foldid, Theta.maxit, Theta.thr, eps,
     B.init[, j] <- coef(cv, s = cv$lambda.min)[2:(p + 1)]
     lam.list[j] <- max(cv$lambda)
   }
-  lamB.max <- max(lam.list) * 5
+  lamB.max <- max(lam.list) * 10
   
   
   if (is.null(rho)) {
@@ -65,8 +65,9 @@ InitParams <- function(X, Y, rho, kfold, foldid, Theta.maxit, Theta.thr, eps,
         diag.pf <- max(abs(diag.wi))/max(abs(offdiag.wi))
       }else{
         diag.pf <- 4
-        warning("\nUnable to compute the `diag.penalty.factor`, set to the default value = 4.\n
-Users can provide a different value (usually larger) at their own discretion.\n")
+        warning("\nFail to compute the `diag.penalty.factor`, has been set to the default value = 4.\n
+Please try to reduce the dimensionality by filtering variables prior to fitting the model, 
+or try different values (usually larger) for the argument `diag.penalty.factor`.\n")
       }
     }
   } else {

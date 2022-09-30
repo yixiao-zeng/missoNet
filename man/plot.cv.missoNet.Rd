@@ -2,19 +2,35 @@
 % Please edit documentation in R/plot.cv.missoNet.R
 \name{plot.cv.missoNet}
 \alias{plot.cv.missoNet}
-\title{Plot the cross-validation errors produced by \code{cv.missoNet}}
+\title{Plot the cross-validation errors produced by cv.missoNet}
 \usage{
 \method{plot}{cv.missoNet}(x, type = c("cv.heatmap", "cv.scatter"), detailed.axes = TRUE, ...)
 }
 \arguments{
-\item{x}{Fitted `\code{cv.missoNet}` object.}
+\item{x}{A fitted \code{'cv.missoNet'} object.}
 
-\item{type}{Type of plot, can be either `\code{"cv.heatmap"}` (default) or `\code{"cv.scatter"}`.}
+\item{type}{A character string for the type of plot, can be either "\code{cv.heatmap}" (default) or "\code{cv.scatter}".}
 
-\item{detailed.axes}{Logical: should the detailed axes be plotted? The default is `TRUE`.}
+\item{detailed.axes}{Logical: whether the detailed axes should be plotted. The default is \code{'TRUE'}.}
 
-\item{...}{Other graphical arguments used by `\code{ComplexHeatmap::Heatmap}`.}
+\item{...}{Other graphical arguments used by \sQuote{ComplexHeatmap::Heatmap}.}
 }
 \description{
-S3 method for plotting the mean cross-validation error surface from a fitted `\code{cv.missoNet}` object.
+S3 method for plotting the cross-validation error surface from a fitted \code{'cv.missoNet'} object.
+}
+\examples{
+## Perform a five-fold cross-validation on a simulated dataset.
+sim.dat <- generateData(n = 200, p = 10, q = 10, rho = 0.1, missing.type = "MCAR")
+cvfit <- cv.missoNet(X = sim.dat$X, Y = sim.dat$Z, kfold = 5, fit.1se = TRUE)
+
+
+## Plot the (standardized) mean cross-validated errors in a heatmap.
+plot(cvfit)
+
+
+## Plot the (standardized) mean cross-validated errors in a scatterplot.
+plot(cvfit, type = "cv.scatter", detailed.axes = FALSE)
+}
+\author{
+Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca}, Celia M.T. Greenwood and Archer Yi Yang.
 }

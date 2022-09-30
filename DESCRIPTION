@@ -1,29 +1,37 @@
 Type: Package
 Package: missoNet
 Title: Multi-task Regression and Conditional Network Estimation with
-    Missing Data
-Version: 0.9.0.9000
-Date: 2022-07-28
-Authors@R: 
-    person("Yixiao", "Zeng", , "yixiao.zeng@qq.com", role = c("aut", "cre"))
-Description: The package 'missoNet' enables users to fit multi-task
-    Gaussian regression models to estimate covariate effects by
-    leveraging the relatedness information of multiple responses. 
-    Meanwhile, the algorithm can learn the conditional network
-    structure among responses in an undirected Gaussian graphical model.
-    Different from existing techniques for multivariate
-    regression/multi-task learning, 'missoNet' allows missing data in the 
-    response matrix, it enjoys the theoretical and computational benefits 
-    of convexity and returns solutions that are comparable/close to the 
-    clean data estimates.
+    Missing Values in the Tasks
+Version: 1.0.0
+Date: 2022-09-30
+Authors@R:
+    person("Yixiao", "Zeng", , "yixiao.zeng@mail.mcgill.ca", role = c("aut", "cre"))
+Description: The package 'missoNet' is specifically designed to fit the
+    conditional graphical lasso models linking a set of predictor
+    variables to a set of response variables (or tasks), when the response
+    data may contain missing values. 'missoNet' simultaneously estimates
+    the covariate effects on all tasks by leveraging information from one
+    another, in order to provide more accurate predictions in comparison
+    to modeling them individually. Meanwhile, 'missoNet' is able to learn
+    the conditional network structure among the correlated response
+    vairables via penalized maximum likelihood in an undirected Gaussian
+    graphical model. In contrast to most penalized multi-task regression /
+    conditional graphical lasso methods, 'missoNet' has the capability of
+    obtaining estimates even when the response data is corrupted by
+    missing values. The method automatically enjoys the theoretical and
+    computational benefits of convexity, and returns solutions that are
+    comparable/close to the estimates without any missing values. The
+    package also includes auxiliary functions for data simulation,
+    goodness-of-fit evaluation, regularization parameter tuning, and
+    visualization of results, as well as predictions in new data.
 License: GPL (>= 2)
 URL: https://github.com/yixiao-zeng/missoNet
 BugReports: https://github.com/yixiao-zeng/missoNet/issues
 Imports: 
     glasso (>= 1.11),
     glmnet (>= 4.1.4),
-    Rcpp (>= 1.0.8.3),
-    snowfall (>= 1.84.6.1)
+    pbapply (>= 1.5.0),
+    Rcpp (>= 1.0.8.3)
 Suggests: 
     BiocManager,
     circlize,
@@ -36,6 +44,7 @@ Suggests:
 LinkingTo: 
     Rcpp,
     RcppArmadillo
+VignetteBuilder: 
+    knitr
 Encoding: UTF-8
 RoxygenNote: 7.2.1
-VignetteBuilder: knitr
