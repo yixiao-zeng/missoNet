@@ -22,8 +22,8 @@ relax.glasso <- function(X, Y, init.obj, est, eps, Theta.thr, Theta.maxit) {
     residual.cov <- maxproj.cov(mat = residual.cov, epsilon = eps)
   }
   
-  relax.graph <- suppressWarnings(glasso::glasso(s = residual.cov, rho = 0, thr = Theta.thr, maxit = Theta.maxit,
-                                                 zero = zero, approx = FALSE, penalize.diagonal = TRUE, trace = FALSE))
+  relax.graph <- suppressWarnings(glasso(s = residual.cov, rho = 0, thr = Theta.thr, maxit = Theta.maxit,
+                                         zero = zero, approx = FALSE, penalize.diagonal = TRUE, trace = FALSE))
   relax.graph <- (relax.graph$wi + t(relax.graph$wi))/2
   
   return(relax.graph)

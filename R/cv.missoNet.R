@@ -98,10 +98,10 @@
 #' ## Simulate a dataset with response values missing completely 
 #' ## at random (MCAR), the overall missing rate is around 10%.
 #' sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
-#' tr <- 1:240  ## Training set indices
-#' va <- 241:300  ## Validation set indices
-#' X.tr <- sim.dat$X[tr, ]
-#' Y.tr <- sim.dat$Z[tr, ]  ## Corrupted response matrix
+#' tr <- 1:240  # training set indices
+#' va <- 241:300  # validation set indices
+#' X.tr <- sim.dat$X[tr, ]  # predictor matrix
+#' Y.tr <- sim.dat$Z[tr, ]  # corrupted response matrix
 #'
 #'
 #' ## Perform a five-fold cross-validation WITH specified 'lambda.Beta' and 'lambda.Theta'.
@@ -110,58 +110,57 @@
 #' lamTht.vec <- 10^(seq(from = 0, to = -1, length.out = 5))
 #' cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5,
 #'                      lambda.Beta = lamB.vec, lambda.Theta = lamTht.vec)
-#'                      
-#'                      
+#'
+#' 
 #' ## Perform a five-fold cross-validation WITHOUT specified 'lambda.Beta' and 'lambda.Theta'.
 #' ## < This simplest command should be a good start for most analyses >.
 #' cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5)
 #' 
 #' 
-#' ## Perform a five-fold cross-validation WITHOUT specified 'lambda.Beta' and 'lambda.Theta'. 
-#' ## Use PRE-STANDARDIZED training data if you wish to compare the results with other softwares. 
-#' ## There is no need for centering of variables.
+#' ## Compute the cross-validation folds in parallel on a cluster with two cores.
+#' ## 'fit.1se = TRUE' tells the program to make additional estimations of the parameters 
+#' ## at the largest 'lambda.Beta' / 'lambda.Theta' according to the one-standard-error rule.
+#' cl <- parallel::makeCluster(2)
+#' cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5, fit.1se = TRUE,
+#'                      parallel = TRUE, cl = cl)
+#' parallel::stopCluster(cl)
+#' 
+#' 
+#' \dontrun{
+#' 
+#' ## Use PRE-STANDARDIZED training data if you wish to compare the results 
+#' ## with other softwares. There is no need for centering of variables.
 #' X.tr.std <- scale(X.tr, center = FALSE, scale = apply(X.tr, 2, sd, na.rm = TRUE))
 #' Y.tr.std <- scale(Y.tr, center = FALSE, scale = apply(Y.tr, 2, sd, na.rm = TRUE))
 #' cvfit.std <- cv.missoNet(X = X.tr.std, Y = Y.tr.std, kfold = 5,
 #'                          standardize = FALSE, standardize.response = FALSE)
 #'
 #'
-#' ## Compute the cross-validation folds in parallel on a cluster with two cores.
-#' ## 'fit.1se = TRUE' tells the program to make additional estimates of the parameters 
-#' ## at the largest 'lambda.Beta' / 'lambda.Theta' according to the one-standard-error rule.
-#' cl <- parallel::makeCluster(2)
-#' cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5,
-#'                      parallel = TRUE, cl = cl, fit.1se = TRUE)
-#' parallel::stopCluster(cl)
-#'
-#'
 #' ## Plot the (standardized) mean cross-validated errors in a heatmap.
-#' \dontrun{
 #' plot(cvfit)
-#' }
-#' 
+#' #----------------------------------------------------------------------#
 #' ## Plot the (standardized) mean cross-validated errors in a scatterplot.
-#' \dontrun{
 #' plot(cvfit, type = "cv.scatter")
-#' }
+#'
 #'
 #' ## Extract the estimates at "lambda.min".
 #' Beta.hat1 <- cvfit$est.min$Beta
 #' Theta.hat1 <- cvfit$est.min$Theta
-#' 
+#' #-------------------------------------------------------------------#
 #' ## Extract the estimates at "lambda.1se.Beta" (if 'fit.1se = TRUE').
 #' Beta.hat2 <- cvfit$est.1se.B$Beta
 #' Theta.hat2 <- cvfit$est.1se.B$Theta
-#' 
+#' #-------------------------------------------------------------------#
 #' ## Extract the estimates at "lambda.1se.Theta" (if 'fit.1se = TRUE').
 #' Beta.hat3 <- cvfit$est.1se.Tht$Beta
 #' Theta.hat3 <- cvfit$est.1se.Tht$Theta
 #'
 #'
 #' ## Make predictions of response values at "lambda.min".
-#' ## 's' = "lambda.1se.Beta" or 's' = "lambda.1se.Theta"
-#' ## is supported if 'fit.1se = TRUE' when calling cv.missoNet.
+#' ## 's' = "lambda.1se.Beta" and 's' = "lambda.1se.Theta"
+#' ## are supported if 'fit.1se = TRUE' when calling cv.missoNet.
 #' newy <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.min")
+#' }
 
 cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
                         lambda.Beta = NULL, lambda.Theta = NULL,

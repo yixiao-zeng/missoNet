@@ -80,10 +80,10 @@
 #' ## Simulate a dataset with response values missing completely 
 #' ## at random (MCAR), the overall missing rate is around 10%.
 #' sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
-#' tr <- 1:240  ## Training set indices
-#' va <- 241:300  ## Validation set indices
-#' X.tr <- sim.dat$X[tr, ]
-#' Y.tr <- sim.dat$Z[tr, ]  ## Corrupted response matrix
+#' tr <- 1:240  # training set indices
+#' va <- 241:300  # validation set indices
+#' X.tr <- sim.dat$X[tr, ]  # predictor matrix
+#' Y.tr <- sim.dat$Z[tr, ]  # corrupted response matrix
 #' 
 #' 
 #' ## Fit one missoNet model with a scalar for both 'lambda.Beta' and 'lambda.Theta'.
@@ -104,11 +104,12 @@
 #' parallel::stopCluster(cl)
 #' 
 #' 
-#' ## Extract the estimates at ('lamB.vec[1]', 'lamTht.vec[1]').
+#' ## Extract the estimates at ('lamB.vec[1]', 'lamTht.vec[1]'); the estimates 
+#' ## at the subsequent lambda pairs could be extracted in the same way.
 #' Beta.hat <- fit2$est.list[[1]]$Beta
 #' Theta.hat <- fit2$est.list[[1]]$Theta
-#' lambda.Beta <- fit2$est.list[[1]]$lambda.Beta  ## Equal to 'lamB.vec[1]'
-#' lambda.Theta <- fit2$est.list[[1]]$lambda.Theta  ## Equal to 'lamTht.vec[1]'
+#' lambda.Beta <- fit2$est.list[[1]]$lambda.Beta  # equal to 'lamB.vec[1]'
+#' lambda.Theta <- fit2$est.list[[1]]$lambda.Theta  # equal to 'lamTht.vec[1]'
 #' 
 #' 
 #' ## Fit a series of missoNet models using PRE-STANDARDIZED training 

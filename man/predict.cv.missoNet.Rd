@@ -22,18 +22,20 @@ The matrix of predicted values: \code{'newy = mu_hat + newx \%*\% Beta_hat'}.
 S3 method for making predictions of response values from a fitted \code{'cv.missoNet'} object.
 }
 \examples{
-## Perform a five-fold cross-validation on a simulated dataset.
+## Perform the five-fold cross-validation on a simulated dataset.
 sim.dat <- generateData(n = 200, p = 10, q = 10, rho = 0.1, missing.type = "MCAR")
-tr <- 1:160  ## Training set indices
-va <- 161:200  ## Validation set indices
+tr <- 1:160  # training set indices
+va <- 161:200  # validation set indices
 cvfit <- cv.missoNet(X = sim.dat$X[tr, ], Y = sim.dat$Z[tr, ], kfold = 5, fit.1se = TRUE)
 
 
 ## Make predictions of new response values.
 newy1 <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.min")
+#---------------------------------------------------------------------#
 newy2 <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.1se.Beta")
+#---------------------------------------------------------------------#
 newy3 <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.1se.Theta")
 }
 \author{
-Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca}, Celia M.T. Greenwood and Archer Yi Yang.
+Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca} and Celia M.T. Greenwood.
 }

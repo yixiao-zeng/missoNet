@@ -41,30 +41,30 @@ An example of how to use the package:
 
 ```r
 # Simulate a dataset with response values missing completely 
-# at random (MCAR), the overall missing rate is around 10%
+# at random (MCAR), the overall missing rate is around 10%.
 sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
-tr <- 1:240  # Training set indices
-va <- 241:300  # Validation set indices
-X.tr <- sim.dat$X[tr, ]  # Predictor matrix
-Y.tr <- sim.dat$Z[tr, ]  # Corrupted response matrix
+tr <- 1:240  # training set indices
+va <- 241:300  # validation set indices
+X.tr <- sim.dat$X[tr, ]  # predictor matrix
+Y.tr <- sim.dat$Z[tr, ]  # corrupted response matrix
 
-# Use cv.missoNet to do a five-fold cross-validation on the training data
+# Use cv.missoNet to do a five-fold cross-validation on the training data.
 cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5)
 
-# Or compute the cross-validation folds in parallel
-cl <- parallel::makeCluster(parallel::detectCores() - 1)
+# Compute the cross-validation folds in parallel.
+cl <- parallel::makeCluster(min(parallel::detectCores()-1, 3))
 cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5,
                      parallel = TRUE, cl = cl)
 parallel::stopCluster(cl)
 
-# Plot the standardized mean cross-validated errors in a heatmap
+# Plot the standardized mean cross-validated errors in a heatmap.
 plot(cvfit)
 
-# Extract the estimates at "lambda.min" that gives the minimum cross-validated error
+# Extract the estimates at "lambda.min" that gives the minimum cross-validated error.
 Beta_hat <- cvfit$est.min$Beta
 Theta_hat <- cvfit$est.min$Theta
 
-# Make predictions of response values on the validation set
+# Make predictions of response values on the validation set.
 newy <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.min")
 ```
 

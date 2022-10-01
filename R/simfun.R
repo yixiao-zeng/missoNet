@@ -6,7 +6,7 @@ genBeta <- function(p, q, s1, s2) {
   K <- matrix(0, p, q)
   R <- matrix(0, p, q)
   
-  ## check the number of non-zero elements
+  ## check the number of nonzero elements
   while ((sum(K * R) <= (p * q * s1 * s2)/1.5) | (sum(K * R) >= (p * q * s1 * s2) * 1.3)) {
     K <- matrix(rbinom(p * q, 1, s1), p, q)
     R <- matrix(0, p, q)
@@ -54,7 +54,7 @@ genTheta <- function(q) {
       }
       Th[i, i] <- -sum(Th[i, (round(q/4) * 3 + 1):q])
     }
-    ## add a small positive value to diagonal to ensure PSD
+    ## add small positive values to the diagonal elements to ensure PSD
     diag(Th) <- diag(Th) + 0.1
   }
   return(Th)
@@ -65,12 +65,6 @@ genTheta <- function(q) {
 ## Function for generating X
 ###################################
 genX <- function(n, p, Sigma.X) {
-  if (!requireNamespace("mvtnorm", quietly = TRUE)) {
-    cat("\nRunning this function for the first time, downloading the necessary dependencies...\n\n")
-    Sys.sleep(2)
-    install.packages("mvtnorm")
-    requireNamespace("mvtnorm", quietly = TRUE)
-  }
   if (is.null(Sigma.X)) {
     s <- 0.7  # autocorrelation
     dist <- matrix(NA, p, p)
@@ -93,13 +87,6 @@ genX <- function(n, p, Sigma.X) {
 ## Function for generating Y
 ###################################
 genY <- function(X, BETAstar, Theta) {
-  if (!requireNamespace("mvtnorm", quietly = TRUE)) {
-    cat("\nRunning this function for the first time, downloading the necessary dependencies...\n\n")
-    Sys.sleep(2)
-    install.packages("mvtnorm")
-    requireNamespace("mvtnorm", quietly = TRUE)
-  }
-  
   n <- nrow(X)
   q <- ncol(BETAstar)
   if (min(eigen(Theta)$value) <= 1e-7) {

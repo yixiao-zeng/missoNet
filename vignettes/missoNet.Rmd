@@ -82,8 +82,8 @@ We will use a synthetic dataset for illustration. To generate a set of data with
 ## The missing mechanism can also be "MCAR" or "MNAR".
 sim.dat <- generateData(n = 150, p = 15, q = 12, rho = 0.1, missing.type = "MAR", with.seed = 1512)
 
-tr <- 1:120  ## Training set indices
-va <- 121:150  ## Validation set indices
+tr <- 1:120  # training set indices
+va <- 121:150  # validation set indices
 ```
 
 This command returns an object containing all necessary components for analysis including: 
@@ -102,7 +102,7 @@ The probabilities of missingness for the response variables and the missing mech
 
 We can easily visualize how missing data is distributed in the corrupted response matrix $\mathbf{Z}$ using package **visdat**:
 ```{r, eval = FALSE}
-Z <- sim.dat$Z  ## Corrupted response matrix
+Z <- sim.dat$Z  # corrupted response matrix
 visdat::vis_miss(as.data.frame(Z))
 ```
 ```{r, include = FALSE, eval = FALSE}
@@ -117,8 +117,8 @@ knitr::include_graphics(system.file("extdata", "vismis.png", package = "missoNet
 A single model can be fitted using the most basic call to `missoNet`:
 ```{r}
 ## Training set
-X.tr <- sim.dat$X[tr, ]  ## Predictor matrix
-Z.tr <- sim.dat$Z[tr, ]  ## Corrupted response matrix
+X.tr <- sim.dat$X[tr, ]  # predictor matrix
+Z.tr <- sim.dat$Z[tr, ]  # corrupted response matrix
 
 ## Using the training set to fit the model.
 ## 'lambda.Beta' and 'lambda.Theta' are arbitrarily set to 0.1.
@@ -128,8 +128,8 @@ fit <- missoNet(X = X.tr, Y = Z.tr, lambda.Beta = 0.1, lambda.Theta = 0.1, verbo
 
 However, `missoNet` should be more commonly used with a grid of values for $\lambda_B$ and $\lambda_\Theta$. The two penalty vectors must have the same length, and the `missoNet` function will be called with each consecutive pair of values -- i.e., with the first elements of the two vectors, then with the second elements, etc.
 ```{r}
-lambda.Beta.vec <- 10^(seq(from = 0, to = -1, length.out = 10))  ## 10 values on the log scale, from 1 to 0.1
-lambda.Theta.vec <- rep(0.1, 10)  ## For each value of 'lambda.Beta', 'lambda.Theta' remains constant at 0.1
+lambda.Beta.vec <- 10^(seq(from = 0, to = -1, length.out = 10))  # 10 values on the log scale, from 1 to 0.1
+lambda.Theta.vec <- rep(0.1, 10)  # for each value of 'lambda.Beta', 'lambda.Theta' remains constant at 0.1
 fit_list <- missoNet(X = X.tr, Y = Z.tr, lambda.Beta = lambda.Beta.vec, lambda.Theta = lambda.Theta.vec, verbose = 0)
 ```
 
@@ -149,7 +149,7 @@ The program has warned us that the range of $\lambda_\Theta$ is inappropriate so
 
 Let's fit the cross-validation model again, this time running all folds in parallel on two CPU cores. The parallelization of **missoNet** models relies on package **parallel**, so make sure the parallel clusters have been registered beforehand.
 ```{r, eval = FALSE}
-## 'fit.1se = TRUE' tells the program to make additional estimates of the parameters 
+## 'fit.1se = TRUE' tells the program to make additional estimations of the parameters 
 ## at the largest values of 'lambda.Beta' and 'lambda.Theta' respectively according to 
 ## the one-standard-error rule.
 
@@ -328,17 +328,17 @@ data(bgsmtr_example_data)
 
 ## Transpose data matrix to make rows correspond to 
 ## samples and columns correspond to variables.
-SNP <- t(bgsmtr_example_data$SNP_data)  ## Predictor matrix
-BM <- t(bgsmtr_example_data$BrainMeasures)  ## Response matrix
+SNP <- t(bgsmtr_example_data$SNP_data)  # predictor matrix
+BM <- t(bgsmtr_example_data$BrainMeasures)  # complete response matrix
 
 ## Unsupervised filtering of the top 50% variables.
 SNP_var <- apply(SNP, 2, var)
 SNP_subset <- SNP_var > quantile(SNP_var, 0.5)
 SNP <- SNP[ ,SNP_subset]
 
-set.seed(123)  ## A random seed for reproducibility
-tr <- sample(1:632, 550, replace = FALSE)  ## Training set indices
-va <- c(1:632)[-tr]  ## Validation set indices
+set.seed(123)  # a random seed for reproducibility
+tr <- sample(1:632, 550, replace = FALSE)  # training set indices
+va <- c(1:632)[-tr]  # validation set indices
 
 cat("dim(SNP):", dim(SNP[tr, ]), "
 dim(BM):", dim(BM[tr, ]))
@@ -378,7 +378,7 @@ We first perform a large-scope coarse search for the optimal lambda pair $({\lam
 ## Model I (the coarse-grid fit)
 
 ## To be more in line with real-world usage, the model is trained without 
-## specified missing probability ('rho' = NULL, even though we know it is 0.05) 
+## specified missing probabilities ('rho' = NULL, even if we know it is 0.05) 
 ## and lambda sequences ('lambda.Beta' = NULL, 'lambda.Theta' = NULL), in which 
 ## case the program will automatically determine reasonable values for users.
 
@@ -422,8 +422,8 @@ parallel::stopCluster(cl)
 
 ## Certainly, users can specify the lambda values (linear on the log scale) by themselves
 ## for the cross-validation search rather than use the control arguments. The following 
-## commands should return almost the same results as the above ones (subtle difference 
-## comes from rounding the float numbers).
+## commands should return almost the same results as the above ones (subtle differences 
+## come from rounding the float numbers).
 
 # cl <- parallel::makeCluster(3)
 # cvfit2.BM <- cv.missoNet(X = SNP[tr, ], Y = BM.mis[tr, ], kfold = 5,
@@ -481,7 +481,7 @@ plot(ht3)
 
 ## Plot the partial correlation matrix of the 15 neuroimaging measures.
 ## Must supply a dataset without missing values, so we use the original dataset here.
-pcor.mat <- ppcor::pcor(BM)  ## Not BM.mis
+pcor.mat <- ppcor::pcor(BM)  # not BM.mis
 corrplot::corrplot(pcor.mat$estimate, p.mat = pcor.mat$p.value, 
                    sig.level = 0.01, insig = "blank", 
                    tl.cex = 0.5, tl.col = "black", mar = c(.5, .1, 2, .1),
@@ -498,9 +498,9 @@ The two figures in the second row above show the relaxed conditional network and
 
 If we cluster the estimated coefficient matrix $\hat{\mathbf{B}}$ by rows (SNPs) in an unsupervised manner:
 ```{r, eval = FALSE}
-colnames(Beta_hat) <- colnames(BM)  ## Brain measure names
-rownames(Beta_hat) <- colnames(SNP)  ## SNP names
-Gene_groups <- bgsmtr_example_data$SNP_groups[SNP_subset]
+colnames(Beta_hat) <- colnames(BM)  # brain measure names
+rownames(Beta_hat) <- colnames(SNP)  # SNP names
+Gene_groups <- bgsmtr_example_data$SNP_groups[SNP_subset]  # gene names
 
 ComplexHeatmap::pheatmap(Beta_hat,
                          annotation_row = data.frame("Gene" = Gene_groups, row.names = rownames(Beta_hat)),
@@ -509,7 +509,7 @@ ComplexHeatmap::pheatmap(Beta_hat,
                          column_title = expression(paste(hat(bold(Beta)), " at `lambda.min` (clustered)")))
 ```
 ```{r, eval = FALSE, include = FALSE}
-set.seed(34)  # Seed for legend colors
+set.seed(34)  # seed for legend colors
 ComplexHeatmap::pheatmap(cvfit2.BM$est.min$Beta,
                          annotation_row = data.frame("Gene" = cvfit2.BM$Gene, row.names = rownames(cvfit2.BM$est.min$Beta)),
                          color = circlize::colorRamp2(c(-0.05,0,0.05), c("blue","white","red")), show_rownames = FALSE,
@@ -540,7 +540,7 @@ parallel::stopCluster(cl)
 
 Then we can assess the prediction performance of the models trained using the corrupted vs. complete dataset.
 ```{r, eval = FALSE}
-## Predictions on the validation dataset
+## Predictions on the validation dataset.
 newy.model2 <- predict(cvfit2.BM, newx = SNP[va, ], s = "lambda.min")
 newy.model3 <- predict(cvfit3.BM, newx = SNP[va, ], s = "lambda.min")
 

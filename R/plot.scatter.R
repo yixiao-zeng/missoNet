@@ -1,11 +1,4 @@
 plot.scatter <- function(cv.missoNet.obj, detailed.axes) {
-  if (!requireNamespace("plot3D", quietly = TRUE)) {
-    cat("\nRunning this function for the first time, downloading the necessary dependencies...\n\n")
-    Sys.sleep(2)
-    install.packages("plot3D")
-    requireNamespace("plot3D", quietly = TRUE)
-  }
-  
   log.lamB.vec <- log10(cv.missoNet.obj$lambda.Beta.vec)
   log.lamTh.vec <- log10(cv.missoNet.obj$lambda.Theta.vec)
   

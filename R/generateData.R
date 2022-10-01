@@ -57,16 +57,15 @@
 #' ## Simulate a dataset with response values missing completely 
 #' ## at random (MCAR), the overall missing rate is around 10%.
 #' sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
-#' 
+#' #--------------------------------------------------------------------------------#
 #' ## Fit a missoNet model using the simulated dataset.
-#' X <- sim.dat$X  ## Predictor matrix
-#' Y <- sim.dat$Z  ## Corrupted response matrix
+#' X <- sim.dat$X  # predictor matrix
+#' Y <- sim.dat$Z  # corrupted response matrix
 #' fit <- missoNet(X = X, Y = Y, lambda.Beta = 0.1, lambda.Theta = 0.1)
 #' 
 #' 
-#' ## Simulate a dataset with response values missing at random (MAR),
-#' ## the approximate missing rate for each column of the response 
-#' ## matrix is specified through a vector 'rho'.
+#' ## Simulate a dataset with response values missing at random (MAR), the approximate 
+#' ## missing rate for each column of the response matrix is specified through a vector 'rho'.
 #' ## The row sparsity and element sparsity of the auto-generated 'Beta' could be 
 #' ## adjusted by using 'Beta.row.sparsity' and 'Beta.elm.sparsity', respectively.
 #' n <- 300; p <- 50; q <- 20
@@ -78,16 +77,16 @@
 #' ## Simulate a dataset with response values missing not at 
 #' ## random (MNAR), using the user-supplied 'Beta' and 'Theta'.
 #' n <- 300; p <- 50; q <- 20
-#' Beta <- matrix(rnorm(p*q, 0, 1), p, q)  ## A nonsparse 'Beta' (p x q)
-#' Theta <- diag(q)  ## A diagonal 'Theta' (q x q)
+#' Beta <- matrix(rnorm(p*q, 0, 1), p, q)  # a nonsparse 'Beta' (p x q)
+#' Theta <- diag(q)  # a diagonal 'Theta' (q x q)
 #' sim.dat <- generateData(Beta = Beta, Theta = Theta, n = n, p = p, q = q,
 #'                         rho = 0.1, missing.type = "MNAR")
-#'                         
+#' #----------------------------------------------------------------------#           
 #' ## Specifying just one of 'Beta' and 'Theta' is also allowed.
 #' sim.dat <- generateData(Theta = Theta, n = n, p = p, q = q,
 #'                         rho = 0.1, missing.type = "MNAR")
-#'                     
-#'                     
+#' 
+#' 
 #' ## User-supplied 'X', 'Beta' and 'E', in which case 'Y' is deterministic.
 #' n <- 300; p <- 50; q <- 20
 #' X <- matrix(rnorm(n*p, 0, 1), n, p)

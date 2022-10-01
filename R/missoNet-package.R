@@ -17,7 +17,9 @@
 #' @useDynLib missoNet, .registration=TRUE
 #' @importFrom Rcpp sourceCpp
 #' @importFrom graphics par
+#' @importFrom grid gpar grid.rect
 #' @importFrom stats coef complete.cases quantile rbinom rnorm runif sd
-#' @importFrom utils install.packages setTxtProgressBar txtProgressBar
+#' @importFrom utils setTxtProgressBar txtProgressBar
+#' @importFrom glasso glasso
 NULL
 #> NULL

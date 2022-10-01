@@ -60,8 +60,8 @@ update.missoNet <- function(X, Y, lamTh, lamB,
         break
       } else {
         lik.old <- lik.new
-        Theta.out <- glasso::glasso(s = residual.cov, rho = lamTh.mat, thr = Theta.thr, maxit = Theta.maxit,
-                                    approx = FALSE, penalize.diagonal = info$penalize.diagonal, trace = FALSE)
+        Theta.out <- glasso(s = residual.cov, rho = lamTh.mat, thr = Theta.thr, maxit = Theta.maxit,
+                            approx = FALSE, penalize.diagonal = info$penalize.diagonal, trace = FALSE)
         Theta <- (Theta.out$wi + t(Theta.out$wi))/2
 
         B.out <- updateBeta(Theta = Theta, B0 = B.init, n = info$n, xtx = info$xtx, xty = info$til.xty,
@@ -95,11 +95,11 @@ update.missoNet <- function(X, Y, lamTh, lamB,
   ################################################################################
   if (info$penalize.diagonal) {
     lamTh.mat <- lamTh * (1 - diag(info$q)) + lamTh * diag.pf * diag(info$q)
-    Theta.out <- glasso::glasso(s = info.update$residual.cov, rho = lamTh.mat, thr = Theta.thr, maxit = Theta.maxit,
-                                approx = FALSE, penalize.diagonal = TRUE, trace = FALSE)
+    Theta.out <- glasso(s = info.update$residual.cov, rho = lamTh.mat, thr = Theta.thr, maxit = Theta.maxit,
+                        approx = FALSE, penalize.diagonal = TRUE, trace = FALSE)
   } else {
-    Theta.out <- glasso::glasso(s = info.update$residual.cov, rho = lamTh, thr = Theta.thr, maxit = Theta.maxit,
-                                approx = FALSE, penalize.diagonal = FALSE, trace = FALSE)
+    Theta.out <- glasso(s = info.update$residual.cov, rho = lamTh, thr = Theta.thr, maxit = Theta.maxit,
+                        approx = FALSE, penalize.diagonal = FALSE, trace = FALSE)
   }
   Theta <- (Theta.out$wi + t(Theta.out$wi))/2
   
