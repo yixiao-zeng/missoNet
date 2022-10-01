@@ -166,5 +166,5 @@ fit3 <- missoNet(X = X.tr.std, Y = Y.tr.std, lambda.Beta = lamB.vec, lambda.Thet
                  standardize = FALSE, standardize.response = FALSE)
 }
 \author{
-Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca} and Celia M.T. Greenwood.
+Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca}, Celia M.T. Greenwood and Archer Yi Yang.
 }

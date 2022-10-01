@@ -37,5 +37,5 @@ newy2 <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.1se.Beta")
 newy3 <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.1se.Theta")
 }
 \author{
-Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca} and Celia M.T. Greenwood.
+Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca}, Celia M.T. Greenwood and Archer Yi Yang.
 }

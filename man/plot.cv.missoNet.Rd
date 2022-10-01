@@ -32,5 +32,5 @@ plot(cvfit)
 plot(cvfit, type = "cv.scatter", detailed.axes = FALSE)}
 }
 \author{
-Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca} and Celia M.T. Greenwood.
+Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca}, Celia M.T. Greenwood and Archer Yi Yang.
 }

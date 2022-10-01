@@ -129,5 +129,5 @@ sim.dat <- generateData(X = X, Beta = Beta, E = E, n = n, p = p, q = q,
                         rho = 0.1, missing.type = "MCAR")
 }
 \author{
-Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca} and Celia M.T. Greenwood.
+Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca}, Celia M.T. Greenwood and Archer Yi Yang.
 }

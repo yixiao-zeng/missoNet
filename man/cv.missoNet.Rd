@@ -228,5 +228,5 @@ newy <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.min")
 }
 }
 \author{
-Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca} and Celia M.T. Greenwood.
+Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca}, Celia M.T. Greenwood and Archer Yi Yang.
 }
