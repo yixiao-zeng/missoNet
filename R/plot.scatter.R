@@ -1,14 +1,4 @@
 plot.scatter <- function(cv.missoNet.obj, detailed.axes, plt.surf, ...) {
-  if (!requireNamespace("circlize", quietly = TRUE)) {
-    dl <- utils::askYesNo("Download the necessary 'circlize' package?")
-    if (isTRUE(dl)) {
-      utils::install.packages("circlize")
-      requireNamespace("circlize", quietly = TRUE)
-    } else {
-      stop("the plotting function depends on the 'circlize' package.")
-    }
-  }
-  
   col <- circlize::colorRamp2(quantile(cv.missoNet.obj$cvm, c(0, 0.2, 0.4, 0.6, 0.8, 1)), c("blue", "cyan", "green", "yellow", "orange", "red"))
   if (isTRUE(detailed.axes)) {
     lab <- c(10, 10, 10)

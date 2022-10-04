@@ -57,7 +57,7 @@
 #' ## Simulate a dataset with response values missing completely 
 #' ## at random (MCAR), the overall missing rate is around 10%.
 #' sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
-#' #--------------------------------------------------------------------------------#
+#' ## ---------------------------------------------------------------------------- ##
 #' ## Fit a missoNet model using the simulated dataset.
 #' X <- sim.dat$X  # predictor matrix
 #' Y <- sim.dat$Z  # corrupted response matrix
@@ -81,7 +81,7 @@
 #' Theta <- diag(q)  # a diagonal 'Theta' (q x q)
 #' sim.dat <- generateData(Beta = Beta, Theta = Theta, n = n, p = p, q = q,
 #'                         rho = 0.1, missing.type = "MNAR")
-#' #----------------------------------------------------------------------#           
+#' ## ------------------------------------------------------------------ ##           
 #' ## Specifying just one of 'Beta' and 'Theta' is also allowed.
 #' sim.dat <- generateData(Theta = Theta, n = n, p = p, q = q,
 #'                         rho = 0.1, missing.type = "MNAR")

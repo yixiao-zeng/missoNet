@@ -1,14 +1,4 @@
 plot.heatmap <- function(cv.missoNet.obj, detailed.axes, ...) {
-  if (!requireNamespace("circlize", quietly = TRUE)) {
-    dl <- utils::askYesNo("Download the necessary 'circlize' package?")
-    if (isTRUE(dl)) {
-      utils::install.packages("circlize")
-      requireNamespace("circlize", quietly = TRUE)
-    } else {
-      stop("the plotting function depends on the 'circlize' package.")
-    }
-  }
-  
   lamB.vec <- sort(unique(cv.missoNet.obj$lambda.Beta.vec), decreasing = TRUE)
   lamTh.vec <- sort(unique(cv.missoNet.obj$lambda.Theta.vec), decreasing = TRUE)
   cvm <- NULL
@@ -72,4 +62,3 @@ plot.heatmap <- function(cv.missoNet.obj, detailed.axes, ...) {
                           }
   )
 }
-

@@ -13,18 +13,19 @@
 #' @author Yixiao Zeng \email{yixiao.zeng@@mail.mcgill.ca}, Celia M.T. Greenwood and Archer Yi Yang.
 #' 
 #' @examples
-#' ## Perform the five-fold cross-validation on a simulated dataset.
+#' ## Simulate a dataset.
 #' sim.dat <- generateData(n = 200, p = 10, q = 10, rho = 0.1, missing.type = "MCAR")
-#' cvfit <- cv.missoNet(X = sim.dat$X, Y = sim.dat$Z, kfold = 5, fit.1se = TRUE)
-#' 
 #' 
 #' \dontrun{
 #' 
+#' ## Perform a five-fold cross-validation on the simulated dataset.
+#' cvfit <- cv.missoNet(X = sim.dat$X, Y = sim.dat$Z, kfold = 5, fit.1se = TRUE)
+#' 
 #' ## Plot the (standardized) mean cross-validated errors in a heatmap.
 #' plot(cvfit)
-#' #----------------------------------------------------------------------#
+#' 
 #' ## Plot the (standardized) mean cross-validated errors in a 3D scatterplot.
-#' plot(cvfit, type = "cv.scatter", detailed.axes = FALSE, plt.surf = FALSE)
+#' plot(cvfit, type = "cv.scatter", detailed.axes = FALSE, plt.surf = TRUE)
 #' }
 
 plot.cv.missoNet <- function(x, type = c("cv.heatmap", "cv.scatter"), detailed.axes = TRUE, plt.surf = TRUE, ...) {

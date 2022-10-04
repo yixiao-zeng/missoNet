@@ -6,16 +6,17 @@
 # missoNet: Multi-Task Regression and Conditional Network Estimation with Missing Values in the Tasks
 
 `missoNet` is an R package that fits penalized multi-task Gaussian regression -- that is, with multiple 
-correlated tasks or response variables -- to simultaneously estimate the covariate effects on all tasks 
-and the conditional network structure among the response variables via penalized maximum likelihood in 
-an undirected Gaussian graphical model. In contrast to most penalized multi-task regression / conditional 
-graphical lasso methods, `missoNet` has the capability of obtaining estimates even when the response data 
-is corrupted by missing values. The method automatically enjoys the theoretical and computational benefits 
-of convexity, and returns solutions that are comparable/close to the estimates without any missing values.
+correlated tasks or response variables -- to simultaneously estimate the coefficients of a set of predictor 
+variables for all tasks and the conditional response network structure given all predictor variables, via 
+penalized maximum likelihood in an undirected conditional Gaussian graphical model. In contrast to most 
+penalized multi-task regression (conditional graphical lasso) methods, `missoNet` has the capability of 
+obtaining estimates even when the response data is corrupted by missing values. The method automatically 
+enjoys the theoretical and computational benefits of convexity, and returns solutions that are comparable/close 
+to the estimates without any missing values.
 
-The package includes functions for data simulation, model fitting, cross-validation, and visualization of 
-results, as well as predictions in new data. The function arguments are in the same style as those of 
-`glmnet`, making it easy for experienced users to get started.
+The package provides an integrated set of core routines including 1) data simulation; 2) model fitting and 
+cross-validation; 3) visualization of results; 4) predictions in new data. The function arguments are in the 
+same style as those of `glmnet`, making it easy for experienced users to get started.
 
 
 ## Installation
@@ -49,10 +50,10 @@ tst <- 241:300  # test set indices
 X.tr <- sim.dat$X[tr, ]  # predictor matrix
 Y.tr <- sim.dat$Z[tr, ]  # corrupted response matrix
 
-# Use cv.missoNet to do a five-fold cross-validation on the training data.
+# Perform a five-fold cross-validation on the training set.
 cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5)
 
-# Or compute the cross-validation folds in parallel.
+# Alternatively, compute the cross-validation folds in parallel.
 cl <- parallel::makeCluster(min(parallel::detectCores()-1, 3))
 cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5,
                      parallel = TRUE, cl = cl)

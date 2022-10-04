@@ -27,8 +27,7 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-**missoNet** is a package that fits penalized multi-task Gaussian regression -- that is, with multiple correlated tasks or response variables -- to simultaneously estimate the covariate effects on all tasks and the conditional network structure among the response variables via penalized maximum likelihood in an undirected Gaussian graphical model. In contrast to most penalized multi-task regression / conditional graphical lasso methods, **missoNet** has the capability of obtaining estimates even when the response data 
-is corrupted by missing values. The method automatically enjoys the theoretical and computational benefits of convexity, and returns solutions that are comparable/close to the estimates without any missing values.
+**missoNet** is a package that fits penalized multi-task Gaussian regression -- that is, with multiple correlated tasks or response variables -- to simultaneously estimate the coefficients of a set of predictor variables for all tasks and the conditional response network structure given all predictor variables, via penalized maximum likelihood in an undirected conditional Gaussian graphical model. In contrast to most penalized multi-task regression (conditional graphical lasso) methods, **missoNet** has the capability of obtaining estimates even when the response data is corrupted by missing values. The method automatically enjoys the theoretical and computational benefits of convexity, and returns solutions that are comparable/close to the estimates without any missing values.
 
 **missoNet** assumes the model
 $$
@@ -44,11 +43,11 @@ $$
 $$
 $\mathbf{B}^*$ that mapping predictors to responses and $\mathbf{\Theta}^*$ that revealing the responses' conditional dependencies are estimated for the lasso penalties -- $\lambda_B$ and $\lambda_\Theta$, over a grid of values (on the log scale) covering the entire range of possible solutions. To learn more about sparse multi-task regression with inverse covariance estimation using datasets without missing values, see [MRCE](https://CRAN.R-project.org/package=MRCE).
 
-However, missingness in real data is inevitable. Most multi-task regression / conditional graphical lasso methods either assume the data is fully-observed (eg. MRCE), or deal with missing data through a likelihood-based method such as the EM algorithm (e.g, [cglasso](https://CRAN.R-project.org/package=cglasso)). An important challenge in this context is the possible non-convexity of the associated optimization problem when there is missing data, as well as the high computational cost from iteratively updating the estimations for parameters.
+However, missingness in real data is inevitable. Most penalized multi-task regression / conditional graphical lasso methods either assume the data is fully-observed (eg. MRCE), or deal with missing data through a likelihood-based method such as the EM algorithm (e.g, [cglasso](https://CRAN.R-project.org/package=cglasso)). An important challenge in this context is the possible non-convexity of the associated optimization problem when there is missing data, as well as the high computational cost from iteratively updating the estimations for parameters.
 
 **missoNet** aims to handle a specific class of datasets where the response matrix $\mathbf{Y}$ contains data which is missing at random (MAR). To use **missoNet**, users do not need to possess additional knowledge for pre-processing missing data (e.g., imputation) nor for selection of regularization parameters ($\lambda_B$ and $\lambda_\Theta$), the method provides a unified framework for automatically solving a convex modification of the multi-task learning problem defined above, using corrupted datasets.
 
-The package includes functions for data simulation, model fitting, cross-validation, and visualization of results, as well as predictions in new data. The function arguments are in the same style as those of **glmnet**, making it easy for experienced users to get started.
+The package provides an integrated set of core routines for data simulation, model fitting and cross-validation, visualization of results, as well as predictions in new data. The function arguments are in the same style as those of `glmnet`, making it easy for experienced users to get started.
 
 
 # Installation

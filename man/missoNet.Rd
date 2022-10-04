@@ -130,6 +130,7 @@ tst <- 241:300  # test set indices
 X.tr <- sim.dat$X[tr, ]  # predictor matrix
 Y.tr <- sim.dat$Z[tr, ]  # corrupted response matrix
 
+\dontrun{
 
 ## Fit one missoNet model with a scalar for both 'lambda.Beta' and 'lambda.Theta'.
 fit1 <- missoNet(X = X.tr, Y = Y.tr, lambda.Beta = 0.1, lambda.Theta = 0.1)
@@ -164,6 +165,7 @@ X.tr.std <- scale(X.tr, center = FALSE, scale = apply(X.tr, 2, sd, na.rm = TRUE)
 Y.tr.std <- scale(Y.tr, center = FALSE, scale = apply(Y.tr, 2, sd, na.rm = TRUE))
 fit3 <- missoNet(X = X.tr.std, Y = Y.tr.std, lambda.Beta = lamB.vec, lambda.Theta = lamTht.vec,
                  standardize = FALSE, standardize.response = FALSE)
+}
 }
 \author{
 Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca}, Celia M.T. Greenwood and Archer Yi Yang.

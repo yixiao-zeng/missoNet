@@ -85,6 +85,7 @@
 #' X.tr <- sim.dat$X[tr, ]  # predictor matrix
 #' Y.tr <- sim.dat$Z[tr, ]  # corrupted response matrix
 #' 
+#' \dontrun{
 #' 
 #' ## Fit one missoNet model with a scalar for both 'lambda.Beta' and 'lambda.Theta'.
 #' fit1 <- missoNet(X = X.tr, Y = Y.tr, lambda.Beta = 0.1, lambda.Theta = 0.1)
@@ -119,6 +120,7 @@
 #' Y.tr.std <- scale(Y.tr, center = FALSE, scale = apply(Y.tr, 2, sd, na.rm = TRUE))
 #' fit3 <- missoNet(X = X.tr.std, Y = Y.tr.std, lambda.Beta = lamB.vec, lambda.Theta = lamTht.vec,
 #'                  standardize = FALSE, standardize.response = FALSE)
+#'}
 
 missoNet <- function(X, Y, lambda.Beta, lambda.Theta, rho = NULL,
                      Beta.maxit = 1e4, Beta.thr = 1e-06, eta = 0.8,

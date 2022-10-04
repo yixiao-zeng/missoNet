@@ -168,6 +168,7 @@ tst <- 241:300  # test set indices
 X.tr <- sim.dat$X[tr, ]  # predictor matrix
 Y.tr <- sim.dat$Z[tr, ]  # corrupted response matrix
 
+\dontrun{
 
 ## Perform a five-fold cross-validation WITH specified 'lambda.Beta' and 'lambda.Theta'.
 ## 'standardize' and 'standardize.response' are 'TRUE' by default.
@@ -181,8 +182,6 @@ cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5,
 ## < This simplest command should be a good start for most analyses >.
 cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5)
 
-
-\dontrun{
 
 ## Compute the cross-validation folds in parallel on a cluster with three cores.
 ## 'fit.1se = TRUE' tells the program to make additional estimations of the 
@@ -204,7 +203,7 @@ cvfit.std <- cv.missoNet(X = X.tr.std, Y = Y.tr.std, kfold = 5,
 
 ## Plot the (standardized) mean cross-validated errors in a heatmap.
 plot(cvfit, type = "cv.heatmap")
-#-------------------------------------------------------------------------#
+## --------------------------------------------------------------------- ##
 ## Plot the (standardized) mean cross-validated errors in a 3D scatterplot.
 plot(cvfit, type = "cv.scatter")
 
@@ -212,11 +211,11 @@ plot(cvfit, type = "cv.scatter")
 ## Extract the estimates at "lambda.min".
 Beta.hat1 <- cvfit$est.min$Beta
 Theta.hat1 <- cvfit$est.min$Theta
-#-------------------------------------------------------------------#
+## --------------------------------------------------------------- ##
 ## Extract the estimates at "lambda.1se.Beta" (if 'fit.1se = TRUE').
 Beta.hat2 <- cvfit$est.1se.B$Beta
 Theta.hat2 <- cvfit$est.1se.B$Theta
-#-------------------------------------------------------------------#
+## --------------------------------------------------------------- ##
 ## Extract the estimates at "lambda.1se.Theta" (if 'fit.1se = TRUE').
 Beta.hat3 <- cvfit$est.1se.Tht$Beta
 Theta.hat3 <- cvfit$est.1se.Tht$Theta
