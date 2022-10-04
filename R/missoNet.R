@@ -81,7 +81,7 @@
 #' ## at random (MCAR), the overall missing rate is around 10%.
 #' sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
 #' tr <- 1:240  # training set indices
-#' va <- 241:300  # validation set indices
+#' tst <- 241:300  # test set indices
 #' X.tr <- sim.dat$X[tr, ]  # predictor matrix
 #' Y.tr <- sim.dat$Z[tr, ]  # corrupted response matrix
 #' 
@@ -131,7 +131,7 @@ missoNet <- function(X, Y, lambda.Beta, lambda.Theta, rho = NULL,
   }
   
   if (verbose > 0) { cat("\n========================= missoNet ========================\n
-- Parameter initialization...\n\n") }
+- Parameter initialization ...\n\n") }
   n <- nrow(X)
   kfold <- ifelse(n >= 100, 10, 5)
   set.seed(123)  # for reproducibility
@@ -143,7 +143,7 @@ missoNet <- function(X, Y, lambda.Beta, lambda.Theta, rho = NULL,
                          standardize = standardize, standardize.response = standardize.response)
   
   if (verbose > 0) { cat("-----------------------------------------------------------\n
-- Fittig with the user-supplied `lambda` value(s)...\n\n") }
+- Fittig with the user-supplied `lambda` value(s) ...\n\n") }
   if (!parallel) {
     fit_list <- vector("list", length(lambda.Theta))
     names(fit_list) <- paste0(1:length(lambda.Theta), ": lamB=", sprintf("%.3f", lambda.Beta), " lamTht=", sprintf("%.3f", lambda.Theta))
@@ -157,7 +157,7 @@ missoNet <- function(X, Y, lambda.Beta, lambda.Theta, rho = NULL,
     if (verbose == 1) { close(pb) }
   } else {
     if (verbose > 0) {
-      cat("  - Parallel execution on", length(cl), "CPU cores...\n\n")
+      cat("  - Parallel execution on", length(cl), "CPU cores ...\n\n")
       pbapply::pboptions(type = "txt", style = 3, char = "=", txt.width = 50, use_lb = TRUE, nout = min(length(lambda.Theta), 100))
     } else {pbapply::pboptions(type = "none", use_lb = TRUE)}
     

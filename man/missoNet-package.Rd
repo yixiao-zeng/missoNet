@@ -6,7 +6,7 @@
 \title{Multi-task regression and conditional network estimation with missing data}
 \description{
 \tabular{ll}{ Package: \tab missoNet\cr Type: \tab Package\cr Version: \tab
-1.0.0\cr Date: \tab 2022-09-30\cr License: \tab GPL (>= 2)\cr }
+1.0.0\cr Date: \tab 2022-10-01\cr License: \tab GPL-2\cr }
 }
 \section{missoNet functions}{
 

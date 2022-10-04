@@ -99,7 +99,7 @@
 #' ## at random (MCAR), the overall missing rate is around 10%.
 #' sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
 #' tr <- 1:240  # training set indices
-#' va <- 241:300  # validation set indices
+#' tst <- 241:300  # test set indices
 #' X.tr <- sim.dat$X[tr, ]  # predictor matrix
 #' Y.tr <- sim.dat$Z[tr, ]  # corrupted response matrix
 #'
@@ -117,16 +117,17 @@
 #' cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5)
 #' 
 #' 
-#' ## Compute the cross-validation folds in parallel on a cluster with two cores.
-#' ## 'fit.1se = TRUE' tells the program to make additional estimations of the parameters 
-#' ## at the largest 'lambda.Beta' / 'lambda.Theta' according to the one-standard-error rule.
-#' cl <- parallel::makeCluster(2)
+#' \dontrun{
+#' 
+#' ## Compute the cross-validation folds in parallel on a cluster with three cores.
+#' ## 'fit.1se = TRUE' tells the program to make additional estimations of the 
+#' ## parameters at the largest 'lambda.Beta' / 'lambda.Theta' that gives the 
+#' ## most regularized model according to the one-standard-error rule.
+#' cl <- parallel::makeCluster(min(parallel::detectCores()-1, 3))
 #' cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5, fit.1se = TRUE,
 #'                      parallel = TRUE, cl = cl)
 #' parallel::stopCluster(cl)
 #' 
-#' 
-#' \dontrun{
 #' 
 #' ## Use PRE-STANDARDIZED training data if you wish to compare the results 
 #' ## with other softwares. There is no need for centering of variables.
@@ -137,9 +138,9 @@
 #'
 #'
 #' ## Plot the (standardized) mean cross-validated errors in a heatmap.
-#' plot(cvfit)
-#' #----------------------------------------------------------------------#
-#' ## Plot the (standardized) mean cross-validated errors in a scatterplot.
+#' plot(cvfit, type = "cv.heatmap")
+#' #-------------------------------------------------------------------------#
+#' ## Plot the (standardized) mean cross-validated errors in a 3D scatterplot.
 #' plot(cvfit, type = "cv.scatter")
 #'
 #'
@@ -159,7 +160,7 @@
 #' ## Make predictions of response values at "lambda.min".
 #' ## 's' = "lambda.1se.Beta" and 's' = "lambda.1se.Theta"
 #' ## are supported if 'fit.1se = TRUE' when calling cv.missoNet.
-#' newy <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.min")
+#' newy <- predict(cvfit, newx = sim.dat$X[tst, ], s = "lambda.min")
 #' }
 
 cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
@@ -175,7 +176,7 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
                         permute = TRUE, with.seed = NULL,
                         parallel = FALSE, cl = NULL, verbose = 1) {
   if (verbose > 0) { cat("\n======================= cv.missoNet =======================\n
-- Parameter initialization...\n\n") }
+- Parameter initialization ...\n\n") }
   
   n <- nrow(X)
   p <- ncol(X)
@@ -268,7 +269,7 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
 
   } else {
     if (verbose > 0) {
-      cat("- Parallel execution on", length(cl), "CPU cores...\n\n")
+      cat("- Parallel execution on", length(cl), "CPU cores ...\n\n")
       pbapply::pboptions(type = "txt", style = 3, char = "=", txt.width = 50, use_lb = TRUE, nout = kfold)
     } else {pbapply::pboptions(type = "none", use_lb = TRUE)}
    
@@ -293,7 +294,7 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
                 lamTh.vec = lamTh.vec, lamB.vec = lamB.vec, 
                 lamTh.min = lamTh.min, lamB.min = lamB.min, margin = 0.1)
   
-  if (verbose > 0) { cat("- Fittig with `lambda.min`...\n\n") }
+  if (verbose > 0) { cat("- Fittig with `lambda.min` ...\n\n") }
   out.min <- update.missoNet(X = X, Y = Y, lamTh = lamTh.min, lamB = lamB.min,
                              Beta.maxit = Beta.maxit * 10, Beta.thr = Beta.thr * 0.01,
                              Theta.maxit = Theta.maxit * 10, Theta.thr = Theta.thr * 0.01,
@@ -316,7 +317,7 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
   if (fit.1se) {
     if (verbose > 0) { 
       cat("-----------------------------\n
-- Fiting with `lambda.1se`...\n
+- Fiting with `lambda.1se` ...\n
   -- `lambda.1se.Beta`\n\n") }
     new.lamB.vec <- lamB.vec[lamTh.vec == lamTh.min]
     new.err.cv <- err.cv[lamTh.vec == lamTh.min]

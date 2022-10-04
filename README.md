@@ -1,8 +1,9 @@
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/yixiao-zeng/missoNet/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/yixiao-zeng/missoNet/actions/workflows/R-CMD-check.yaml)
+[![CRAN status](https://www.r-pkg.org/badges/version/missoNet)](https://CRAN.R-project.org/package=missoNet)
 <!-- badges: end -->
 
-# missoNet: Multi-task Regression and Conditional Network Estimation with Missing Values in the Tasks
+# missoNet: Multi-Task Regression and Conditional Network Estimation with Missing Values in the Tasks
 
 `missoNet` is an R package that fits penalized multi-task Gaussian regression -- that is, with multiple 
 correlated tasks or response variables -- to simultaneously estimate the covariate effects on all tasks 
@@ -31,7 +32,7 @@ Or install the development version of `missoNet` from GitHub:
 if(!require("devtools")) {
   install.packages("devtools")
 }
-devtools::install_github("yixiao-zeng/missoNet")
+devtools::install_github("yixiao-zeng/missoNet", build_vignettes = TRUE)
 ```
 
 
@@ -44,14 +45,14 @@ An example of how to use the package:
 # at random (MCAR), the overall missing rate is around 10%.
 sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
 tr <- 1:240  # training set indices
-va <- 241:300  # validation set indices
+tst <- 241:300  # test set indices
 X.tr <- sim.dat$X[tr, ]  # predictor matrix
 Y.tr <- sim.dat$Z[tr, ]  # corrupted response matrix
 
 # Use cv.missoNet to do a five-fold cross-validation on the training data.
 cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5)
 
-# Compute the cross-validation folds in parallel.
+# Or compute the cross-validation folds in parallel.
 cl <- parallel::makeCluster(min(parallel::detectCores()-1, 3))
 cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5,
                      parallel = TRUE, cl = cl)
@@ -64,8 +65,8 @@ plot(cvfit)
 Beta_hat <- cvfit$est.min$Beta
 Theta_hat <- cvfit$est.min$Theta
 
-# Make predictions of response values on the validation set.
-newy <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.min")
+# Make predictions of response values on the test set.
+newy <- predict(cvfit, newx = sim.dat$X[tst, ], s = "lambda.min")
 ```
 
 

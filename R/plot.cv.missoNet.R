@@ -5,7 +5,8 @@
 #' @param x A fitted \code{'cv.missoNet'} object.
 #' @param type A character string for the type of plot, can be either "\code{cv.heatmap}" (default) or "\code{cv.scatter}".
 #' @param detailed.axes Logical: whether the detailed axes should be plotted. The default is \code{'TRUE'}.
-#' @param ... Other graphical arguments used by \sQuote{ComplexHeatmap::Heatmap}.
+#' @param plt.surf Logical: whether to draw the error surface. The default is \code{'TRUE'}. This is only needed when \code{'type'} = "\code{cv.scatter}".
+#' @param ... Other graphical arguments used by \sQuote{ComplexHeatmap::Heatmap} or \sQuote{scatterplot3d::scatterplot3d}.
 #' @method plot cv.missoNet
 #' @export
 #' 
@@ -18,13 +19,15 @@
 #' 
 #' 
 #' \dontrun{
+#' 
 #' ## Plot the (standardized) mean cross-validated errors in a heatmap.
 #' plot(cvfit)
 #' #----------------------------------------------------------------------#
-#' ## Plot the (standardized) mean cross-validated errors in a scatterplot.
-#' plot(cvfit, type = "cv.scatter", detailed.axes = FALSE)}
+#' ## Plot the (standardized) mean cross-validated errors in a 3D scatterplot.
+#' plot(cvfit, type = "cv.scatter", detailed.axes = FALSE, plt.surf = FALSE)
+#' }
 
-plot.cv.missoNet <- function(x, type = c("cv.heatmap", "cv.scatter"), detailed.axes = TRUE, ...) {
+plot.cv.missoNet <- function(x, type = c("cv.heatmap", "cv.scatter"), detailed.axes = TRUE, plt.surf = TRUE, ...) {
   type <- match.arg(type)
-  switch(type, cv.heatmap = plot.heatmap(x, detailed.axes, ...), cv.scatter = plot.scatter(x, detailed.axes))
+  switch(type, cv.heatmap = plot.heatmap(x, detailed.axes, ...), cv.scatter = plot.scatter(x, detailed.axes, plt.surf, ...))
 }

@@ -4,7 +4,13 @@
 \alias{plot.cv.missoNet}
 \title{Plot the cross-validation errors produced by cv.missoNet}
 \usage{
-\method{plot}{cv.missoNet}(x, type = c("cv.heatmap", "cv.scatter"), detailed.axes = TRUE, ...)
+\method{plot}{cv.missoNet}(
+  x,
+  type = c("cv.heatmap", "cv.scatter"),
+  detailed.axes = TRUE,
+  plt.surf = TRUE,
+  ...
+)
 }
 \arguments{
 \item{x}{A fitted \code{'cv.missoNet'} object.}
@@ -13,7 +19,9 @@
 
 \item{detailed.axes}{Logical: whether the detailed axes should be plotted. The default is \code{'TRUE'}.}
 
-\item{...}{Other graphical arguments used by \sQuote{ComplexHeatmap::Heatmap}.}
+\item{plt.surf}{Logical: whether to draw the error surface. The default is \code{'TRUE'}. This is only needed when \code{'type'} = "\code{cv.scatter}".}
+
+\item{...}{Other graphical arguments used by \sQuote{ComplexHeatmap::Heatmap} or \sQuote{scatterplot3d::scatterplot3d}.}
 }
 \description{
 S3 method for plotting the cross-validation error surface from a fitted \code{'cv.missoNet'} object.
@@ -25,11 +33,13 @@ cvfit <- cv.missoNet(X = sim.dat$X, Y = sim.dat$Z, kfold = 5, fit.1se = TRUE)
 
 
 \dontrun{
+
 ## Plot the (standardized) mean cross-validated errors in a heatmap.
 plot(cvfit)
 #----------------------------------------------------------------------#
-## Plot the (standardized) mean cross-validated errors in a scatterplot.
-plot(cvfit, type = "cv.scatter", detailed.axes = FALSE)}
+## Plot the (standardized) mean cross-validated errors in a 3D scatterplot.
+plot(cvfit, type = "cv.scatter", detailed.axes = FALSE, plt.surf = FALSE)
+}
 }
 \author{
 Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca}, Celia M.T. Greenwood and Archer Yi Yang.

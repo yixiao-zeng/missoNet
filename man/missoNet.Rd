@@ -126,7 +126,7 @@ solutions that are comparable/close to the clean conditional graphical lasso est
 ## at random (MCAR), the overall missing rate is around 10\%.
 sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
 tr <- 1:240  # training set indices
-va <- 241:300  # validation set indices
+tst <- 241:300  # test set indices
 X.tr <- sim.dat$X[tr, ]  # predictor matrix
 Y.tr <- sim.dat$Z[tr, ]  # corrupted response matrix
 

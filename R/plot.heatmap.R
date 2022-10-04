@@ -1,7 +1,12 @@
 plot.heatmap <- function(cv.missoNet.obj, detailed.axes, ...) {
   if (!requireNamespace("circlize", quietly = TRUE)) {
-    utils::install.packages("circlize")
-    requireNamespace("circlize", quietly = TRUE)
+    dl <- utils::askYesNo("Download the necessary 'circlize' package?")
+    if (isTRUE(dl)) {
+      utils::install.packages("circlize")
+      requireNamespace("circlize", quietly = TRUE)
+    } else {
+      stop("the plotting function depends on the 'circlize' package.")
+    }
   }
   
   lamB.vec <- sort(unique(cv.missoNet.obj$lambda.Beta.vec), decreasing = TRUE)
@@ -20,17 +25,17 @@ plot.heatmap <- function(cv.missoNet.obj, detailed.axes, ...) {
   } else {
     rownames(cvm) <- rep(" ", length(lamTh.vec))
     colnames(cvm) <- rep(" ", length(lamB.vec))
-    pos <- c(round(length(lamTh.vec) * 0.1), round(length(lamTh.vec) * 0.2),
-             round(length(lamTh.vec) * 0.3), round(length(lamTh.vec) * 0.4),
-             round(length(lamTh.vec) * 0.5), round(length(lamTh.vec) * 0.6),
-             round(length(lamTh.vec) * 0.7), round(length(lamTh.vec) * 0.8),
-             round(length(lamTh.vec) * 0.9))
+    pos <- c(1, floor(length(lamTh.vec) * 0.1), floor(length(lamTh.vec) * 0.2),
+             floor(length(lamTh.vec) * 0.3), floor(length(lamTh.vec) * 0.4),
+             floor(length(lamTh.vec) * 0.5), floor(length(lamTh.vec) * 0.6),
+             floor(length(lamTh.vec) * 0.7), floor(length(lamTh.vec) * 0.8),
+             floor(length(lamTh.vec) * 0.9), length(lamTh.vec))
     rownames(cvm)[pos] <- sprintf("%.3f", lamTh.vec[pos])
-    pos <- c(round(length(lamB.vec) * 0.1), round(length(lamB.vec) * 0.2),
-             round(length(lamB.vec) * 0.3), round(length(lamB.vec) * 0.4),
-             round(length(lamB.vec) * 0.5), round(length(lamB.vec) * 0.6),
-             round(length(lamB.vec) * 0.7), round(length(lamB.vec) * 0.8),
-             round(length(lamB.vec) * 0.9))
+    pos <- c(1, floor(length(lamB.vec) * 0.1), floor(length(lamB.vec) * 0.2),
+             floor(length(lamB.vec) * 0.3), floor(length(lamB.vec) * 0.4),
+             floor(length(lamB.vec) * 0.5), floor(length(lamB.vec) * 0.6),
+             floor(length(lamB.vec) * 0.7), floor(length(lamB.vec) * 0.8),
+             floor(length(lamB.vec) * 0.9), length(lamB.vec))
     colnames(cvm)[pos] <- sprintf("%.3f", lamB.vec[pos])
   }
   

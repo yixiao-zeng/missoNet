@@ -24,17 +24,20 @@ S3 method for making predictions of response values from a fitted \code{'cv.miss
 \examples{
 ## Perform the five-fold cross-validation on a simulated dataset.
 sim.dat <- generateData(n = 200, p = 10, q = 10, rho = 0.1, missing.type = "MCAR")
-tr <- 1:160  # training set indices
-va <- 161:200  # validation set indices
+tr <- 1:180  # training set indices
+tst <- 181:200  # test set indices
 cvfit <- cv.missoNet(X = sim.dat$X[tr, ], Y = sim.dat$Z[tr, ], kfold = 5, fit.1se = TRUE)
 
 
+\dontrun{
+
 ## Make predictions of new response values.
-newy1 <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.min")
-#---------------------------------------------------------------------#
-newy2 <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.1se.Beta")
-#---------------------------------------------------------------------#
-newy3 <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.1se.Theta")
+newy1 <- predict(cvfit, newx = sim.dat$X[tst, ], s = "lambda.min")
+#----------------------------------------------------------------------#
+newy2 <- predict(cvfit, newx = sim.dat$X[tst, ], s = "lambda.1se.Beta")
+#----------------------------------------------------------------------#
+newy3 <- predict(cvfit, newx = sim.dat$X[tst, ], s = "lambda.1se.Theta")
+}
 }
 \author{
 Yixiao Zeng \email{yixiao.zeng@mail.mcgill.ca}, Celia M.T. Greenwood and Archer Yi Yang.

@@ -42,9 +42,9 @@ $$
 \mathrm{tr}\left[\frac{1}{n}(\mathbf{Y} - \mathbf{XB})^\top(\mathbf{Y} - \mathbf{XB}) \mathbf{\Theta}\right] 
 - \mathrm{log}|\mathbf{\Theta}| + \lambda_{\Theta}(\|\mathbf{\Theta}\|_{1,\mathrm{off}} + 1_{n\leq \mathrm{max}(p,q)} \|\mathbf{\Theta}\|_{1,\mathrm{diag}}) + \lambda_{B}\|\mathbf{B}\|_1.
 $$
-$\mathbf{B}^*$ that mapping predictors to responses and $\mathbf{\Theta}^*$ that revealing the responses' conditional dependencies are estimated for the lasso penalties -- $\lambda_B$ and $\lambda_\Theta$, over a grid of values (on the log scale) covering the entire range of possible solutions. To learn more about sparse multi-task regression with inverse covariance estimation using datasets without missing values, see [MRCE](https://cran.r-project.org/web/packages/MRCE/index.html).
+$\mathbf{B}^*$ that mapping predictors to responses and $\mathbf{\Theta}^*$ that revealing the responses' conditional dependencies are estimated for the lasso penalties -- $\lambda_B$ and $\lambda_\Theta$, over a grid of values (on the log scale) covering the entire range of possible solutions. To learn more about sparse multi-task regression with inverse covariance estimation using datasets without missing values, see [MRCE](https://CRAN.R-project.org/package=MRCE).
 
-However, missingness in real data is inevitable. Most multi-task regression / conditional graphical lasso methods either assume the data is fully-observed (eg. MRCE), or deal with missing data through a likelihood-based method such as the EM algorithm (e.g, [cglasso](https://cran.r-project.org/web/packages/cglasso/index.html)). An important challenge in this context is the possible non-convexity of the associated optimization problem when there is missing data, as well as the high computational cost from iteratively updating the estimations for parameters.
+However, missingness in real data is inevitable. Most multi-task regression / conditional graphical lasso methods either assume the data is fully-observed (eg. MRCE), or deal with missing data through a likelihood-based method such as the EM algorithm (e.g, [cglasso](https://CRAN.R-project.org/package=cglasso)). An important challenge in this context is the possible non-convexity of the associated optimization problem when there is missing data, as well as the high computational cost from iteratively updating the estimations for parameters.
 
 **missoNet** aims to handle a specific class of datasets where the response matrix $\mathbf{Y}$ contains data which is missing at random (MAR). To use **missoNet**, users do not need to possess additional knowledge for pre-processing missing data (e.g., imputation) nor for selection of regularization parameters ($\lambda_B$ and $\lambda_\Theta$), the method provides a unified framework for automatically solving a convex modification of the multi-task learning problem defined above, using corrupted datasets.
 
@@ -83,7 +83,7 @@ We will use a synthetic dataset for illustration. To generate a set of data with
 sim.dat <- generateData(n = 150, p = 15, q = 12, rho = 0.1, missing.type = "MAR", with.seed = 1512)
 
 tr <- 1:120  # training set indices
-va <- 121:150  # validation set indices
+tst <- 121:150  # test set indices
 ```
 
 This command returns an object containing all necessary components for analysis including: 
@@ -147,16 +147,17 @@ cvfit <- cv.missoNet(X = X.tr, Y = Z.tr, kfold = 5,
 
 The program has warned us that the range of $\lambda_\Theta$ is inappropriate so that we need to supply a sequence of $\lambda_\Theta$ covering larger values. However, picking a suitable range for such hyperparameters may require experience or a series of trials and errors. Therefore, `cv.missoNet` provides a smarter way to solve this problem.
 
-Let's fit the cross-validation model again, this time running all folds in parallel on two CPU cores. The parallelization of **missoNet** models relies on package **parallel**, so make sure the parallel clusters have been registered beforehand.
+Let's fit the cross-validation model again, this time running all folds in parallel on three CPU cores. The parallelization of **missoNet** models relies on package **parallel**, so make sure the parallel clusters have been registered beforehand.
 ```{r, eval = FALSE}
-## 'fit.1se = TRUE' tells the program to make additional estimations of the parameters 
-## at the largest values of 'lambda.Beta' and 'lambda.Theta' respectively according to 
-## the one-standard-error rule.
+## 'fit.1se = TRUE' tells the program to make additional estimations of the 
+## parameters at the largest value of 'lambda.Beta' / 'lambda.Theta' that gives
+## the most regularized model such that the cross-validated error is within one 
+## standard error of the minimum.
 
-cl <- parallel::makeCluster(2)
+cl <- parallel::makeCluster(min(parallel::detectCores()-1, 3))
 cvfit <- cv.missoNet(X = X.tr, Y = Z.tr, kfold = 5,
                      fit.1se = TRUE, parallel = TRUE, cl = cl,
-                     permute = TRUE, with.seed = 433, verbose = 0)
+                     permute = TRUE, with.seed = 433, verbose = 1)
 parallel::stopCluster(cl)
 ```
 
@@ -175,9 +176,9 @@ knitr::include_graphics(system.file("extdata", "cvfitHeat.png", package = "misso
 
 to visualize the mean cross-validated error in a heatmap style. The white solid box marks out the position of the minimum mean cross-validated error with corresponding $\lambda_B$ and $\lambda_\Theta$ (`"lambda.min"` := $({\lambda_B}_\text{min}, {\lambda_\Theta}_\text{min})$), and the white dashed boxes indicate the largest $\lambda_B$ and $\lambda_\Theta$ at which the mean cross-validated error is within one standard error of the minimum, by fixing the other one at `"lambda.min"` (i.e., `"lambda.1se.Beta"` := $({\lambda_B}_\text{1se}, {\lambda_\Theta}_\text{min})$ and `"lambda.1se.Theta"` := $({\lambda_B}_\text{min}, {\lambda_\Theta}_\text{1se})$). We often use this "one-standard-error" rule when selecting the most parsimonious model; this acknowledges the fact that the cross-validation surface is estimated with error, so error on the side of parsimony is preferable.
 
-We can also plot the errors in the form of scattergram:
+We can also plot the errors in a 3D scatter plot (without surfaces):
 ```{r, eval = FALSE}
-plot(cvfit, type = "cv.scatter")
+plot(cvfit, type = "cv.scatter", plt.surf = FALSE)
 ```
 ```{r, echo = FALSE, fig.align = 'left', out.width = "80%"}
 knitr::include_graphics(system.file("extdata", "cvfitScat.png", package = "missoNet"))
@@ -238,12 +239,12 @@ knitr::include_graphics(system.file("extdata", "cvfitEst2.png", package = "misso
 
 Like other regression methods, predictions can be made based on the fitted `'cv.missoNet'` object as well. The code below gives predictions for a new input matrix `'newx'` at `"lambda.min"` (`'s' = "lambda.1se.Beta"` and `'s' = "lambda.1se.Theta"` is available only when `'fit.1se' = TRUE`):
 ```{r, eval = FALSE}
-## Prediction on the validation dataset: newy = mu + newx %*% Beta.
+## Predictions on the test set: newy = mu + newx %*% Beta.
 
 ## 's' can also be "lambda.1se.Beta" or "lambda.1se.Theta"
 ## (why 's' but not 'lambda'? Because we follow the naming rules of glmnet).
 
-newy <- predict(cvfit, newx = sim.dat$X[va, ], s = "lambda.min")
+newy <- predict(cvfit, newx = sim.dat$X[tst, ], s = "lambda.min")
 
 cat("dim(newy):", dim(newy))
 ```
@@ -318,9 +319,9 @@ Of the aforementioned missing data mechanisms, MCAR is random, and the other two
 
 In this section, we will apply **missoNet** to a relatively high-dimensional dataset -- `bgsmtr_example_data`, as a part of the **bgsmtr** package, obtained from the Alzheimer’s Disease Neuroimaging Initiative (ADNI-1) database.
 
-This example dataset consists of 15 structural neuromaging measures and 486 single nucleotide polymorphisms (SNPs) determined from a sample of 632 subjects. Importantly, the 486 SNPs cover 33 genes deemed associated with Alzheimer's disease. In this case, $\mathbf{X}$ is a 632-by-486 matrix containing minor allele counts (i.e. 0, 1 or 2) for 486 SNPs on the 632 subjects. $\mathbf{Y}$ is a 632-by-15 matrix containing volumetric and cortical thickness measures for 15 regions of interest. For more details, see Greenlaw et al. (2017) [<doi:10.1093/bioinformatics/btx215>](https://academic.oup.com/bioinformatics/article/33/16/2513/3611271?login=false) and [bgsmtr](https://cran.r-project.org/web/packages/bgsmtr/index.html).
+This example dataset consists of 15 structural neuromaging measures and 486 single nucleotide polymorphisms (SNPs) determined from a sample of 632 subjects. Importantly, the 486 SNPs cover 33 genes deemed associated with Alzheimer's disease. In this case, $\mathbf{X}$ is a 632-by-486 matrix containing minor allele counts (i.e. 0, 1 or 2) for 486 SNPs on the 632 subjects. $\mathbf{Y}$ is a 632-by-15 matrix containing volumetric and cortical thickness measures for 15 regions of interest. For more details, see Greenlaw et al. (2017) [<doi:10.1093/bioinformatics/btx215>](https://academic.oup.com/bioinformatics/article/33/16/2513/3611271?login=false) and [bgsmtr](https://CRAN.R-project.org/package=bgsmtr).
 
-First let's load the dataset and randomly split the data into training and validation sets. As a demonstration, we only use the SNPs with large variance (i.e. variance in the top 50% among all SNPs, $p$ = 243) as the predictor variables. In most practical cases, this kind of unsupervised filtering of variables for dimension reduction before analyses can help the algorithm make faster progress and get more robust results.
+First let's load the dataset and randomly split the data into training and test sets. As a demonstration, we only use the SNPs with large variance (i.e. variance in the top 50% among all SNPs, $p$ = 243) as the predictor variables. In most practical cases, this kind of unsupervised filtering of variables for dimension reduction before analyses can help the algorithm make faster progress and get more robust results.
 ```{r, eval = FALSE}
 ## Load data
 library(bgsmtr, quietly = TRUE)
@@ -338,7 +339,7 @@ SNP <- SNP[ ,SNP_subset]
 
 set.seed(123)  # a random seed for reproducibility
 tr <- sample(1:632, 550, replace = FALSE)  # training set indices
-va <- c(1:632)[-tr]  # validation set indices
+tst <- c(1:632)[-tr]  # test set indices
 
 cat("dim(SNP):", dim(SNP[tr, ]), "
 dim(BM):", dim(BM[tr, ]))
@@ -377,12 +378,12 @@ We first perform a large-scope coarse search for the optimal lambda pair $({\lam
 ```{r, eval = FALSE}
 ## Model I (the coarse-grid fit)
 
-## To be more in line with real-world usage, the model is trained without 
-## specified missing probabilities ('rho' = NULL, even if we know it is 0.05) 
-## and lambda sequences ('lambda.Beta' = NULL, 'lambda.Theta' = NULL), in which 
-## case the program will automatically determine reasonable values for users.
+## To be more in line with real-world usage, the model is trained without specified 
+## missing probabilities for the response variables ('rho' = NULL) and lambda sequences 
+## for the lasso penalties ('lambda.Beta' = NULL, 'lambda.Theta' = NULL), in which case 
+## the program will automatically compute and use reasonable values.
 
-cl <- parallel::makeCluster(3)
+cl <- parallel::makeCluster(min(parallel::detectCores()-1, 3))
 cvfit.BM <- cv.missoNet(X = SNP[tr, ], Y = BM.mis[tr, ], kfold = 5, 
                         rho = NULL, lambda.Beta = NULL, lambda.Theta = NULL,
                         lamBeta.min.ratio = 1e-4, lamTheta.min.ratio = 1e-4,
@@ -390,7 +391,7 @@ cvfit.BM <- cv.missoNet(X = SNP[tr, ], Y = BM.mis[tr, ], kfold = 5,
                         lamBeta.scale.factor = 3, lamTheta.scale.factor = 3,
                         standardize = TRUE, standardize.response = TRUE,
                         permute = TRUE, with.seed = 433,
-                        parallel = TRUE, cl = cl, verbose = 0)
+                        parallel = TRUE, cl = cl, verbose = 1)
 parallel::stopCluster(cl)
 ```
 
@@ -411,13 +412,13 @@ Because we are going to do a fine-grid search, the number of lambda values can b
 ## Model II (the fine-grid fit)
 
 ## For brevity, arguments taking the defaults are not specified explicitly.
-cl <- parallel::makeCluster(3)
+cl <- parallel::makeCluster(min(parallel::detectCores()-1, 3))
 cvfit2.BM <- cv.missoNet(X = SNP[tr, ], Y = BM.mis[tr, ], kfold = 5,
                          lamBeta.min.ratio = 0.01, lamTheta.min.ratio = 0.01,
                          n.lamBeta = 40, n.lamTheta = 40,
                          lamBeta.scale.factor = 3, lamTheta.scale.factor = 0.3,
                          fit.relax = TRUE, permute = TRUE, with.seed = 433,
-                         parallel = TRUE, cl = cl, verbose = 0)
+                         parallel = TRUE, cl = cl, verbose = 1)
 parallel::stopCluster(cl)
 
 ## Certainly, users can specify the lambda values (linear on the log scale) by themselves
@@ -425,7 +426,7 @@ parallel::stopCluster(cl)
 ## commands should return almost the same results as the above ones (subtle differences 
 ## come from rounding the float numbers).
 
-# cl <- parallel::makeCluster(3)
+# cl <- parallel::makeCluster(min(parallel::detectCores()-1, 3))
 # cvfit2.BM <- cv.missoNet(X = SNP[tr, ], Y = BM.mis[tr, ], kfold = 5,
 #                          lambda.Beta = 10^(seq(from = log10(2.66), to = log10(2.66*0.01), length.out = 40)),
 #                          lambda.Theta = 10^(seq(from = log10(2.99), to = log10(2.99*0.01), length.out = 40)),
@@ -528,32 +529,32 @@ Finally, we end this section by refitting the model using the original dataset w
 ## Model III (the complete-data fit)
 
 ## All arguments are kept unchanged compared to model II, except BM.mis -> BM.
-cl <- parallel::makeCluster(3)
+cl <- parallel::makeCluster(min(parallel::detectCores()-1, 3))
 cvfit3.BM <- cv.missoNet(X = SNP[tr, ], Y = BM[tr, ], kfold = 5,
                          lamBeta.min.ratio = 0.01, lamTheta.min.ratio = 0.01,
                          n.lamBeta = 40, n.lamTheta = 40,
                          lamBeta.scale.factor = 3, lamTheta.scale.factor = 0.3,
                          fit.relax = TRUE, permute = TRUE, with.seed = 433,
-                         parallel = TRUE, cl = cl, verbose = 0)
+                         parallel = TRUE, cl = cl, verbose = 1)
 parallel::stopCluster(cl)
 ```
 
 Then we can assess the prediction performance of the models trained using the corrupted vs. complete dataset.
 ```{r, eval = FALSE}
-## Predictions on the validation dataset.
-newy.model2 <- predict(cvfit2.BM, newx = SNP[va, ], s = "lambda.min")
-newy.model3 <- predict(cvfit3.BM, newx = SNP[va, ], s = "lambda.min")
+## Predictions on the test set.
+newy.model2 <- predict(cvfit2.BM, newx = SNP[tst, ], s = "lambda.min")
+newy.model3 <- predict(cvfit3.BM, newx = SNP[tst, ], s = "lambda.min")
 
-cat("MAE on the validation dataset:
-  - Model II (corrupted):", mean(abs(BM[va, ] - newy.model2)), "
-  - Model III (complete):", mean(abs(BM[va, ] - newy.model3)))
+cat("MAE on the test set:
+  - Model II (corrupted):", mean(abs(BM[tst, ] - newy.model2)), "
+  - Model III (complete):", mean(abs(BM[tst, ] - newy.model3)))
 ```
 ```{r, echo = FALSE}
-cat("MAE on the validation dataset:
+cat("MAE on the test set:
   - Model II (corrupted): 2543.588
   - Model III (complete): 2543.591")
 ```
 
-As expected, there is no obvious difference between the two models with regard to the mean absolute prediction error (MAE) on the validation dataset, since we generated the missing data simply following the MCAR mechanism. Real missing data usually falls on a continuum between one extreme -- where the systematic missingness pattern depends entirely on the observed data (pure MAR), and the other extreme -- where the systematic missingness pattern depends entirely on the missing data (pure MNAR). Even in this case, **missoNet** can still provide good enough estimates compared with those algorithms that cannot tolerate missing values.
+As expected, there is no obvious difference between the two models with regard to the mean absolute prediction error (MAE) on the test set, since we generated the missing data simply following the MCAR mechanism. Real missing data usually falls on a continuum between one extreme -- where the systematic missingness pattern depends entirely on the observed data (pure MAR), and the other extreme -- where the systematic missingness pattern depends entirely on the missing data (pure MNAR). Even in this case, **missoNet** can still provide good enough estimates compared with those algorithms that cannot tolerate missing values.
 
 # References
