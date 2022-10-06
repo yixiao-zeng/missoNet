@@ -40,8 +40,8 @@
 #' 
 #' @param X Numeric predictor matrix (\eqn{n\times p}): columns correspond to predictor variables and rows correspond to samples. Missing values are not allowed. There is no need for centering or scaling of the variables. \code{'X'} should not include a column of ones for an intercept.
 #' @param Y Numeric response matrix (\eqn{n\times q}): columns correspond to response variables and rows correspond to samples. Missing values should be coded as either \code{'NA'}s or \code{'NaN'}s. There is no need for centering or scaling of the variables.
-#' @param lambda.Beta A scalar or a numeric vector: a user-supplied sequence of non-negative value(s) for \eqn{\lambda_B} used to penalize the elements of the coefficient matrix \eqn{\mathbf{B}}. Note that the values will be sequentially visited in the given orders as inputs to the regularization parameter sequence \eqn{\{(\lambda_B, \lambda_\Theta)\}}; \code{'lambda.Beta'} must have the same length as \code{'lambda.Theta'}.
-#' @param lambda.Theta A scalar or a numeric vector: a user-supplied sequence of non-negative value(s) for \eqn{\lambda_\Theta} used to penalize the (off-diagonal) elements of the precision matrix \eqn{\mathbf{\Theta}}. Note that the values will be sequentially visited in the given orders as inputs to the regularization parameter sequence \eqn{\{(\lambda_B, \lambda_\Theta)\}}; \code{'lambda.Theta'} must have the same length as \code{'lambda.Beta'}.
+#' @param lambda.Beta A scalar or a numeric vector: a user-supplied sequence of non-negative value(s) for \{\eqn{\lambda_B}\} used to penalize the elements of the coefficient matrix \eqn{\mathbf{B}}. Note that the values will be sequentially visited in the given orders as inputs to the regularization parameter sequence \eqn{\{(\lambda_B, \lambda_\Theta)\}}; \code{'lambda.Beta'} must have the same length as \code{'lambda.Theta'}.
+#' @param lambda.Theta A scalar or a numeric vector: a user-supplied sequence of non-negative value(s) for \{\eqn{\lambda_\Theta}\} used to penalize the (off-diagonal) elements of the precision matrix \eqn{\mathbf{\Theta}}. Note that the values will be sequentially visited in the given orders as inputs to the regularization parameter sequence \eqn{\{(\lambda_B, \lambda_\Theta)\}}; \code{'lambda.Theta'} must have the same length as \code{'lambda.Beta'}.
 #' @param rho (Optional) A scalar or a numeric vector of length \eqn{q}: the elements are user-supplied probabilities of missingness for the response variables. The default is \code{'rho = NULL'} and the program will compute the empirical missing rates for each of the columns of \code{'Y'} and use them as the working missing probabilities. The default setting should suffice in most cases; misspecified missing probabilities would introduce biases into the model.
 #' @param Beta.maxit The maximum number of iterations of the fast iterative shrinkage-thresholding algorithm (FISTA) for updating \eqn{\hat{\mathbf{B}}}. The default is \code{'Beta.maxit = 10000'}.
 #' @param Beta.thr The convergence threshold of the FISTA algorithm for updating \eqn{\hat{\mathbf{B}}}; the default is \code{'Beta.thr = 1.0E-6'}. Iterations stop when the absolute parameter change is less than (\code{'Beta.thr'} \code{*} \code{sum(abs(}\eqn{\hat{\mathbf{B}}}\code{))}).
@@ -53,9 +53,10 @@
 #' @param diag.penalty.factor Numeric: a separate penalty multiplication factor for the diagonal elements of \eqn{\mathbf{\Theta}} when \code{'penalize.diagonal = TRUE'}. \eqn{\lambda_\Theta} is multiplied by this number to allow a differential shrinkage of the diagonal elements. The default is \code{'NULL'} and the program will guess a value based on an initial estimate of \eqn{\mathbf{\Theta}}. This factor could be \code{'0'} for no shrinkage (equivalent to \code{'penalize.diagonal = FALSE'}). Most users will be able to use the default value.
 #' @param standardize Logical: should the columns of \code{'X'} be standardized so each has unit variance? The default is \code{'TRUE'}. The estimated results will always be returned on the original scale. If \code{'X'} has been standardized prior to fitting the model, you might not wish to standardize it inside the algorithm.
 #' @param standardize.response Logical: should the columns of \code{'Y'} be standardized so each has unit variance? The default is \code{'TRUE'}. The estimated results will always be returned on the original scale. If \code{'Y'} has been standardized prior to fitting the model, you might not wish to standardize it inside the algorithm.
-#' @param fit.relax Logical: the default is \code{'FALSE'}. If \code{'TRUE'}, the program will re-estimate the edges in the active set (i.e. nonzero off-diagonal elements) of the network structure \eqn{\hat{\mathbf{\Theta}}} without penalization (\eqn{\lambda_\Theta=0}). This debiased estimate of \eqn{\mathbf{\Theta}} could be useful for some interdependency analyses. WARNING: there may be convergence issues if the empirical covariance matrix is not of full rank (e.g., \eqn{n < q)}).
+#' @param fit.relax Logical: the default is \code{'FALSE'}. If \code{'TRUE'}, the program will re-estimate the edges in the active set (i.e. nonzero off-diagonal elements) of the network structure \eqn{\hat{\mathbf{\Theta}}} without penalization (\eqn{\lambda_\Theta=0}). This debiased estimate of \eqn{\mathbf{\Theta}} could be useful for some interdependency analyses. WARNING: there may be convergence issues if the empirical covariance matrix is not of full rank (e.g. \eqn{n < q)}).
 #' @param parallel Logical: the default is \code{'FALSE'}. If \code{'TRUE'}, the program uses clusters to fit models with each element of the \eqn{\lambda} sequence \eqn{\{(\lambda_B, \lambda_\Theta)\}} in parallel. Must register parallel clusters beforehand, see examples below.
 #' @param cl A cluster object created by \sQuote{\code{parallel::makeCluster}} for parallel evaluations. This is only needed when \code{'parallel = TRUE'}.
+#' @param with.seed A random number seed for the parameter initialization. A user-specified value will eliminate the slight randomness in results.
 #' @param verbose Value of \code{'0'}, \code{'1'} or \code{'2'}. \code{'verbose = 0'} -- silent; \code{'verbose = 1'} (the default) -- limited tracing with progress bars; \code{'verbose = 2'} -- detailed tracing. Note that displaying the progress bars slightly increases the computation overhead compared to the silent mode. The detailed tracing should be used for monitoring progress only when the program runs extremely slowly, and it is not supported under \code{'parallel = TRUE'}.
 #'
 #' @return This function returns a \code{'list'} consisting of the following components:
@@ -77,22 +78,22 @@
 #' @author Yixiao Zeng \email{yixiao.zeng@@mail.mcgill.ca}, Celia M.T. Greenwood and Archer Yi Yang.
 #'
 #' @examples
-#' ## Simulate a dataset with response values missing completely 
-#' ## at random (MCAR), the overall missing rate is around 10%.
+#' ## Simulate a dataset with response values missing completely at random (MCAR), 
+#' ## the overall missing rate is around 10%.
 #' sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
 #' tr <- 1:240  # training set indices
 #' tst <- 241:300  # test set indices
 #' X.tr <- sim.dat$X[tr, ]  # predictor matrix
 #' Y.tr <- sim.dat$Z[tr, ]  # corrupted response matrix
 #' 
-#' \dontrun{
+#' \donttest{
+#' ## Fit one missoNet model with two scalars for 'lambda.Beta' and 'lambda.Theta'.
+#' fit1 <- missoNet(X = X.tr, Y = Y.tr, lambda.Beta = 0.1, lambda.Theta = 0.2)
 #' 
-#' ## Fit one missoNet model with a scalar for both 'lambda.Beta' and 'lambda.Theta'.
-#' fit1 <- missoNet(X = X.tr, Y = Y.tr, lambda.Beta = 0.1, lambda.Theta = 0.1)
 #' 
-#' 
-#' ## Fit a series of missoNet models with the lambda pairs sequentially extracted from the 
-#' ## 'lambda.Beta' and 'lambda.Theta' vectors, note that the two vectors must have the same length.
+#' ## Fit a series of missoNet models with the lambda pairs := (lambda.Beta, lambda.Theta)
+#' ## sequentially extracted from the 'lambda.Beta' and 'lambda.Theta' vectors, note that the 
+#' ## two vectors must have the same length.
 #' lamB.vec <- 10^(seq(from = 0, to = -1, length.out = 5))
 #' lamTht.vec <- rep(0.1, 5)
 #' fit2 <- missoNet(X = X.tr, Y = Y.tr, lambda.Beta = lamB.vec, lambda.Theta = lamTht.vec)
@@ -105,29 +106,29 @@
 #' parallel::stopCluster(cl)
 #' 
 #' 
-#' ## Extract the estimates at ('lamB.vec[1]', 'lamTht.vec[1]'); the estimates 
-#' ## at the subsequent lambda pairs could be extracted in the same way.
+#' ## Extract the estimates at ('lamB.vec[1]', 'lamTht.vec[1]').
+#' ## The estimates at the subsequent lambda pairs could be accessed in the same way.
 #' Beta.hat <- fit2$est.list[[1]]$Beta
 #' Theta.hat <- fit2$est.list[[1]]$Theta
 #' lambda.Beta <- fit2$est.list[[1]]$lambda.Beta  # equal to 'lamB.vec[1]'
 #' lambda.Theta <- fit2$est.list[[1]]$lambda.Theta  # equal to 'lamTht.vec[1]'
 #' 
 #' 
-#' ## Fit a series of missoNet models using PRE-STANDARDIZED training 
-#' ## data if you wish to compare the results with other softwares. 
+#' ## Fit a series of missoNet models using PRE-STANDARDIZED training data
+#' ## if you wish to compare the results with other softwares. 
 #' ## There is no need for centering of variables.
 #' X.tr.std <- scale(X.tr, center = FALSE, scale = apply(X.tr, 2, sd, na.rm = TRUE))
 #' Y.tr.std <- scale(Y.tr, center = FALSE, scale = apply(Y.tr, 2, sd, na.rm = TRUE))
 #' fit3 <- missoNet(X = X.tr.std, Y = Y.tr.std, lambda.Beta = lamB.vec, lambda.Theta = lamTht.vec,
 #'                  standardize = FALSE, standardize.response = FALSE)
-#'}
+#' }
 
 missoNet <- function(X, Y, lambda.Beta, lambda.Theta, rho = NULL,
                      Beta.maxit = 1e4, Beta.thr = 1e-06, eta = 0.8,
                      Theta.maxit = 1e4, Theta.thr = 1e-06, eps = 1e-08,
                      penalize.diagonal = NULL, diag.penalty.factor = NULL,
-                     standardize = TRUE, standardize.response = TRUE,
-                     fit.relax = FALSE, parallel = FALSE, cl = NULL, verbose = 1) {
+                     standardize = TRUE, standardize.response = TRUE, fit.relax = FALSE,
+                     parallel = FALSE, cl = NULL, with.seed = NULL, verbose = 1) {
   if (length(lambda.Beta) != length(lambda.Theta)) {
     stop("`lambda.Beta` and `lambda.Theta` should be equal in length.")
   }
@@ -136,7 +137,7 @@ missoNet <- function(X, Y, lambda.Beta, lambda.Theta, rho = NULL,
 - Parameter initialization ...\n\n") }
   n <- nrow(X)
   kfold <- ifelse(n >= 100, 10, 5)
-  set.seed(123)  # for reproducibility
+  set.seed(with.seed)  # for reproducibility
   ind <- sample(n, replace = FALSE)
   foldid <- unlist(lapply(1:kfold, function(x) { rep(x, length((1 + floor((x - 1) * n/kfold)):floor(x * n/kfold))) }))
   init.obj <- InitParams(X = X[ind, ], Y = Y[ind, ], rho = rho, kfold = kfold, foldid = foldid,

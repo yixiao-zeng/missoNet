@@ -8,7 +8,6 @@
 #' @param ... Not used. Other arguments for predicting.
 #' 
 #' @return The matrix of predicted values: \code{'newy = mu_hat + newx \%*\% Beta_hat'}.
-#' 
 #' @method predict cv.missoNet
 #' @export
 #' 
@@ -16,19 +15,20 @@
 #' 
 #' @examples
 #' ## Simulate a dataset.
-#' sim.dat <- generateData(n = 200, p = 10, q = 10, rho = 0.1, missing.type = "MCAR")
-#' tr <- 1:180  # training set indices
-#' tst <- 181:200  # test set indices
+#' sim.dat <- generateData(n = 300, p = 10, q = 10, rho = 0.1, missing.type = "MCAR")
+#' tr <- 1:240  # training set indices
+#' tst <- 241:300  # test set indices
 #' 
-#' \dontrun{
-#' 
+#' \donttest{
 #' ## Perform a five-fold cross-validation on the training set.
-#' cvfit <- cv.missoNet(X = sim.dat$X[tr, ], Y = sim.dat$Z[tr, ], kfold = 5, fit.1se = TRUE)
+#' cvfit <- cv.missoNet(X = sim.dat$X[tr, ], Y = sim.dat$Z[tr, ], kfold = 5,
+#'                      fit.1se = TRUE, permute = TRUE, with.seed = 123)
+#' 
 #' 
 #' ## Make predictions of response values on the test set.
 #' newy1 <- predict(cvfit, newx = sim.dat$X[tst, ], s = "lambda.min")
-#' newy2 <- predict(cvfit, newx = sim.dat$X[tst, ], s = "lambda.1se.Beta")
-#' newy3 <- predict(cvfit, newx = sim.dat$X[tst, ], s = "lambda.1se.Theta")
+#' newy2 <- predict(cvfit, newx = sim.dat$X[tst, ], s = "lambda.1se.Beta")  # 'fit.1se' = TRUE
+#' newy3 <- predict(cvfit, newx = sim.dat$X[tst, ], s = "lambda.1se.Theta")  # 'fit.1se' = TRUE
 #' }
 
 predict.cv.missoNet <- function(object, newx = NULL, s = "lambda.min", ...) {

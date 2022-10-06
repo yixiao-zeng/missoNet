@@ -3,11 +3,11 @@
 [![CRAN status](https://www.r-pkg.org/badges/version/missoNet)](https://CRAN.R-project.org/package=missoNet)
 <!-- badges: end -->
 
-# missoNet: Multi-Task Regression and Conditional Network Estimation with Missing Values in the Tasks
+# missoNet: Missingness in Multi-Task Regression with Network Estimation
 
-`missoNet` is an R package that fits penalized multi-task Gaussian regression -- that is, with multiple 
+`missoNet` is an R package that fits penalized multi-task regression -- that is, with multiple 
 correlated tasks or response variables -- to simultaneously estimate the coefficients of a set of predictor 
-variables for all tasks and the conditional response network structure given all predictor variables, via 
+variables for all tasks and the conditional response network structure given all predictors, via 
 penalized maximum likelihood in an undirected conditional Gaussian graphical model. In contrast to most 
 penalized multi-task regression (conditional graphical lasso) methods, `missoNet` has the capability of 
 obtaining estimates even when the response data is corrupted by missing values. The method automatically 
@@ -42,8 +42,8 @@ devtools::install_github("yixiao-zeng/missoNet", build_vignettes = TRUE)
 An example of how to use the package:
 
 ```r
-# Simulate a dataset with response values missing completely 
-# at random (MCAR), the overall missing rate is around 10%.
+# Simulate a dataset with response values missing completely at random (MCAR), 
+# the overall missing rate is around 10%.
 sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
 tr <- 1:240  # training set indices
 tst <- 241:300  # test set indices

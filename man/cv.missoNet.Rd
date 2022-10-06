@@ -45,9 +45,9 @@ cv.missoNet(
 
 \item{rho}{(Optional) A scalar or a numeric vector of length \eqn{q}: the elements are user-supplied probabilities of missingness for the response variables. The default is \code{'rho = NULL'} and the program will compute the empirical missing rates for each of the columns of \code{'Y'} and use them as the working missing probabilities. The default setting should suffice in most cases; misspecified missing probabilities would introduce biases into the model.}
 
-\item{lambda.Beta}{(Optional) Numeric vector: a user-supplied sequence of non-negative values for \eqn{\lambda_B} penalizing the elements of the coefficient matrix \eqn{\mathbf{B}} among which the cross-validation procedure searches. The default is \code{'lambda.Beta = NULL'}, in which case the program computes an appropriate range of \eqn{\lambda_B} values using \code{'n.lamBeta'} and \code{'lamBeta.min.ratio'}. Supplying a vector overrides this default. Note that the supplied sequence will be automatically arranged, internally, in a descending order.}
+\item{lambda.Beta}{(Optional) Numeric vector: a user-supplied sequence of non-negative values for \{\eqn{\lambda_B}\} penalizing the elements of the coefficient matrix \eqn{\mathbf{B}} among which the cross-validation procedure searches. The default is \code{'lambda.Beta = NULL'}, in which case the program computes an appropriate range of \eqn{\lambda_B} values using \code{'n.lamBeta'} and \code{'lamBeta.min.ratio'}. Supplying a vector overrides this default. Note that the supplied sequence will be automatically arranged, internally, in a descending order.}
 
-\item{lambda.Theta}{(Optional) Numeric vector: a user-supplied sequence of non-negative values for \eqn{\lambda_\Theta} penalizing the (off-diagonal) elements of the precision matrix \eqn{\mathbf{\Theta}} among which the cross-validation procedure searches. The default is \code{'lambda.Theta = NULL'}, in which case the program computes an appropriate range of \eqn{\lambda_\Theta} values using \code{'n.lamTheta'} and \code{'lamTheta.min.ratio'}. Supplying a vector overrides this default. Note that the supplied sequence will be automatically arranged, internally, in a descending order.}
+\item{lambda.Theta}{(Optional) Numeric vector: a user-supplied sequence of non-negative values for \{\eqn{\lambda_\Theta}\} penalizing the (off-diagonal) elements of the precision matrix \eqn{\mathbf{\Theta}} among which the cross-validation procedure searches. The default is \code{'lambda.Theta = NULL'}, in which case the program computes an appropriate range of \eqn{\lambda_\Theta} values using \code{'n.lamTheta'} and \code{'lamTheta.min.ratio'}. Supplying a vector overrides this default. Note that the supplied sequence will be automatically arranged, internally, in a descending order.}
 
 \item{lamBeta.min.ratio}{The smallest value of \eqn{\lambda_B} is calculated as the data-derived \eqn{\mathrm{max}(\lambda_B)} multiplied by \code{'lamBeta.min.ratio'}. The default depends on the sample size, \eqn{n}, relative to the number of predictors, \eqn{p}. If \eqn{n > p}, the default is \code{'1.0E-4'}, otherwise it is \code{'1.0E-2'}. A very small value of \code{'lamBeta.min.ratio'} may significantly increase runtime and lead to a saturated fit in the \eqn{n \leq p} case. This is only needed when \code{'lambda.Beta = NULL'}.}
 
@@ -83,11 +83,11 @@ cv.missoNet(
 
 \item{fit.1se}{Logical: the default is \code{'FALSE'}. If \code{'TRUE'}, two additional models will be fitted with the largest values of \eqn{\lambda_B} and \eqn{\lambda_\Theta} respectively at which the cross-validated error is within one standard error of the minimum.}
 
-\item{fit.relax}{Logical: the default is \code{'FALSE'}. If \code{'TRUE'}, the program will re-estimate the edges in the active set (i.e. nonzero off-diagonal elements) of the network structure \eqn{\hat{\mathbf{\Theta}}} without penalization (\eqn{\lambda_\Theta=0}). This debiased estimate of \eqn{\mathbf{\Theta}} could be useful for some interdependency analyses. WARNING: there may be convergence issues if the empirical covariance matrix is not of full rank (e.g., \eqn{n < q)}).}
+\item{fit.relax}{Logical: the default is \code{'FALSE'}. If \code{'TRUE'}, the program will re-estimate the edges in the active set (i.e. nonzero off-diagonal elements) of the network structure \eqn{\hat{\mathbf{\Theta}}} without penalization (\eqn{\lambda_\Theta=0}). This debiased estimate of \eqn{\mathbf{\Theta}} could be useful for some interdependency analyses. WARNING: there may be convergence issues if the empirical covariance matrix is not of full rank (e.g. \eqn{n < q)}).}
 
 \item{permute}{Logical: should the subject indices for the cross-validation be permuted? The default is \code{'TRUE'}.}
 
-\item{with.seed}{A random seed for the permutation.}
+\item{with.seed}{A random number seed for the permutation.}
 
 \item{parallel}{Logical: the default is \code{'FALSE'}. If \code{'TRUE'}, the program uses clusters to compute the cross-validation folds in parallel. Must register parallel clusters beforehand, see examples below.}
 
@@ -130,12 +130,12 @@ of the regularization parameters over which the cross-validation searches.
 \details{
 The \sQuote{\code{cv.missoNet}} function fits \sQuote{\code{\link{missoNet}}} models (\code{'kfold'} \code{*} \code{'n.lamBeta'} \code{*} \code{'n.lamTheta'}) 
 times in the whole cross-validation process. That is, for the \eqn{k}th-fold (\eqn{k=1,...,K}) computation, the models are fitted at each of 
-the all (\code{'n.lamBeta'} \code{*} \code{'n.lamTheta'}) possible regularization parameter pairs (\eqn{\lambda_B}, \eqn{\lambda_\Theta}), with the \eqn{k}th 
+the all (\code{'n.lamBeta'} \code{*} \code{'n.lamTheta'}) possible combinations of the regularization parameters (\eqn{\lambda_B}, \eqn{\lambda_\Theta}), with the \eqn{k}th 
 fold of the training data omitted. The errors are accumulated, and the averaged errors as well as the standard deviations are computed over all folds. 
 Note that the results of \sQuote{\code{cv.missoNet}} are random, since the samples are randomly split into k-folds. Users can eliminate this randomness 
-by setting \code{'permute = FALSE'}, or by explicitly assigning a random seed to the permutation of samples.
+by setting \code{'permute = FALSE'}, or by explicitly assigning a seed to the permutation of samples.
 
-A user-supplied sequence for \eqn{\lambda_B} and/or \eqn{\lambda_\Theta} is permitted, 
+A user-supplied sequence for \{\eqn{\lambda_B}\} and/or \{\eqn{\lambda_\Theta}\} is permitted, 
 otherwise the program computes an appropriate range of values for the regularization parameters using other control arguments.
 Note that \sQuote{\code{cv.missoNet}} standardizes \code{'X'} and \code{'Y'} to have unit variances before computing its \eqn{\lambda} 
 sequences (and then unstandardizes the resulting coefficients); if you wish to reproduce/compare results with those of other softwares, 
@@ -160,16 +160,15 @@ and the prediction function \sQuote{\code{\link{predict.cv.missoNet}}} can be us
 See the vignette for examples.
 }
 \examples{
-## Simulate a dataset with response values missing completely 
-## at random (MCAR), the overall missing rate is around 10\%.
+## Simulate a dataset with response values missing completely at random (MCAR), 
+## the overall missing rate is around 10\%.
 sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
 tr <- 1:240  # training set indices
 tst <- 241:300  # test set indices
 X.tr <- sim.dat$X[tr, ]  # predictor matrix
 Y.tr <- sim.dat$Z[tr, ]  # corrupted response matrix
 
-\dontrun{
-
+\donttest{
 ## Perform a five-fold cross-validation WITH specified 'lambda.Beta' and 'lambda.Theta'.
 ## 'standardize' and 'standardize.response' are 'TRUE' by default.
 lamB.vec <- 10^(seq(from = 0, to = -1, length.out = 5))
@@ -179,22 +178,26 @@ cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5,
 
 
 ## Perform a five-fold cross-validation WITHOUT specified 'lambda.Beta' and 'lambda.Theta'.
-## < This simplest command should be a good start for most analyses >.
+## In this case, a grid of 'lambda.Beta' and 'lambda.Theta' values in a (hopefully) reasonable 
+## range will be computed and used by the program.
+## 
+## < This simplest command should be a good start for most analyses. >
 cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5)
 
 
-## Compute the cross-validation folds in parallel on a cluster with three cores.
-## 'fit.1se = TRUE' tells the program to make additional estimations of the 
-## parameters at the largest 'lambda.Beta' / 'lambda.Theta' that gives the 
-## most regularized model according to the one-standard-error rule.
-cl <- parallel::makeCluster(min(parallel::detectCores()-1, 3))
+## Alternatively, compute the cross-validation folds in parallel on a cluster with 2 cores.
+## 
+## 'fit.1se = TRUE' tells the program to make additional estimations of the parameters at the 
+## largest value of 'lambda.Beta' / 'lambda.Theta' that gives the most regularized model such 
+## that the cross-validated error is within one standard error of the minimum.
+cl <- parallel::makeCluster(min(parallel::detectCores()-1, 2))
 cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5, fit.1se = TRUE,
                      parallel = TRUE, cl = cl)
 parallel::stopCluster(cl)
 
 
-## Use PRE-STANDARDIZED training data if you wish to compare the results 
-## with other softwares. There is no need for centering of variables.
+## Use PRE-STANDARDIZED training data if you wish to compare the results with other softwares. 
+## There is no need for centering of variables.
 X.tr.std <- scale(X.tr, center = FALSE, scale = apply(X.tr, 2, sd, na.rm = TRUE))
 Y.tr.std <- scale(Y.tr, center = FALSE, scale = apply(Y.tr, 2, sd, na.rm = TRUE))
 cvfit.std <- cv.missoNet(X = X.tr.std, Y = Y.tr.std, kfold = 5,
@@ -203,28 +206,28 @@ cvfit.std <- cv.missoNet(X = X.tr.std, Y = Y.tr.std, kfold = 5,
 
 ## Plot the (standardized) mean cross-validated errors in a heatmap.
 plot(cvfit, type = "cv.heatmap")
-## --------------------------------------------------------------------- ##
+
 ## Plot the (standardized) mean cross-validated errors in a 3D scatterplot.
-plot(cvfit, type = "cv.scatter")
+plot(cvfit, type = "cv.scatter", plt.surf = TRUE)
 
 
 ## Extract the estimates at "lambda.min".
 Beta.hat1 <- cvfit$est.min$Beta
 Theta.hat1 <- cvfit$est.min$Theta
-## --------------------------------------------------------------- ##
-## Extract the estimates at "lambda.1se.Beta" (if 'fit.1se = TRUE').
+
+## Extract the estimates at "lambda.1se.Beta" (if 'fit.1se' = TRUE).
 Beta.hat2 <- cvfit$est.1se.B$Beta
 Theta.hat2 <- cvfit$est.1se.B$Theta
-## --------------------------------------------------------------- ##
-## Extract the estimates at "lambda.1se.Theta" (if 'fit.1se = TRUE').
+
+## Extract the estimates at "lambda.1se.Theta" (if 'fit.1se' = TRUE).
 Beta.hat3 <- cvfit$est.1se.Tht$Beta
 Theta.hat3 <- cvfit$est.1se.Tht$Theta
 
 
-## Make predictions of response values at "lambda.min".
-## 's' = "lambda.1se.Beta" and 's' = "lambda.1se.Theta"
-## are supported if 'fit.1se = TRUE' when calling cv.missoNet.
-newy <- predict(cvfit, newx = sim.dat$X[tst, ], s = "lambda.min")
+## Make predictions of response values on the test set.
+newy1 <- predict(cvfit, newx = sim.dat$X[tst, ], s = "lambda.min")
+newy2 <- predict(cvfit, newx = sim.dat$X[tst, ], s = "lambda.1se.Beta")  # 'fit.1se' = TRUE
+newy3 <- predict(cvfit, newx = sim.dat$X[tst, ], s = "lambda.1se.Theta")  # 'fit.1se' = TRUE
 }
 }
 \author{

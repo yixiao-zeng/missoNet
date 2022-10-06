@@ -45,7 +45,7 @@ generateData(
 
 \item{Beta.elm.sparsity}{A Bernoulli parameter between 0 and 1 controlling the approximate proportion of nonzero elements among the rows of \eqn{\mathbf{B}} where not all elements are zeros; the default is \code{'Beta.elm.sparsity = 0.2'}. This is only needed when \code{'Beta = NULL'}.}
 
-\item{with.seed}{A random seed for the generative process.}
+\item{with.seed}{A random number seed for the generative process.}
 }
 \value{
 This function returns a \code{'list'} consisting of the following components:
@@ -87,10 +87,10 @@ under "\code{MAR}", \code{'M[i, j]'} is related to \code{'X'}, but not related t
 under "\code{MNAR}", \code{'M[i, j]'} is related to \code{'Y'} itself, even after \code{'X'} is controlled.
 }
 \examples{
-## Simulate a dataset with response values missing completely 
-## at random (MCAR), the overall missing rate is around 10\%.
+## Simulate a dataset with response values missing completely at random (MCAR), 
+## the overall missing rate is around 10\%.
 sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
-## ---------------------------------------------------------------------------- ##
+## -------------------------------------------------------------------------------
 ## Fit a missoNet model using the simulated dataset.
 X <- sim.dat$X  # predictor matrix
 Y <- sim.dat$Z  # corrupted response matrix
@@ -99,22 +99,23 @@ fit <- missoNet(X = X, Y = Y, lambda.Beta = 0.1, lambda.Theta = 0.1)
 
 ## Simulate a dataset with response values missing at random (MAR), the approximate 
 ## missing rate for each column of the response matrix is specified through a vector 'rho'.
+## 
 ## The row sparsity and element sparsity of the auto-generated 'Beta' could be 
-## adjusted by using 'Beta.row.sparsity' and 'Beta.elm.sparsity', respectively.
+## adjusted correspondingly by using 'Beta.row.sparsity' and 'Beta.elm.sparsity'.
 n <- 300; p <- 50; q <- 20
 rho <- runif(q, min = 0, max = 0.2)
 sim.dat <- generateData(n = n, p = p, q = q, rho = rho, missing.type = "MAR",
                         Beta.row.sparsity = 0.3, Beta.elm.sparsity = 0.2)
 
 
-## Simulate a dataset with response values missing not at 
-## random (MNAR), using the user-supplied 'Beta' and 'Theta'.
+## Simulate a dataset with response values missing not at random (MNAR), 
+## using the user-supplied 'Beta' and 'Theta'.
 n <- 300; p <- 50; q <- 20
 Beta <- matrix(rnorm(p*q, 0, 1), p, q)  # a nonsparse 'Beta' (p x q)
 Theta <- diag(q)  # a diagonal 'Theta' (q x q)
 sim.dat <- generateData(Beta = Beta, Theta = Theta, n = n, p = p, q = q,
                         rho = 0.1, missing.type = "MNAR")
-## ------------------------------------------------------------------ ##           
+## ---------------------------------------------------------------------          
 ## Specifying just one of 'Beta' and 'Theta' is also allowed.
 sim.dat <- generateData(Theta = Theta, n = n, p = p, q = q,
                         rho = 0.1, missing.type = "MNAR")

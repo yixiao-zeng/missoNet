@@ -23,6 +23,7 @@ missoNet(
   fit.relax = FALSE,
   parallel = FALSE,
   cl = NULL,
+  with.seed = NULL,
   verbose = 1
 )
 }
@@ -31,9 +32,9 @@ missoNet(
 
 \item{Y}{Numeric response matrix (\eqn{n\times q}): columns correspond to response variables and rows correspond to samples. Missing values should be coded as either \code{'NA'}s or \code{'NaN'}s. There is no need for centering or scaling of the variables.}
 
-\item{lambda.Beta}{A scalar or a numeric vector: a user-supplied sequence of non-negative value(s) for \eqn{\lambda_B} used to penalize the elements of the coefficient matrix \eqn{\mathbf{B}}. Note that the values will be sequentially visited in the given orders as inputs to the regularization parameter sequence \eqn{\{(\lambda_B, \lambda_\Theta)\}}; \code{'lambda.Beta'} must have the same length as \code{'lambda.Theta'}.}
+\item{lambda.Beta}{A scalar or a numeric vector: a user-supplied sequence of non-negative value(s) for \{\eqn{\lambda_B}\} used to penalize the elements of the coefficient matrix \eqn{\mathbf{B}}. Note that the values will be sequentially visited in the given orders as inputs to the regularization parameter sequence \eqn{\{(\lambda_B, \lambda_\Theta)\}}; \code{'lambda.Beta'} must have the same length as \code{'lambda.Theta'}.}
 
-\item{lambda.Theta}{A scalar or a numeric vector: a user-supplied sequence of non-negative value(s) for \eqn{\lambda_\Theta} used to penalize the (off-diagonal) elements of the precision matrix \eqn{\mathbf{\Theta}}. Note that the values will be sequentially visited in the given orders as inputs to the regularization parameter sequence \eqn{\{(\lambda_B, \lambda_\Theta)\}}; \code{'lambda.Theta'} must have the same length as \code{'lambda.Beta'}.}
+\item{lambda.Theta}{A scalar or a numeric vector: a user-supplied sequence of non-negative value(s) for \{\eqn{\lambda_\Theta}\} used to penalize the (off-diagonal) elements of the precision matrix \eqn{\mathbf{\Theta}}. Note that the values will be sequentially visited in the given orders as inputs to the regularization parameter sequence \eqn{\{(\lambda_B, \lambda_\Theta)\}}; \code{'lambda.Theta'} must have the same length as \code{'lambda.Beta'}.}
 
 \item{rho}{(Optional) A scalar or a numeric vector of length \eqn{q}: the elements are user-supplied probabilities of missingness for the response variables. The default is \code{'rho = NULL'} and the program will compute the empirical missing rates for each of the columns of \code{'Y'} and use them as the working missing probabilities. The default setting should suffice in most cases; misspecified missing probabilities would introduce biases into the model.}
 
@@ -57,11 +58,13 @@ missoNet(
 
 \item{standardize.response}{Logical: should the columns of \code{'Y'} be standardized so each has unit variance? The default is \code{'TRUE'}. The estimated results will always be returned on the original scale. If \code{'Y'} has been standardized prior to fitting the model, you might not wish to standardize it inside the algorithm.}
 
-\item{fit.relax}{Logical: the default is \code{'FALSE'}. If \code{'TRUE'}, the program will re-estimate the edges in the active set (i.e. nonzero off-diagonal elements) of the network structure \eqn{\hat{\mathbf{\Theta}}} without penalization (\eqn{\lambda_\Theta=0}). This debiased estimate of \eqn{\mathbf{\Theta}} could be useful for some interdependency analyses. WARNING: there may be convergence issues if the empirical covariance matrix is not of full rank (e.g., \eqn{n < q)}).}
+\item{fit.relax}{Logical: the default is \code{'FALSE'}. If \code{'TRUE'}, the program will re-estimate the edges in the active set (i.e. nonzero off-diagonal elements) of the network structure \eqn{\hat{\mathbf{\Theta}}} without penalization (\eqn{\lambda_\Theta=0}). This debiased estimate of \eqn{\mathbf{\Theta}} could be useful for some interdependency analyses. WARNING: there may be convergence issues if the empirical covariance matrix is not of full rank (e.g. \eqn{n < q)}).}
 
 \item{parallel}{Logical: the default is \code{'FALSE'}. If \code{'TRUE'}, the program uses clusters to fit models with each element of the \eqn{\lambda} sequence \eqn{\{(\lambda_B, \lambda_\Theta)\}} in parallel. Must register parallel clusters beforehand, see examples below.}
 
 \item{cl}{A cluster object created by \sQuote{\code{parallel::makeCluster}} for parallel evaluations. This is only needed when \code{'parallel = TRUE'}.}
+
+\item{with.seed}{A random number seed for the parameter initialization. A user-specified value will eliminate the slight randomness in results.}
 
 \item{verbose}{Value of \code{'0'}, \code{'1'} or \code{'2'}. \code{'verbose = 0'} -- silent; \code{'verbose = 1'} (the default) -- limited tracing with progress bars; \code{'verbose = 2'} -- detailed tracing. Note that displaying the progress bars slightly increases the computation overhead compared to the silent mode. The detailed tracing should be used for monitoring progress only when the program runs extremely slowly, and it is not supported under \code{'parallel = TRUE'}.}
 }
@@ -122,22 +125,22 @@ using corrupted datasets. Moreover, \sQuote{\code{missoNet}} enjoys the theoreti
 solutions that are comparable/close to the clean conditional graphical lasso estimates. Please refer to the original manuscript (coming soon) for more details of our method.
 }
 \examples{
-## Simulate a dataset with response values missing completely 
-## at random (MCAR), the overall missing rate is around 10\%.
+## Simulate a dataset with response values missing completely at random (MCAR), 
+## the overall missing rate is around 10\%.
 sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
 tr <- 1:240  # training set indices
 tst <- 241:300  # test set indices
 X.tr <- sim.dat$X[tr, ]  # predictor matrix
 Y.tr <- sim.dat$Z[tr, ]  # corrupted response matrix
 
-\dontrun{
+\donttest{
+## Fit one missoNet model with two scalars for 'lambda.Beta' and 'lambda.Theta'.
+fit1 <- missoNet(X = X.tr, Y = Y.tr, lambda.Beta = 0.1, lambda.Theta = 0.2)
 
-## Fit one missoNet model with a scalar for both 'lambda.Beta' and 'lambda.Theta'.
-fit1 <- missoNet(X = X.tr, Y = Y.tr, lambda.Beta = 0.1, lambda.Theta = 0.1)
 
-
-## Fit a series of missoNet models with the lambda pairs sequentially extracted from the 
-## 'lambda.Beta' and 'lambda.Theta' vectors, note that the two vectors must have the same length.
+## Fit a series of missoNet models with the lambda pairs := (lambda.Beta, lambda.Theta)
+## sequentially extracted from the 'lambda.Beta' and 'lambda.Theta' vectors, note that the 
+## two vectors must have the same length.
 lamB.vec <- 10^(seq(from = 0, to = -1, length.out = 5))
 lamTht.vec <- rep(0.1, 5)
 fit2 <- missoNet(X = X.tr, Y = Y.tr, lambda.Beta = lamB.vec, lambda.Theta = lamTht.vec)
@@ -150,16 +153,16 @@ fit2 <- missoNet(X = X.tr, Y = Y.tr, lambda.Beta = lamB.vec, lambda.Theta = lamT
 parallel::stopCluster(cl)
 
 
-## Extract the estimates at ('lamB.vec[1]', 'lamTht.vec[1]'); the estimates 
-## at the subsequent lambda pairs could be extracted in the same way.
+## Extract the estimates at ('lamB.vec[1]', 'lamTht.vec[1]').
+## The estimates at the subsequent lambda pairs could be accessed in the same way.
 Beta.hat <- fit2$est.list[[1]]$Beta
 Theta.hat <- fit2$est.list[[1]]$Theta
 lambda.Beta <- fit2$est.list[[1]]$lambda.Beta  # equal to 'lamB.vec[1]'
 lambda.Theta <- fit2$est.list[[1]]$lambda.Theta  # equal to 'lamTht.vec[1]'
 
 
-## Fit a series of missoNet models using PRE-STANDARDIZED training 
-## data if you wish to compare the results with other softwares. 
+## Fit a series of missoNet models using PRE-STANDARDIZED training data
+## if you wish to compare the results with other softwares. 
 ## There is no need for centering of variables.
 X.tr.std <- scale(X.tr, center = FALSE, scale = apply(X.tr, 2, sd, na.rm = TRUE))
 Y.tr.std <- scale(Y.tr, center = FALSE, scale = apply(Y.tr, 2, sd, na.rm = TRUE))

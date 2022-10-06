@@ -21,7 +21,10 @@
 
 \item{plt.surf}{Logical: whether to draw the error surface. The default is \code{'TRUE'}. This is only needed when \code{'type'} = "\code{cv.scatter}".}
 
-\item{...}{Other graphical arguments used by \sQuote{ComplexHeatmap::Heatmap} or \sQuote{scatterplot3d::scatterplot3d}.}
+\item{...}{Other graphical arguments used by \sQuote{ComplexHeatmap::Heatmap} (\code{'type'} = "\code{cv.heatmap}") or \sQuote{scatterplot3d::scatterplot3d} (\code{'type'} = "\code{cv.scatter}").}
+}
+\value{
+The plot object.
 }
 \description{
 S3 method for plotting the cross-validation error surface from a fitted \code{'cv.missoNet'} object.
@@ -30,16 +33,17 @@ S3 method for plotting the cross-validation error surface from a fitted \code{'c
 ## Simulate a dataset.
 sim.dat <- generateData(n = 200, p = 10, q = 10, rho = 0.1, missing.type = "MCAR")
 
-\dontrun{
-
+\donttest{
 ## Perform a five-fold cross-validation on the simulated dataset.
-cvfit <- cv.missoNet(X = sim.dat$X, Y = sim.dat$Z, kfold = 5, fit.1se = TRUE)
+cvfit <- cv.missoNet(X = sim.dat$X, Y = sim.dat$Z, kfold = 5,
+                     fit.1se = TRUE, permute = TRUE, with.seed = 123)
+
 
 ## Plot the (standardized) mean cross-validated errors in a heatmap.
-plot(cvfit)
+plot(cvfit, type = "cv.heatmap")
 
 ## Plot the (standardized) mean cross-validated errors in a 3D scatterplot.
-plot(cvfit, type = "cv.scatter", detailed.axes = FALSE, plt.surf = TRUE)
+plot(cvfit, type = "cv.scatter", plt.surf = TRUE)
 }
 }
 \author{
