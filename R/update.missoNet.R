@@ -1,7 +1,7 @@
 update.missoNet <- function(X, Y, lamTh, lamB,
                             Beta.maxit, Beta.thr, Theta.maxit, Theta.thr,
                             verbose, eps, eta, diag.pf,
-                            info, info.update, init.obj, under.cv) {
+                            info, info.update, under.cv, init.obj=NULL, B.init=NULL) {
   if (is.null(info)) {
     n <- nrow(X)
     p <- ncol(X)
@@ -34,9 +34,9 @@ update.missoNet <- function(X, Y, lamTh, lamB,
       cat("  ---------------- Warming-up -----------------\n")
       cat("\titer\t|\t| lik(t + 1) - lik(t) |\n")
     }
-    B.init <- init.obj$B.init * init.obj$sdx
     Beta.thr.rescale <- Beta.thr * sum(abs(B.init))
-    residual.cov <- init.obj$residual.cov.init
+    E <- Y - X %*% B.init
+    residual.cov <- getResidual(E = E, n = n, rho.mat = rho.mat.2, eps = eps)
     
     if (info$penalize.diagonal) {
       lamTh.mat <- lamTh * (1 - diag(info$q)) + lamTh * diag.pf * diag(info$q)

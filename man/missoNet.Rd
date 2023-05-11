@@ -11,10 +11,10 @@ missoNet(
   lambda.Theta,
   rho = NULL,
   Beta.maxit = 10000,
-  Beta.thr = 1e-06,
+  Beta.thr = 1e-08,
   eta = 0.8,
   Theta.maxit = 10000,
-  Theta.thr = 1e-06,
+  Theta.thr = 1e-08,
   eps = 1e-08,
   penalize.diagonal = NULL,
   diag.penalty.factor = NULL,
@@ -40,13 +40,13 @@ missoNet(
 
 \item{Beta.maxit}{The maximum number of iterations of the fast iterative shrinkage-thresholding algorithm (FISTA) for updating \eqn{\hat{\mathbf{B}}}. The default is \code{'Beta.maxit = 10000'}.}
 
-\item{Beta.thr}{The convergence threshold of the FISTA algorithm for updating \eqn{\hat{\mathbf{B}}}; the default is \code{'Beta.thr = 1.0E-6'}. Iterations stop when the absolute parameter change is less than (\code{'Beta.thr'} \code{*} \code{sum(abs(}\eqn{\hat{\mathbf{B}}}\code{))}).}
+\item{Beta.thr}{The convergence threshold of the FISTA algorithm for updating \eqn{\hat{\mathbf{B}}}; the default is \code{'Beta.thr = 1.0E-8'}. Iterations stop when the absolute parameter change is less than (\code{'Beta.thr'} \code{*} \code{sum(abs(}\eqn{\hat{\mathbf{B}}}\code{))}).}
 
 \item{eta}{The backtracking line search shrinkage factor; the default is \code{'eta = 0.8'}. Most users will be able to use the default value, some experienced users may want to tune \code{'eta'} according to the properties of a specific dataset for a faster convergence of the FISTA algorithm. Note that \code{'eta'} must be in (0, 1).}
 
 \item{Theta.maxit}{The maximum number of iterations of the \sQuote{\code{\link{glasso}}} algorithm for updating \eqn{\hat{\mathbf{\Theta}}}. The default is \code{'Theta.maxit = 10000'}.}
 
-\item{Theta.thr}{The convergence threshold of the \sQuote{\code{\link{glasso}}} algorithm for updating \eqn{\hat{\mathbf{\Theta}}}; the default is \code{'Theta.thr = 1.0E-6'}. Iterations stop when the average absolute parameter change is less than (\code{'Theta.thr'} \code{*} \code{ave(abs(offdiag(}\eqn{\hat{\mathbf{\Sigma}}}\code{)))}), where \eqn{\hat{\mathbf{\Sigma}}} denotes the empirical working covariance matrix.}
+\item{Theta.thr}{The convergence threshold of the \sQuote{\code{\link{glasso}}} algorithm for updating \eqn{\hat{\mathbf{\Theta}}}; the default is \code{'Theta.thr = 1.0E-8'}. Iterations stop when the average absolute parameter change is less than (\code{'Theta.thr'} \code{*} \code{ave(abs(offdiag(}\eqn{\hat{\mathbf{\Sigma}}}\code{)))}), where \eqn{\hat{\mathbf{\Sigma}}} denotes the empirical working covariance matrix.}
 
 \item{eps}{A numeric tolerance level for the L1 projection of the empirical covariance matrix; the default is \code{'eps = 1.0E-8'}. The empirical covariance matrix will be projected onto a L1 ball to have \code{min(eigen(}\eqn{\hat{\mathbf{\Sigma}}}\code{)$value)} == \code{'eps'}, if any of the eigenvalues is less than the specified tolerance. Most users will be able to use the default value.}
 

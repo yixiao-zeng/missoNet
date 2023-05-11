@@ -75,7 +75,7 @@ or try different values (usually larger) for the argument `diag.penalty.factor`.
   }
   lamTh.max <- max(glasso.obj$rholist) * 10
   
-  return(list(B.init = B.init, residual.cov.init = residual.cov.init, rho.vec = rho.vec, sdx = sdx, sdy = sdy, mx = mx, my = my,
+  return(list(B.init = B.init, rho.vec = rho.vec, sdx = sdx, sdy = sdy, mx = mx, my = my,
               penalize.diagonal = penalize.diagonal, diag.pf = diag.pf, lamB.max = lamB.max, lamTh.max = lamTh.max))
 }
 

@@ -5,8 +5,9 @@ parWrapper <- function(k, X, Y, init.obj, rho, ind, kfold, lamTh.vec, lamB.vec,
   q <- ncol(Y)
   
   err.fold <- rep(0, length(lamTh.vec))
+  Beta.warm.fold <- lapply(1:length(lamTh.vec), function(x){matrix(0,p,q)})
   
-  foldind <- ind[(1 + floor((k - 1) * n/kfold)):floor(k * n/kfold)]
+  foldind <- ind[(1+floor((k-1)*n/kfold)) : floor(k*n/kfold)]
   X.tr <- X[-foldind, ]
   Y.tr <- Y[-foldind, ]
   X.va <- X[foldind, , drop = FALSE]
@@ -57,8 +58,9 @@ parWrapper <- function(k, X, Y, init.obj, rho, ind, kfold, lamTh.vec, lamB.vec,
     
     E.va.sq <- (Y.va - X.va %*% info.update$B.init)^2
     err.fold[i] <- mean(E.va.sq, na.rm = TRUE)
+    Beta.warm.fold[[i]] <- info.update$B.init
   }
   
-  return(err.fold)
+  return(list(err.fold = err.fold, Beta.warm.fold = Beta.warm.fold))
 }
 

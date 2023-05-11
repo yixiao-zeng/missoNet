@@ -209,10 +209,12 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
   if (verbose > 0) { cat("--------------------- Cross-validation --------------------\n\n") }
   if (!parallel) {
     err <- matrix(0, kfold, length(lamTh.vec))
+    Beta.warm <- lapply(1:length(lamTh.vec), function(x){matrix(0,p,q)})
+    Beta.warm.fold <- lapply(1:kfold, function(k){Beta.warm})
     for (k in 1:kfold) {
       if (verbose > 0) { cat(sprintf("Fold: %d/%d\n", k, kfold)) }
       
-      foldind <- ind[(1 + floor((k - 1) * n/kfold)):floor(k * n/kfold)]
+      foldind <- ind[(1+floor((k-1)*n/kfold)) : floor(k*n/kfold)]
       X.tr <- X[-foldind, ]
       Y.tr <- Y[-foldind, ]
       X.va <- X[foldind, , drop = FALSE]
@@ -264,23 +266,34 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
         
         E.va.sq <- (Y.va - X.va %*% info.update$B.init)^2
         err[k, i] <- mean(E.va.sq, na.rm = TRUE)
+        Beta.warm.fold[[k]][[i]] <- info.update$B.init
         if (verbose == 1) { setTxtProgressBar(pb, i) }
       }
       if (verbose == 1) { close(pb) }
     }
-
+    for (k in 1:kfold) {
+      Beta.warm <- lapply(1:length(lamTh.vec), function(x){Beta.warm[[x]] + Beta.warm.fold[[k]][[x]]})
+    }
+    rm(Beta.warm.fold, X.tr, Y.tr, Z.tr, E.tr, X.va, Y.va, info, info.update)
   } else {
     if (verbose > 0) {
       cat("- Parallel execution on", length(cl), "CPU cores ...\n\n")
       pbapply::pboptions(type = "txt", style = 3, char = "=", txt.width = 50, use_lb = TRUE, nout = kfold)
     } else {pbapply::pboptions(type = "none", use_lb = TRUE)}
-   
+    
     par.out <- pbapply::pblapply(1:kfold, function(k) {
       parWrapper(k = k, X = X, Y = Y, init.obj = init.obj, rho = rho, ind = ind, kfold = kfold, lamTh.vec = lamTh.vec, lamB.vec = lamB.vec,
                  Beta.maxit = Beta.maxit, Beta.thr = Beta.thr, Theta.maxit = Theta.maxit, Theta.thr = Theta.thr, eps = eps, eta = eta)
     }, cl = cl)
     
-    err <- do.call("rbind", par.out)
+    #err <- do.call("rbind", par.out)
+    err <- matrix(0, kfold, length(lamTh.vec))
+    Beta.warm <- lapply(1:length(lamTh.vec), function(x){matrix(0,p,q)})
+    for (k in 1:kfold) {
+      err[k, ] <- par.out[[k]]$err.fold
+      Beta.warm <- lapply(1:length(lamTh.vec), function(x){Beta.warm[[x]] + par.out[[k]]$Beta.warm.fold[[x]]})
+    }
+    rm(par.out)
   }
   if (verbose > 0) { cat("\n-----------------------------------------------------------\n\n") }
   
@@ -288,6 +301,7 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
   err.sd <- apply(err, 2, sd)/sqrt(kfold)
   err.up <- err.cv + err.sd
   err.low <- err.cv - err.sd
+  Beta.warm <- lapply(1:length(lamTh.vec), function(x){Beta.warm[[x]]/kfold})
   
   cv.min <- which.min(err.cv)
   lamTh.min <- lamTh.vec[cv.min]
@@ -298,19 +312,18 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
   
   if (verbose > 0) { cat("- Fittig with `lambda.min` ...\n\n") }
   out.min <- update.missoNet(X = X, Y = Y, lamTh = lamTh.min, lamB = lamB.min,
-                             Beta.maxit = Beta.maxit * 10, Beta.thr = Beta.thr * 0.01,
-                             Theta.maxit = Theta.maxit * 10, Theta.thr = Theta.thr * 0.01,
+                             Beta.maxit = 1e4, Beta.thr = min(1e-08, Beta.thr*0.01),
+                             Theta.maxit = 1e4, Theta.thr = min(1e-08, Theta.thr*0.01),
                              verbose = verbose, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
-                             info = NULL, info.update = NULL, init.obj = init.obj, under.cv = FALSE)
+                             info = NULL, info.update = NULL, under.cv = FALSE, init.obj = init.obj, B.init = Beta.warm[[cv.min]])
   out.min$Beta <- sweep(out.min$Beta/init.obj$sdx, 2, init.obj$sdy, `*`)    ## convert back to the original scale
   out.min$mu <- as.numeric(init.obj$my - crossprod(out.min$Beta, init.obj$mx))
   out.min$lambda.Beta <- lamB.min
   out.min$lambda.Theta <- lamTh.min
   relax.net <- NULL
   if (fit.relax) {
-    if (verbose > 0) { cat("  -- Relaxed network\n\n") }
     relax.net <- relax.glasso(X = X, Y = Y, init.obj = init.obj, est = out.min, eps = eps,
-                              Theta.thr = Theta.thr * 0.01, Theta.maxit = Theta.maxit * 10)
+                              Theta.thr = min(1e-08, Theta.thr*0.01), Theta.maxit = 1e4)
   }
   out.min$relax.net <- relax.net
   
@@ -327,19 +340,18 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
     
     if (lamB.1se != lamB.min) {
       outB.1se <- update.missoNet(X = X, Y = Y, lamTh = lamTh.min, lamB = lamB.1se,
-                                  Beta.maxit = Beta.maxit * 10, Beta.thr = Beta.thr * 0.01,
-                                  Theta.maxit = Theta.maxit * 10, Theta.thr = Theta.thr * 0.01,
+                                  Beta.maxit = 1e4, Beta.thr = min(1e-08, Beta.thr*0.01),
+                                  Theta.maxit = 1e4, Theta.thr = min(1e-08, Theta.thr*0.01),
                                   verbose = verbose, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
-                                  info = NULL, info.update = NULL, init.obj = init.obj, under.cv = FALSE)
+                                  info = NULL, info.update = NULL, under.cv = FALSE, init.obj = init.obj, B.init = Beta.warm[[which((lamTh.vec == lamTh.min) & (lamB.vec == lamB.1se))]])
       outB.1se$Beta <- sweep(outB.1se$Beta/init.obj$sdx, 2, init.obj$sdy, `*`)
       outB.1se$mu <- as.numeric(init.obj$my - crossprod(outB.1se$Beta, init.obj$mx))
       outB.1se$lambda.Beta <- lamB.1se
       outB.1se$lambda.Theta <- lamTh.min
       relax.net <- NULL
       if (fit.relax) {
-        if (verbose > 0) { cat("    --- Relaxed network\n\n") }
         relax.net <- relax.glasso(X = X, Y = Y, init.obj = init.obj, est = outB.1se, eps = eps,
-                                  Theta.thr = Theta.thr * 0.01, Theta.maxit = Theta.maxit * 10)
+                                  Theta.thr = min(1e-08, Theta.thr*0.01), Theta.maxit = 1e4)
       }
       outB.1se$relax.net <- relax.net
     } else {
@@ -353,19 +365,18 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
     
     if (lamTh.1se != lamTh.min) {
       outTh.1se <- update.missoNet(X = X, Y = Y, lamTh = lamTh.1se, lamB = lamB.min,
-                                  Beta.maxit = Beta.maxit * 10, Beta.thr = Beta.thr * 0.01,
-                                  Theta.maxit = Theta.maxit * 10, Theta.thr = Theta.thr * 0.01,
+                                  Beta.maxit = 1e4, Beta.thr = min(1e-08, Beta.thr*0.01),
+                                  Theta.maxit = 1e4, Theta.thr = min(1e-08, Theta.thr*0.01),
                                   verbose = verbose, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
-                                  info = NULL, info.update = NULL, init.obj = init.obj, under.cv = FALSE)
+                                  info = NULL, info.update = NULL, under.cv = FALSE, init.obj = init.obj, B.init = Beta.warm[[which((lamTh.vec == lamTh.1se) & (lamB.vec == lamB.min))]])
       outTh.1se$Beta <- sweep(outTh.1se$Beta/init.obj$sdx, 2, init.obj$sdy, `*`)
       outTh.1se$mu <- as.numeric(init.obj$my - crossprod(outTh.1se$Beta, init.obj$mx))
       outTh.1se$lambda.Beta <- lamB.min
       outTh.1se$lambda.Theta <- lamTh.1se
       relax.net <- NULL
       if (fit.relax) {
-        if (verbose > 0) { cat("    --- Relaxed network\n\n") }
         relax.net <- relax.glasso(X = X, Y = Y, init.obj = init.obj, est = outTh.1se, eps = eps,
-                                  Theta.thr = Theta.thr * 0.01, Theta.maxit = Theta.maxit * 10)
+                                  Theta.thr = min(1e-08, Theta.thr*0.01), Theta.maxit = 1e4)
       }
       outTh.1se$relax.net <- relax.net
     } else {

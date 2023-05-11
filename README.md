@@ -5,18 +5,19 @@
 
 # missoNet: Missingness in Multi-Task Regression with Network Estimation
 
-`missoNet` is an R package that fits penalized multi-task regression -- that is, with multiple 
-correlated tasks or response variables -- to simultaneously estimate the coefficients of a set of predictor 
-variables for all tasks and the conditional response network structure given all predictors, via 
-penalized maximum likelihood in an undirected conditional Gaussian graphical model. In contrast to most 
-penalized multi-task regression (conditional graphical lasso) methods, `missoNet` has the capability of 
-obtaining estimates even when the response data is corrupted by missing values. The method automatically 
-enjoys the theoretical and computational benefits of convexity, and returns solutions that are comparable/close 
-to the estimates without any missing values.
+`missoNet` is a novel approach to fitting penalized multi-task regression models, which are used to 
+estimate the coefficients of predictor variables for multiple correlated tasks or response variables. 
+The package achieves this by simultaneously estimating the regression coefficients and the conditional 
+response network structure given all predictors, using penalized maximum likelihood in an undirected 
+conditional Gaussian graphical model. In contrast to most penalized multi-task regression methods, such 
+as conditional graphical lasso, `missoNet` is capable of obtaining estimates even when the response data 
+is corrupted by missing values. The method is based on convex optimization, which provides both theoretical 
+and computational benefits, and returns solutions that are comparable to the estimates obtained without 
+any missing values.
 
 The package provides an integrated set of core routines including 1) data simulation; 2) model fitting and 
-cross-validation; 3) visualization of results; 4) predictions in new data. The function arguments are in the 
-same style as those of `glmnet`, making it easy for experienced users to get started.
+cross-validation; 3) visualization of results; 4) predictions in new data. The function arguments are specified 
+in the same style as those of `glmnet`, making it easy for experienced users to get started.
 
 
 ## Installation

@@ -44,10 +44,10 @@
 #' @param lambda.Theta A scalar or a numeric vector: a user-supplied sequence of non-negative value(s) for \{\eqn{\lambda_\Theta}\} used to penalize the (off-diagonal) elements of the precision matrix \eqn{\mathbf{\Theta}}. Note that the values will be sequentially visited in the given orders as inputs to the regularization parameter sequence \eqn{\{(\lambda_B, \lambda_\Theta)\}}; \code{'lambda.Theta'} must have the same length as \code{'lambda.Beta'}.
 #' @param rho (Optional) A scalar or a numeric vector of length \eqn{q}: the elements are user-supplied probabilities of missingness for the response variables. The default is \code{'rho = NULL'} and the program will compute the empirical missing rates for each of the columns of \code{'Y'} and use them as the working missing probabilities. The default setting should suffice in most cases; misspecified missing probabilities would introduce biases into the model.
 #' @param Beta.maxit The maximum number of iterations of the fast iterative shrinkage-thresholding algorithm (FISTA) for updating \eqn{\hat{\mathbf{B}}}. The default is \code{'Beta.maxit = 10000'}.
-#' @param Beta.thr The convergence threshold of the FISTA algorithm for updating \eqn{\hat{\mathbf{B}}}; the default is \code{'Beta.thr = 1.0E-6'}. Iterations stop when the absolute parameter change is less than (\code{'Beta.thr'} \code{*} \code{sum(abs(}\eqn{\hat{\mathbf{B}}}\code{))}).
+#' @param Beta.thr The convergence threshold of the FISTA algorithm for updating \eqn{\hat{\mathbf{B}}}; the default is \code{'Beta.thr = 1.0E-8'}. Iterations stop when the absolute parameter change is less than (\code{'Beta.thr'} \code{*} \code{sum(abs(}\eqn{\hat{\mathbf{B}}}\code{))}).
 #' @param eta The backtracking line search shrinkage factor; the default is \code{'eta = 0.8'}. Most users will be able to use the default value, some experienced users may want to tune \code{'eta'} according to the properties of a specific dataset for a faster convergence of the FISTA algorithm. Note that \code{'eta'} must be in (0, 1).
 #' @param Theta.maxit The maximum number of iterations of the \sQuote{\code{\link{glasso}}} algorithm for updating \eqn{\hat{\mathbf{\Theta}}}. The default is \code{'Theta.maxit = 10000'}.
-#' @param Theta.thr The convergence threshold of the \sQuote{\code{\link{glasso}}} algorithm for updating \eqn{\hat{\mathbf{\Theta}}}; the default is \code{'Theta.thr = 1.0E-6'}. Iterations stop when the average absolute parameter change is less than (\code{'Theta.thr'} \code{*} \code{ave(abs(offdiag(}\eqn{\hat{\mathbf{\Sigma}}}\code{)))}), where \eqn{\hat{\mathbf{\Sigma}}} denotes the empirical working covariance matrix.
+#' @param Theta.thr The convergence threshold of the \sQuote{\code{\link{glasso}}} algorithm for updating \eqn{\hat{\mathbf{\Theta}}}; the default is \code{'Theta.thr = 1.0E-8'}. Iterations stop when the average absolute parameter change is less than (\code{'Theta.thr'} \code{*} \code{ave(abs(offdiag(}\eqn{\hat{\mathbf{\Sigma}}}\code{)))}), where \eqn{\hat{\mathbf{\Sigma}}} denotes the empirical working covariance matrix.
 #' @param eps A numeric tolerance level for the L1 projection of the empirical covariance matrix; the default is \code{'eps = 1.0E-8'}. The empirical covariance matrix will be projected onto a L1 ball to have \code{min(eigen(}\eqn{\hat{\mathbf{\Sigma}}}\code{)$value)} == \code{'eps'}, if any of the eigenvalues is less than the specified tolerance. Most users will be able to use the default value.
 #' @param penalize.diagonal Logical: should the diagonal elements of \eqn{\mathbf{\Theta}} be penalized? The default depends on the sample size, \eqn{n}, relative to the number of predictors and responses. If \eqn{n > \mathrm{max}(p, q)}, the default is \code{'TRUE'}, otherwise it is set to \code{'FALSE'}. Most users will be able to use the default setting.
 #' @param diag.penalty.factor Numeric: a separate penalty multiplication factor for the diagonal elements of \eqn{\mathbf{\Theta}} when \code{'penalize.diagonal = TRUE'}. \eqn{\lambda_\Theta} is multiplied by this number to allow a differential shrinkage of the diagonal elements. The default is \code{'NULL'} and the program will guess a value based on an initial estimate of \eqn{\mathbf{\Theta}}. This factor could be \code{'0'} for no shrinkage (equivalent to \code{'penalize.diagonal = FALSE'}). Most users will be able to use the default value.
@@ -124,8 +124,8 @@
 #' }
 
 missoNet <- function(X, Y, lambda.Beta, lambda.Theta, rho = NULL,
-                     Beta.maxit = 1e4, Beta.thr = 1e-06, eta = 0.8,
-                     Theta.maxit = 1e4, Theta.thr = 1e-06, eps = 1e-08,
+                     Beta.maxit = 1e4, Beta.thr = 1e-08, eta = 0.8,
+                     Theta.maxit = 1e4, Theta.thr = 1e-08, eps = 1e-08,
                      penalize.diagonal = NULL, diag.penalty.factor = NULL,
                      standardize = TRUE, standardize.response = TRUE, fit.relax = FALSE,
                      parallel = FALSE, cl = NULL, with.seed = NULL, verbose = 1) {
@@ -186,7 +186,7 @@ fitWrapper <- function(X, Y, lambda.Theta, lambda.Beta,
                          Beta.maxit = Beta.maxit, Beta.thr = Beta.thr,
                          Theta.maxit = Theta.maxit, Theta.thr = Theta.thr,
                          verbose = verbose, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
-                         info = NULL, info.update = NULL, init.obj = init.obj, under.cv = FALSE)
+                         info = NULL, info.update = NULL, under.cv = FALSE, init.obj = init.obj, B.init = init.obj$B.init*init.obj$sdx)
   fit$Beta <- sweep(fit$Beta/init.obj$sdx, 2, init.obj$sdy, `*`)    ## convert back to the original scale
   fit$mu <- as.numeric(init.obj$my - crossprod(fit$Beta, init.obj$mx))
   fit$lambda.Beta <- lambda.Beta
