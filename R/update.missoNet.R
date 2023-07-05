@@ -1,7 +1,10 @@
 update.missoNet <- function(X, Y, lamTh, lamB,
-                            Beta.maxit, Beta.thr, Theta.maxit, Theta.thr,
-                            verbose, eps, eta, diag.pf,
-                            info, info.update, under.cv, init.obj=NULL, B.init=NULL) {
+                            Beta.maxit, Beta.thr,
+                            Theta.maxit, Theta.thr,
+                            verbose, eps, eta,
+                            penalize.diag, diag.pf,
+                            info, info.update, under.cv,
+                            init.obj=NULL, B.init=NULL) {
   if (is.null(info)) {
     n <- nrow(X)
     p <- ncol(X)
@@ -18,7 +21,6 @@ update.missoNet <- function(X, Y, lamTh, lamB,
     
     info$n <- n
     info$q <- q
-    info$penalize.diagonal <- init.obj$penalize.diagonal
     info$xtx <- crossprod(X)
     info$til.xty <- crossprod(X, Z)/rho.mat.1
     til.ytx <- t(info$til.xty)
@@ -28,32 +30,30 @@ update.missoNet <- function(X, Y, lamTh, lamB,
     }
     
     #####################################################
-    # Pre-updating several times due to a cold start
+    # Pre-updating several times from a cold start
     #####################################################
     if (verbose == 2) {
       cat("  ---------------- Warming-up -----------------\n")
-      cat("\titer\t|\t| lik(t + 1) - lik(t) |\n")
+      cat("\tepoch\t|\t| lik(t + 1) - lik(t) |\n")
     }
-    Beta.thr.rescale <- Beta.thr * sum(abs(B.init))
     E <- Y - X %*% B.init
-    residual.cov <- getResidual(E = E, n = n, rho.mat = rho.mat.2, eps = eps)
+    residual.cov <- getResCov(E = E, n = n, rho.mat = rho.mat.2, eps = eps)
+    # residual.cov <- getResCov(yty = til.yty, ytx = til.ytx, xty = info$til.xty, xtx = info$xtx, B = B.init, n = n, eps = eps)
     
-    if (info$penalize.diagonal) {
+    if (penalize.diag) {
       lamTh.mat <- lamTh * (1 - diag(info$q)) + lamTh * diag.pf * diag(info$q)
-    } else {
-      lamTh.mat <- lamTh * (1 - diag(info$q))
-    }
+    } else { lamTh.mat <- lamTh * (1 - diag(info$q)) }
     lamB.mat <- matrix(lamB, nrow = p, ncol = q)
     
     lik.new <- sum(diag(1/n * (til.yty - til.ytx %*% B.init - crossprod(B.init, info$til.xty)
                                + crossprod(B.init, info$xtx) %*% B.init) %*% diag(1, q)))
     - determinant(diag(1, q), logarithm = TRUE)$mod[1] + sum(abs(lamTh.mat * diag(1, q))) + sum(abs(lamB.mat * B.init))
-    lik.thr <- lik.new * 1e-07
+    lik.thr <- 1e-08
     lik.old <- lik.new + lik.thr + 1
     
     s <- 0
-    while(s < 50) {
-      if(abs(lik.new - lik.old) < lik.thr) {
+    while (s < 1000) {
+      if (abs(lik.new - lik.old) < lik.thr) {
         if (verbose == 2) {
           cat("  ---------------------------------------------\n")
         }
@@ -61,16 +61,16 @@ update.missoNet <- function(X, Y, lamTh, lamB,
       } else {
         lik.old <- lik.new
         Theta.out <- glasso(s = residual.cov, rho = lamTh.mat, thr = Theta.thr, maxit = Theta.maxit,
-                            approx = FALSE, penalize.diagonal = info$penalize.diagonal, trace = FALSE)
+                            approx = FALSE, penalize.diagonal = penalize.diag, trace = FALSE)
         Theta <- (Theta.out$wi + t(Theta.out$wi))/2
 
         B.out <- updateBeta(Theta = Theta, B0 = B.init, n = info$n, xtx = info$xtx, xty = info$til.xty,
-                            lamB = lamB, eta = eta, tolin = Beta.thr.rescale, maxitrin = Beta.maxit)
+                            lamB = lamB, eta = eta, tolin = Beta.thr, maxitrin = Beta.maxit)
         
         B.init <- B.out$Bhat
-        Beta.thr.rescale <- Beta.thr * sum(abs(B.init))
         E <- Y - X %*% B.init
-        residual.cov <- getResidual(E = E, n = n, rho.mat = rho.mat.2, eps = eps)
+        residual.cov <- getResCov(E = E, n = n, rho.mat = rho.mat.2, eps = eps)
+        # residual.cov <- getResCov(yty = til.yty, ytx = til.ytx, xty = info$til.xty, xtx = info$xtx, B = B.init, n = n, eps = eps)
         
         lik.new <- sum(diag(1/n * (til.yty - til.ytx %*% B.init - crossprod(B.init, info$til.xty)
                                    + crossprod(B.init, info$xtx) %*% B.init) %*% Theta))
@@ -86,14 +86,13 @@ update.missoNet <- function(X, Y, lamTh, lamB,
     # Pre-updating ends
     #####################################################
     info.update$B.init <- B.init
-    Beta.thr <- Beta.thr.rescale
     info.update$residual.cov <- residual.cov
   }
   
   ################################################################################
   # Updating Theta and Beta
   ################################################################################
-  if (info$penalize.diagonal) {
+  if (penalize.diag) {
     lamTh.mat <- lamTh * (1 - diag(info$q)) + lamTh * diag.pf * diag(info$q)
     Theta.out <- glasso(s = info.update$residual.cov, rho = lamTh.mat, thr = Theta.thr, maxit = Theta.maxit,
                         approx = FALSE, penalize.diagonal = TRUE, trace = FALSE)
@@ -107,12 +106,12 @@ update.missoNet <- function(X, Y, lamTh, lamB,
                       lamB = lamB, eta = eta, tolin = Beta.thr, maxitrin = Beta.maxit)
   
   if (verbose == 2) {
-    cat("  `lambda.Theta`:", lamTh, "   `lambda.Beta`:", lamB, "\n")
-    cat("  # iters for updating `Theta`: ", Theta.out$niter, "\n")
-    cat("  # iters for updating `Beta`: ", B.out$it.final, "\n\n")
+    cat("  `lambda.Beta`:", lamB, "  `lambda.Theta`:", lamTh, "\n")
+    cat("  # iters for updating `Beta` (prox-grad):", B.out$it.final, "\n")
+    cat("  # iters for updating `Theta` (glasso):", Theta.out$niter, "\n\n")
   }
   
-  if(under.cv) {
+  if (under.cv) {
     return(B.out$Bhat)
   } else {
     return(list(Beta = B.out$Bhat, Theta = Theta))

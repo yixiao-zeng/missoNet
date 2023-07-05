@@ -44,10 +44,10 @@
 #' @param rho (Optional) A scalar or a numeric vector of length \eqn{q}: the elements are user-supplied probabilities of missingness for the response variables. The default is \code{'rho = NULL'} and the program will compute the empirical missing rates for each of the columns of \code{'Y'} and use them as the working missing probabilities. The default setting should suffice in most cases; misspecified missing probabilities would introduce biases into the model.
 #' @param lambda.Beta (Optional) Numeric vector: a user-supplied sequence of non-negative values for \{\eqn{\lambda_B}\} penalizing the elements of the coefficient matrix \eqn{\mathbf{B}} among which the cross-validation procedure searches. The default is \code{'lambda.Beta = NULL'}, in which case the program computes an appropriate range of \eqn{\lambda_B} values using \code{'n.lamBeta'} and \code{'lamBeta.min.ratio'}. Supplying a vector overrides this default. Note that the supplied sequence will be automatically arranged, internally, in a descending order.
 #' @param lambda.Theta (Optional) Numeric vector: a user-supplied sequence of non-negative values for \{\eqn{\lambda_\Theta}\} penalizing the (off-diagonal) elements of the precision matrix \eqn{\mathbf{\Theta}} among which the cross-validation procedure searches. The default is \code{'lambda.Theta = NULL'}, in which case the program computes an appropriate range of \eqn{\lambda_\Theta} values using \code{'n.lamTheta'} and \code{'lamTheta.min.ratio'}. Supplying a vector overrides this default. Note that the supplied sequence will be automatically arranged, internally, in a descending order. 
-#' @param lamBeta.min.ratio The smallest value of \eqn{\lambda_B} is calculated as the data-derived \eqn{\mathrm{max}(\lambda_B)} multiplied by \code{'lamBeta.min.ratio'}. The default depends on the sample size, \eqn{n}, relative to the number of predictors, \eqn{p}. If \eqn{n > p}, the default is \code{'1.0E-4'}, otherwise it is \code{'1.0E-2'}. A very small value of \code{'lamBeta.min.ratio'} may significantly increase runtime and lead to a saturated fit in the \eqn{n \leq p} case. This is only needed when \code{'lambda.Beta = NULL'}.
-#' @param lamTheta.min.ratio The smallest value of \eqn{\lambda_\Theta} is calculated as the data-derived \eqn{\mathrm{max}(\lambda_\Theta)} multiplied by \code{'lamTheta.min.ratio'}. The default depends on the sample size, \eqn{n}, relative to the number of responses, \eqn{q}. If \eqn{n > q}, the default is \code{'1.0E-4'}, otherwise it is \code{'1.0E-2'}. A very small value of \code{'lamTheta.min.ratio'} may significantly increase runtime and lead to a saturated fit in the \eqn{n \leq q} case. This is only needed when \code{'lambda.Theta = NULL'}.
-#' @param n.lamBeta The number of \eqn{\lambda_B} values. If \eqn{n > p}, the default is \code{'40'}, otherwise it is \code{'20'}. Avoid supplying an excessively large number since the program will fit (\code{'n.lamBeta'} \code{*} \code{'n.lamTheta'}) models in total for each fold of the cross-validation. Typically we suggest \code{'n.lamBeta' = -log10('lamBeta.min.ratio') * c}, where \code{c} \eqn{\in} [\code{10}, \code{20}]. This is only needed when \code{'lambda.Beta = NULL'}.
-#' @param n.lamTheta The number of \eqn{\lambda_\Theta} values. If \eqn{n > q}, the default is \code{'40'}, otherwise it is \code{'20'}. Avoid supplying an excessively large number since the program will fit (\code{'n.lamBeta'} \code{*} \code{'n.lamTheta'}) models in total for each fold of the cross-validation. Typically we suggest \code{'n.lamTheta' = -log10('lamTheta.min.ratio') * c}, where \code{c} \eqn{\in} [\code{10}, \code{20}]. This is only needed when \code{'lambda.Theta = NULL'}.
+#' @param lamBeta.min.ratio The smallest value of \eqn{\lambda_B} is calculated as the data-derived \eqn{\mathrm{max}(\lambda_B)} multiplied by \code{'lamBeta.min.ratio'}. The default depends on the sample size, \eqn{n}, relative to the number of predictors, \eqn{p}. If \eqn{n > p}, the default is \code{'1.0E-4'}, otherwise it is \code{'1.0E-3'}. A very small value of \code{'lamBeta.min.ratio'} may significantly increase runtime and lead to a saturated fit in the \eqn{n \leq p} case. This is only needed when \code{'lambda.Beta = NULL'}.
+#' @param lamTheta.min.ratio The smallest value of \eqn{\lambda_\Theta} is calculated as the data-derived \eqn{\mathrm{max}(\lambda_\Theta)} multiplied by \code{'lamTheta.min.ratio'}. The default depends on the sample size, \eqn{n}, relative to the number of responses, \eqn{q}. If \eqn{n > q}, the default is \code{'1.0E-4'}, otherwise it is \code{'1.0E-3'}. A very small value of \code{'lamTheta.min.ratio'} may significantly increase runtime and lead to a saturated fit in the \eqn{n \leq q} case. This is only needed when \code{'lambda.Theta = NULL'}.
+#' @param n.lamBeta The number of \eqn{\lambda_B} values. If \eqn{n > p}, the default is \code{'40'}, otherwise it is \code{'30'}. Avoid supplying an excessively large number since the program will fit (\code{'n.lamBeta'} \code{*} \code{'n.lamTheta'}) models in total for each fold of the cross-validation. Typically we suggest \code{'n.lamBeta' = -log10('lamBeta.min.ratio') * c}, where \code{c} \eqn{\in} [\code{10}, \code{20}]. This is only needed when \code{'lambda.Beta = NULL'}.
+#' @param n.lamTheta The number of \eqn{\lambda_\Theta} values. If \eqn{n > q}, the default is \code{'40'}, otherwise it is \code{'30'}. Avoid supplying an excessively large number since the program will fit (\code{'n.lamBeta'} \code{*} \code{'n.lamTheta'}) models in total for each fold of the cross-validation. Typically we suggest \code{'n.lamTheta' = -log10('lamTheta.min.ratio') * c}, where \code{c} \eqn{\in} [\code{10}, \code{20}]. This is only needed when \code{'lambda.Theta = NULL'}.
 #' @param lamBeta.scale.factor A positive multiplication factor for scaling the entire \eqn{\lambda_B} sequence; the default is \code{'1'}. A typical usage is when the magnitudes of the auto-computed \eqn{\lambda_B} values are inappropriate. For example, this factor would be needed if the optimal value of \eqn{\lambda_B} selected by the cross-validation (i.e. \eqn{{\lambda_B}_\mathrm{min}} with the minimum cross-validated error) approaches either boundary of the search range. This is only needed when \code{'lambda.Beta = NULL'}.
 #' @param lamTheta.scale.factor A positive multiplication factor for scaling the entire \eqn{\lambda_\Theta} sequence; the default is \code{'1'}. A typical usage is when the magnitudes of the auto-computed \eqn{\lambda_\Theta} values are inappropriate. For example, this factor would be needed if the optimal value of \eqn{\lambda_\Theta} selected by the cross-validation (i.e. \eqn{{\lambda_\Theta}_\mathrm{min}} with the minimum cross-validated error) approaches either boundary of the search range. This is only needed when \code{'lambda.Theta = NULL'}.
 #' @param Beta.maxit The maximum number of iterations of the fast iterative shrinkage-thresholding algorithm (FISTA) for updating \eqn{\hat{\mathbf{B}}}. The default is \code{'Beta.maxit = 1000'}.
@@ -56,8 +56,8 @@
 #' @param Theta.maxit The maximum number of iterations of the \sQuote{\code{\link{glasso}}} algorithm for updating \eqn{\hat{\mathbf{\Theta}}}. The default is \code{'Theta.maxit = 1000'}.
 #' @param Theta.thr The convergence threshold of the \sQuote{\code{\link{glasso}}} algorithm for updating \eqn{\hat{\mathbf{\Theta}}}; the default is \code{'Theta.thr = 1.0E-4'}. Iterations stop when the average absolute parameter change is less than (\code{'Theta.thr'} \code{*} \code{ave(abs(offdiag(}\eqn{\hat{\mathbf{\Sigma}}}\code{)))}), where \eqn{\hat{\mathbf{\Sigma}}} denotes the empirical working covariance matrix.
 #' @param eps A numeric tolerance level for the L1 projection of the empirical covariance matrix; the default is \code{'eps = 1.0E-8'}. The empirical covariance matrix will be projected onto a L1 ball to have \code{min(eigen(}\eqn{\hat{\mathbf{\Sigma}}}\code{)$value)} == \code{'eps'}, if any of the eigenvalues is less than the specified tolerance. Most users will be able to use the default value.
-#' @param penalize.diagonal Logical: should the diagonal elements of \eqn{\mathbf{\Theta}} be penalized? The default depends on the sample size, \eqn{n}, relative to the number of predictors and responses. If \eqn{n > \mathrm{max}(p, q)}, the default is \code{'TRUE'}, otherwise it is set to \code{'FALSE'}. Most users will be able to use the default setting.
-#' @param diag.penalty.factor Numeric: a separate penalty multiplication factor for the diagonal elements of \eqn{\mathbf{\Theta}} when \code{'penalize.diagonal = TRUE'}. \eqn{\lambda_\Theta} is multiplied by this number to allow a differential shrinkage of the diagonal elements. The default is \code{'NULL'} and the program will guess a value based on an initial estimate of \eqn{\mathbf{\Theta}}. This factor could be \code{'0'} for no shrinkage (equivalent to \code{'penalize.diagonal = FALSE'}). Most users will be able to use the default value.
+#' @param penalize.diagonal Logical: should the diagonal elements of \eqn{\mathbf{\Theta}} be penalized? The default is \code{'TRUE'}.
+#' @param diag.penalty.factor Numeric: a separate penalty multiplication factor for the diagonal elements of \eqn{\mathbf{\Theta}} when \code{'penalize.diagonal = TRUE'}. \eqn{\lambda_\Theta} is multiplied by this number to allow a differential shrinkage of the diagonal elements. The default is \code{'NULL'} and the program will guess a value based on an initial estimate of \eqn{\mathbf{\Theta}}. This factor could be \code{'0'} for no shrinkage (equivalent to \code{'penalize.diagonal = FALSE'}).
 #' @param standardize Logical: should the columns of \code{'X'} be standardized so each has unit variance? The default is \code{'TRUE'}. The estimated results will always be returned on the original scale. \sQuote{\code{cv.missoNet}} computes appropriate \eqn{\lambda} sequences relying on standardization, if \code{'X'} has been standardized prior to fitting the model, you might not wish to standardize it inside the algorithm.
 #' @param standardize.response Logical: should the columns of \code{'Y'} be standardized so each has unit variance? The default is \code{'TRUE'}. The estimated results will always be returned on the original scale. \sQuote{\code{cv.missoNet}} computes appropriate \eqn{\lambda} sequences relying on standardization, if \code{'Y'} has been standardized prior to fitting the model, you might not wish to standardize it inside the algorithm.
 #' @param fit.1se Logical: the default is \code{'FALSE'}. If \code{'TRUE'}, two additional models will be fitted with the largest values of \eqn{\lambda_B} and \eqn{\lambda_\Theta} respectively at which the cross-validated error is within one standard error of the minimum.
@@ -132,9 +132,8 @@
 #' 
 #' 
 #' ## Use PRE-STANDARDIZED training data if you wish to compare the results with other softwares. 
-#' ## There is no need for centering of variables.
-#' X.tr.std <- scale(X.tr, center = FALSE, scale = apply(X.tr, 2, sd, na.rm = TRUE))
-#' Y.tr.std <- scale(Y.tr, center = FALSE, scale = apply(Y.tr, 2, sd, na.rm = TRUE))
+#' X.tr.std <- scale(X.tr, center = TRUE, scale = TRUE)
+#' Y.tr.std <- scale(Y.tr, center = TRUE, scale = TRUE)
 #' cvfit.std <- cv.missoNet(X = X.tr.std, Y = Y.tr.std, kfold = 5,
 #'                          standardize = FALSE, standardize.response = FALSE)
 #' 
@@ -172,13 +171,13 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
                         lamBeta.scale.factor = 1, lamTheta.scale.factor = 1,
                         Beta.maxit = 1000, Beta.thr = 1e-04, eta = 0.8,
                         Theta.maxit = 1000, Theta.thr = 1e-04, eps = 1e-08,
-                        penalize.diagonal = NULL, diag.penalty.factor = NULL,
+                        penalize.diagonal = TRUE, diag.penalty.factor = NULL,
                         standardize = TRUE, standardize.response = TRUE,
                         fit.1se = FALSE, fit.relax = FALSE,
                         permute = TRUE, with.seed = NULL,
                         parallel = FALSE, cl = NULL, verbose = 1) {
   if (verbose > 0) { cat("\n======================= cv.missoNet =======================\n
-- Parameter initialization ...\n\n") }
+- Model initialization ...\n\n") }
   
   n <- nrow(X)
   p <- ncol(X)
@@ -188,15 +187,14 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
     set.seed(with.seed)
     ind <- sample(n, replace = FALSE)
   } else { ind <- 1:n }
-  foldid <- unlist(lapply(1:kfold, function(x) { rep(x, length((1 + floor((x - 1) * n/kfold)):floor(x * n/kfold))) }))
-  names(ind) <- paste0("fold.", foldid)
+  foldid <- unlist(lapply(1:kfold, function(x) {rep(x, length((1+floor((x-1)*n/kfold)) : floor(x*n/kfold)))}))
+  names(ind) <- paste0("fold-", foldid)
   
-  init.obj <- InitParams(X = X[ind, ], Y = Y[ind, ], rho = rho, kfold = kfold, foldid = foldid,
-                         Theta.maxit = Theta.maxit, Theta.thr = Theta.thr, eps = eps, 
-                         penalize.diagonal = penalize.diagonal, diag.pf = diag.penalty.factor,
+  init.obj <- InitParams(X = X, Y = Y, rho = rho, under.cv = TRUE, lamB.vec = lambda.Beta,
+                         eps = eps, penalize.diag = penalize.diagonal, diag.pf = diag.penalty.factor,
                          standardize = standardize, standardize.response = standardize.response)
   
-  lambda.obj <- InitLambda(lamB = lambda.Beta, lamTh = lambda.Theta, n.tr = floor(n * (kfold - 1)/kfold),
+  lambda.obj <- InitLambda(lamB = lambda.Beta, lamTh = lambda.Theta, n.tr = floor(n*(kfold-1)/kfold),
                            init.obj = init.obj, n.lamB = n.lamBeta, n.lamTh = n.lamTheta,
                            lamB.min.ratio = lamBeta.min.ratio, lamTh.min.ratio = lamTheta.min.ratio,
                            lamB.scale.factor = lamBeta.scale.factor, lamTh.scale.factor = lamTheta.scale.factor)
@@ -230,43 +228,50 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
       rho.mat.2 <- matrix(1 - rho.vec, q, 1) %*% matrix(1 - rho.vec, 1, q)
       diag(rho.mat.2) <- 1 - rho.vec  ## qxq
       
-      mx.tr <- apply(X.tr, 2, mean)
-      X.tr <- scale(X.tr, center = mx.tr, scale = init.obj$sdx)
-      X.va <- scale(X.va, center = mx.tr, scale = init.obj$sdx)
+      X.tr <- scale(X.tr, center = TRUE, scale = init.obj$sdx)
+      X.va <- scale(X.va, center = TRUE, scale = init.obj$sdx)
       
-      my.tr <- apply(Y.tr, 2, mean, na.rm = TRUE)
-      Y.tr <- scale(Y.tr, center = my.tr, scale = init.obj$sdy)
-      Y.va <- scale(Y.va, center = my.tr, scale = init.obj$sdy)
+      Y.tr <- scale(Y.tr, center = TRUE, scale = init.obj$sdy)
+      Y.va <- scale(Y.va, center = TRUE, scale = init.obj$sdy)
       Z.tr <- Y.tr
       Z.tr[is.na(Z.tr)] <- 0
       
       info <- NULL
       info$n <- n.tr
       info$q <- q
-      info$penalize.diagonal <- init.obj$penalize.diagonal
       info$xtx <- crossprod(X.tr)
       info$til.xty <- crossprod(X.tr, Z.tr)/rho.mat.1
+      # til.ytx <- t(info$til.xty)
+      # til.yty <- crossprod(Z.tr)/rho.mat.2
+      # if (min(eigen(til.yty)$value) < eps) {
+      #   til.yty <- maxproj.cov(mat = til.yty, epsilon = eps)
+      # }
       
       info.update <- NULL
-      info.update$B.init <- init.obj$B.init * init.obj$sdx   ## initialize B on the standardized scale
+      #info.update$B.init <- init.obj$B.init * init.obj$sdx   ## initialize B on the standardized scale
+      info.update$B.init <- init.obj$B.init
       Beta.thr.rescale <- Beta.thr * sum(abs(info.update$B.init))
       E.tr <- Y.tr - X.tr %*% info.update$B.init
-      info.update$residual.cov <- getResidual(E = E.tr, n = n.tr, rho.mat = rho.mat.2, eps = eps)
+      info.update$residual.cov <- getResCov(E = E.tr, n = n.tr, rho.mat = rho.mat.2, eps = eps)
+      # info.update$residual.cov <- getResCov(yty = til.yty, ytx = til.ytx, xty = info$til.xty, xtx = info$xtx, B = info.update$B.init, n = n.tr, eps = eps)
       
       if (verbose == 1) { pb <- txtProgressBar(min = 0, max = length(lamTh.vec), style = 3, width = 50, char = "=") }
       for (i in 1:length(lamTh.vec)) {
         info.update$B.init <- update.missoNet(lamTh = lamTh.vec[i], lamB = lamB.vec[i],
                                               Beta.maxit = Beta.maxit, Beta.thr = Beta.thr.rescale,
                                               Theta.maxit = Theta.maxit, Theta.thr = Theta.thr,
-                                              verbose = verbose, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
+                                              verbose = verbose, eps = eps, eta = eta,
+                                              penalize.diag = penalize.diagonal, diag.pf = init.obj$diag.pf,
                                               info = info, info.update = info.update, under.cv = TRUE)
-        Beta.thr.rescale <- Beta.thr * sum(abs(info.update$B.init))
-        E.tr <- Y.tr - X.tr %*% info.update$B.init
-        info.update$residual.cov <- getResidual(E = E.tr, n = n.tr, rho.mat = rho.mat.2, eps = eps)
-        
         E.va.sq <- (Y.va - X.va %*% info.update$B.init)^2
         err[k, i] <- mean(E.va.sq, na.rm = TRUE)
         Beta.warm.fold[[k]][[i]] <- info.update$B.init
+        
+        Beta.thr.rescale <- Beta.thr * sum(abs(info.update$B.init))
+        E.tr <- Y.tr - X.tr %*% info.update$B.init
+        info.update$residual.cov <- getResCov(E = E.tr, n = n.tr, rho.mat = rho.mat.2, eps = eps)
+        # info.update$residual.cov <- getResCov(yty = til.yty, ytx = til.ytx, xty = info$til.xty, xtx = info$xtx, B = info.update$B.init, n = n.tr, eps = eps)
+        
         if (verbose == 1) { setTxtProgressBar(pb, i) }
       }
       if (verbose == 1) { close(pb) }
@@ -274,7 +279,7 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
     for (k in 1:kfold) {
       Beta.warm <- lapply(1:length(lamTh.vec), function(x){Beta.warm[[x]] + Beta.warm.fold[[k]][[x]]})
     }
-    rm(Beta.warm.fold, X.tr, Y.tr, Z.tr, E.tr, X.va, Y.va, info, info.update)
+    rm(Beta.warm.fold, X.tr, Y.tr, Z.tr, E.tr, X.va, Y.va, E.va.sq, info, info.update)
   } else {
     if (verbose > 0) {
       cat("- Parallel execution on", length(cl), "CPU cores ...\n\n")
@@ -282,8 +287,8 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
     } else {pbapply::pboptions(type = "none", use_lb = TRUE)}
     
     par.out <- pbapply::pblapply(1:kfold, function(k) {
-      parWrapper(k = k, X = X, Y = Y, init.obj = init.obj, rho = rho, ind = ind, kfold = kfold, lamTh.vec = lamTh.vec, lamB.vec = lamB.vec,
-                 Beta.maxit = Beta.maxit, Beta.thr = Beta.thr, Theta.maxit = Theta.maxit, Theta.thr = Theta.thr, eps = eps, eta = eta)
+      parWrapper(k = k, X = X, Y = Y, init.obj = init.obj, rho = rho, ind = ind, kfold = kfold, lamTh.vec = lamTh.vec, lamB.vec = lamB.vec, 
+                 penalize.diagonal = penalize.diagonal, Beta.maxit = Beta.maxit, Beta.thr = Beta.thr, Theta.maxit = Theta.maxit, Theta.thr = Theta.thr, eps = eps, eta = eta)
     }, cl = cl)
     
     #err <- do.call("rbind", par.out)
@@ -297,6 +302,7 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
   }
   if (verbose > 0) { cat("\n-----------------------------------------------------------\n\n") }
   
+  init.obj$B.init <- NULL    ## no longer needed
   err.cv <- colSums(err)/kfold
   err.sd <- apply(err, 2, sd)/sqrt(kfold)
   err.up <- err.cv + err.sd
@@ -310,12 +316,15 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
                 lamTh.vec = lamTh.vec, lamB.vec = lamB.vec, 
                 lamTh.min = lamTh.min, lamB.min = lamB.min, margin = 0.1)
   
-  if (verbose > 0) { cat("- Fittig with `lambda.min` ...\n\n") }
+  if (verbose > 0) { cat("- Fittig with `lambda.min` ...\n
+  > [lambda.Beta (min), lambda.Theta (min)]\n\n") }
   out.min <- update.missoNet(X = X, Y = Y, lamTh = lamTh.min, lamB = lamB.min,
-                             Beta.maxit = 1e4, Beta.thr = min(1e-08, Beta.thr*0.01),
-                             Theta.maxit = 1e4, Theta.thr = min(1e-08, Theta.thr*0.01),
-                             verbose = verbose, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
-                             info = NULL, info.update = NULL, under.cv = FALSE, init.obj = init.obj, B.init = Beta.warm[[cv.min]])
+                             Beta.maxit = 1e4, Beta.thr = min(1e-08, Beta.thr),
+                             Theta.maxit = 1e4, Theta.thr = min(1e-08, Theta.thr),
+                             verbose = verbose, eps = eps, eta = eta,
+                             penalize.diag = penalize.diagonal, diag.pf = init.obj$diag.pf,
+                             info = NULL, info.update = NULL, under.cv = FALSE,
+                             init.obj = init.obj, B.init = Beta.warm[[cv.min]])
   out.min$Beta <- sweep(out.min$Beta/init.obj$sdx, 2, init.obj$sdy, `*`)    ## convert back to the original scale
   out.min$mu <- as.numeric(init.obj$my - crossprod(out.min$Beta, init.obj$mx))
   out.min$lambda.Beta <- lamB.min
@@ -323,7 +332,7 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
   relax.net <- NULL
   if (fit.relax) {
     relax.net <- relax.glasso(X = X, Y = Y, init.obj = init.obj, est = out.min, eps = eps,
-                              Theta.thr = min(1e-08, Theta.thr*0.01), Theta.maxit = 1e4)
+                              Theta.thr = min(1e-08, Theta.thr), Theta.maxit = 1e4)
   }
   out.min$relax.net <- relax.net
   
@@ -331,19 +340,21 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
   outTh.1se <- NULL
   if (fit.1se) {
     if (verbose > 0) { 
-      cat("------------------------------\n
+      cat("-----------------------------------------\n
 - Fiting with `lambda.1se` ...\n
-  -- `lambda.1se.Beta`\n\n") }
+  > [lambda.Beta (1se), lambda.Theta (min)]\n\n") }
     new.lamB.vec <- lamB.vec[lamTh.vec == lamTh.min]
     new.err.cv <- err.cv[lamTh.vec == lamTh.min]
     lamB.1se <- max(new.lamB.vec[new.err.cv <= err.up[cv.min]])
     
     if (lamB.1se != lamB.min) {
       outB.1se <- update.missoNet(X = X, Y = Y, lamTh = lamTh.min, lamB = lamB.1se,
-                                  Beta.maxit = 1e4, Beta.thr = min(1e-08, Beta.thr*0.01),
-                                  Theta.maxit = 1e4, Theta.thr = min(1e-08, Theta.thr*0.01),
-                                  verbose = verbose, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
-                                  info = NULL, info.update = NULL, under.cv = FALSE, init.obj = init.obj, B.init = Beta.warm[[which((lamTh.vec == lamTh.min) & (lamB.vec == lamB.1se))]])
+                                  Beta.maxit = 1e4, Beta.thr = min(1e-08, Beta.thr),
+                                  Theta.maxit = 1e4, Theta.thr = min(1e-08, Theta.thr),
+                                  verbose = verbose, eps = eps, eta = eta,
+                                  penalize.diag = penalize.diagonal, diag.pf = init.obj$diag.pf,
+                                  info = NULL, info.update = NULL, under.cv = FALSE,
+                                  init.obj = init.obj, B.init = Beta.warm[[which((lamTh.vec == lamTh.min) & (lamB.vec == lamB.1se))]])
       outB.1se$Beta <- sweep(outB.1se$Beta/init.obj$sdx, 2, init.obj$sdy, `*`)
       outB.1se$mu <- as.numeric(init.obj$my - crossprod(outB.1se$Beta, init.obj$mx))
       outB.1se$lambda.Beta <- lamB.1se
@@ -351,24 +362,26 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
       relax.net <- NULL
       if (fit.relax) {
         relax.net <- relax.glasso(X = X, Y = Y, init.obj = init.obj, est = outB.1se, eps = eps,
-                                  Theta.thr = min(1e-08, Theta.thr*0.01), Theta.maxit = 1e4)
+                                  Theta.thr = min(1e-08, Theta.thr), Theta.maxit = 1e4)
       }
       outB.1se$relax.net <- relax.net
     } else {
-      warning("\n`lambda.1se.Beta` = `lambda.min.Beta`, please provide a finer grid for `lambda.Beta` by increasing the number of values.\n")
+      warning("\nlambda.Beta (1se) = lambda.Beta (min), please provide a finer grid for `lambda.Beta` by increasing the number of values.\n")
     }
     
-    if (verbose > 0) { cat("  -- `lambda.1se.Theta`\n\n") }
+    if (verbose > 0) { cat("  > [lambda.Beta (min), lambda.Theta (1se)]\n\n") }
     new.lamTh.vec <- lamTh.vec[lamB.vec == lamB.min]
     new.err.cv <- err.cv[lamB.vec == lamB.min]
     lamTh.1se <- max(new.lamTh.vec[new.err.cv <= err.up[cv.min]])
     
     if (lamTh.1se != lamTh.min) {
       outTh.1se <- update.missoNet(X = X, Y = Y, lamTh = lamTh.1se, lamB = lamB.min,
-                                  Beta.maxit = 1e4, Beta.thr = min(1e-08, Beta.thr*0.01),
-                                  Theta.maxit = 1e4, Theta.thr = min(1e-08, Theta.thr*0.01),
-                                  verbose = verbose, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
-                                  info = NULL, info.update = NULL, under.cv = FALSE, init.obj = init.obj, B.init = Beta.warm[[which((lamTh.vec == lamTh.1se) & (lamB.vec == lamB.min))]])
+                                   Beta.maxit = 1e4, Beta.thr = min(1e-08, Beta.thr),
+                                   Theta.maxit = 1e4, Theta.thr = min(1e-08, Theta.thr),
+                                   verbose = verbose, eps = eps, eta = eta,
+                                   penalize.diag = penalize.diagonal, diag.pf = init.obj$diag.pf,
+                                   info = NULL, info.update = NULL, under.cv = FALSE,
+                                   init.obj = init.obj, B.init = Beta.warm[[which((lamTh.vec == lamTh.1se) & (lamB.vec == lamB.min))]])
       outTh.1se$Beta <- sweep(outTh.1se$Beta/init.obj$sdx, 2, init.obj$sdy, `*`)
       outTh.1se$mu <- as.numeric(init.obj$my - crossprod(outTh.1se$Beta, init.obj$mx))
       outTh.1se$lambda.Beta <- lamB.min
@@ -376,11 +389,11 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
       relax.net <- NULL
       if (fit.relax) {
         relax.net <- relax.glasso(X = X, Y = Y, init.obj = init.obj, est = outTh.1se, eps = eps,
-                                  Theta.thr = min(1e-08, Theta.thr*0.01), Theta.maxit = 1e4)
+                                  Theta.thr = min(1e-08, Theta.thr), Theta.maxit = 1e4)
       }
       outTh.1se$relax.net <- relax.net
     } else {
-      warning("\n`lambda.1se.Theta` = `lambda.min.Theta`, please provide a finer grid for `lambda.Theta` by increasing the number of values.\n")
+      warning("\nlambda.Theta (1se) = lambda.Theta (min), please provide a finer grid for `lambda.Theta` by increasing the number of values.\n")
     }
   }
   
@@ -388,7 +401,7 @@ cv.missoNet <- function(X, Y, kfold = 5, rho = NULL,
   
   cv <- list(est.min = out.min, est.1se.B = outB.1se, est.1se.Tht = outTh.1se, rho = init.obj$rho.vec, fold.index = ind,
              lambda.Beta.vec = lamB.vec, lambda.Theta.vec = lamTh.vec, cvm = err.cv, cvup = err.up, cvlo = err.low,
-             penalize.diagonal = init.obj$penalize.diagonal, diag.penalty.factor = init.obj$diag.pf)
+             penalize.diagonal = penalize.diagonal, diag.penalty.factor = init.obj$diag.pf)
   class(cv) <- c("cv.missoNet", class(cv))
   return(cv)
 }

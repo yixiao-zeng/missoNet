@@ -1,8 +1,8 @@
 Type: Package
 Package: missoNet
 Title: Missingness in Multi-Task Regression with Network Estimation
-Version: 1.1.0
-Date: 2023-05-10
+Version: 1.1.0.9000
+Date: 2023-06-10
 Authors@R: c(
     person("Yixiao", "Zeng", email = "yixiao.zeng@mail.mcgill.ca", role = c("aut", "cre", "cph")),
     person("Celia", "Greenwood", email = "celia.greenwood@mcgill.ca", role = c("ths", "aut")),
@@ -16,16 +16,13 @@ Description: Efficient procedures for fitting conditional graphical lasso
     in order to provide more accurate predictions in comparison to
     modeling them individually. Additionally, 'missoNet' estimates the
     response network structure influenced by conditioning predictor
-    variables in a L1-regularized conditional Gaussian graphical model.
+    variables using a L1-regularized conditional Gaussian graphical model.
     Unlike most penalized multi-task regression methods (e.g., MRCE),
     'missoNet' is capable of obtaining estimates even when the response
     data is corrupted by missing values. The method automatically enjoys
     the theoretical and computational benefits of convexity, and returns
-    solutions that are comparable to the estimates obtained without any
-    missing values. The package also includes auxiliary functions for data
-    simulation, adaptive model initialization, hyper-parameter tuning,
-    goodness-of-fit evaluation, and visualization of estimates, as well as
-    predictions in new data.
+    solutions that are comparable to the estimates obtained without
+    missingness.
 License: GPL-2
 URL: https://github.com/yixiao-zeng/missoNet
 BugReports: https://github.com/yixiao-zeng/missoNet/issues
@@ -33,7 +30,6 @@ Imports:
     circlize (>= 0.4.14),
     ComplexHeatmap,
     glasso (>= 1.11),
-    glmnet (>= 4.1.4),
     mvtnorm (>= 1.1.3),
     pbapply (>= 1.5.0),
     Rcpp (>= 1.0.8.3),

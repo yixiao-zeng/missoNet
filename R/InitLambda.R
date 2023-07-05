@@ -1,4 +1,5 @@
-InitLambda <- function(lamB, lamTh, n.tr, init.obj, n.lamB, n.lamTh,
+InitLambda <- function(lamB, lamTh, n.tr, init.obj, 
+                       n.lamB, n.lamTh,
                        lamB.min.ratio, lamTh.min.ratio,
                        lamB.scale.factor, lamTh.scale.factor) {
   if (!is.null(lamB) & !is.null(lamTh)) {
@@ -19,17 +20,15 @@ InitLambda <- function(lamB, lamTh, n.tr, init.obj, n.lamB, n.lamTh,
       if (is.null(lamB.min.ratio)) { lamB.min.ratio <- 1e-4 }
       if (is.null(n.lamB)) { n.lamB <- 40 }
     } else {
-      if (init.obj$penalize.diagonal) { lamB.scale.factor <- lamB.scale.factor/2 }
-      if (is.null(lamB.min.ratio)) {lamB.min.ratio <- 1e-2}
-      if (is.null(n.lamB)) { n.lamB <- 20 }
+      if (is.null(lamB.min.ratio)) { lamB.min.ratio <- 1e-3 }
+      if (is.null(n.lamB)) { n.lamB <- 30 }
     }
     if (n.tr > ncol(init.obj$B.init)) {
       if (is.null(lamTh.min.ratio)) { lamTh.min.ratio <- 1e-4 }
       if (is.null(n.lamTh)) { n.lamTh <- 40 }
     } else {
-      if (init.obj$penalize.diagonal) { lamTh.scale.factor <- lamTh.scale.factor/init.obj$diag.pf }
-      if (is.null(lamTh.min.ratio)) { lamTh.min.ratio <- 1e-2 }
-      if (is.null(n.lamTh)) { n.lamTh <- 20 }
+      if (is.null(lamTh.min.ratio)) { lamTh.min.ratio <- 1e-3 }
+      if (is.null(n.lamTh)) { n.lamTh <- 30 }
     }
     
     if (is.null(lamB) & is.null(lamTh)) {

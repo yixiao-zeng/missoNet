@@ -6,7 +6,7 @@
 # missoNet: Missingness in Multi-Task Regression with Network Estimation
 
 `missoNet` is a novel approach to fitting penalized multi-task regression models, which are used to 
-estimate the coefficients of predictor variables for multiple correlated tasks or response variables. 
+estimate the coefficients of predictor variables for multiple correlated tasks/response variables. 
 The package achieves this by simultaneously estimating the regression coefficients and the conditional 
 response network structure given all predictors, using penalized maximum likelihood in an undirected 
 conditional Gaussian graphical model. In contrast to most penalized multi-task regression methods, such 
@@ -15,7 +15,7 @@ is corrupted by missing values. The method is based on convex optimization, whic
 and computational benefits, and returns solutions that are comparable to the estimates obtained without 
 any missing values.
 
-The package provides an integrated set of core routines including 1) data simulation; 2) model fitting and 
+The package provides an integrated set of core routines including 1) generation of simulation data; 2) model fitting and 
 cross-validation; 3) visualization of results; 4) predictions in new data. The function arguments are specified 
 in the same style as those of `glmnet`, making it easy for experienced users to get started.
 
@@ -51,7 +51,7 @@ tst <- 241:300  # test set indices
 X.tr <- sim.dat$X[tr, ]  # predictor matrix
 Y.tr <- sim.dat$Z[tr, ]  # corrupted response matrix
 
-# Perform a five-fold cross-validation on the training set.
+# Perform a five-fold cross-validation on the training data.
 cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5)
 
 # Alternatively, compute the cross-validation folds in parallel.

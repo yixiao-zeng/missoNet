@@ -23,7 +23,7 @@ cv.missoNet(
   Theta.maxit = 1000,
   Theta.thr = 1e-04,
   eps = 1e-08,
-  penalize.diagonal = NULL,
+  penalize.diagonal = TRUE,
   diag.penalty.factor = NULL,
   standardize = TRUE,
   standardize.response = TRUE,
@@ -49,13 +49,13 @@ cv.missoNet(
 
 \item{lambda.Theta}{(Optional) Numeric vector: a user-supplied sequence of non-negative values for \{\eqn{\lambda_\Theta}\} penalizing the (off-diagonal) elements of the precision matrix \eqn{\mathbf{\Theta}} among which the cross-validation procedure searches. The default is \code{'lambda.Theta = NULL'}, in which case the program computes an appropriate range of \eqn{\lambda_\Theta} values using \code{'n.lamTheta'} and \code{'lamTheta.min.ratio'}. Supplying a vector overrides this default. Note that the supplied sequence will be automatically arranged, internally, in a descending order.}
 
-\item{lamBeta.min.ratio}{The smallest value of \eqn{\lambda_B} is calculated as the data-derived \eqn{\mathrm{max}(\lambda_B)} multiplied by \code{'lamBeta.min.ratio'}. The default depends on the sample size, \eqn{n}, relative to the number of predictors, \eqn{p}. If \eqn{n > p}, the default is \code{'1.0E-4'}, otherwise it is \code{'1.0E-2'}. A very small value of \code{'lamBeta.min.ratio'} may significantly increase runtime and lead to a saturated fit in the \eqn{n \leq p} case. This is only needed when \code{'lambda.Beta = NULL'}.}
+\item{lamBeta.min.ratio}{The smallest value of \eqn{\lambda_B} is calculated as the data-derived \eqn{\mathrm{max}(\lambda_B)} multiplied by \code{'lamBeta.min.ratio'}. The default depends on the sample size, \eqn{n}, relative to the number of predictors, \eqn{p}. If \eqn{n > p}, the default is \code{'1.0E-4'}, otherwise it is \code{'1.0E-3'}. A very small value of \code{'lamBeta.min.ratio'} may significantly increase runtime and lead to a saturated fit in the \eqn{n \leq p} case. This is only needed when \code{'lambda.Beta = NULL'}.}
 
-\item{lamTheta.min.ratio}{The smallest value of \eqn{\lambda_\Theta} is calculated as the data-derived \eqn{\mathrm{max}(\lambda_\Theta)} multiplied by \code{'lamTheta.min.ratio'}. The default depends on the sample size, \eqn{n}, relative to the number of responses, \eqn{q}. If \eqn{n > q}, the default is \code{'1.0E-4'}, otherwise it is \code{'1.0E-2'}. A very small value of \code{'lamTheta.min.ratio'} may significantly increase runtime and lead to a saturated fit in the \eqn{n \leq q} case. This is only needed when \code{'lambda.Theta = NULL'}.}
+\item{lamTheta.min.ratio}{The smallest value of \eqn{\lambda_\Theta} is calculated as the data-derived \eqn{\mathrm{max}(\lambda_\Theta)} multiplied by \code{'lamTheta.min.ratio'}. The default depends on the sample size, \eqn{n}, relative to the number of responses, \eqn{q}. If \eqn{n > q}, the default is \code{'1.0E-4'}, otherwise it is \code{'1.0E-3'}. A very small value of \code{'lamTheta.min.ratio'} may significantly increase runtime and lead to a saturated fit in the \eqn{n \leq q} case. This is only needed when \code{'lambda.Theta = NULL'}.}
 
-\item{n.lamBeta}{The number of \eqn{\lambda_B} values. If \eqn{n > p}, the default is \code{'40'}, otherwise it is \code{'20'}. Avoid supplying an excessively large number since the program will fit (\code{'n.lamBeta'} \code{*} \code{'n.lamTheta'}) models in total for each fold of the cross-validation. Typically we suggest \code{'n.lamBeta' = -log10('lamBeta.min.ratio') * c}, where \code{c} \eqn{\in} [\code{10}, \code{20}]. This is only needed when \code{'lambda.Beta = NULL'}.}
+\item{n.lamBeta}{The number of \eqn{\lambda_B} values. If \eqn{n > p}, the default is \code{'40'}, otherwise it is \code{'30'}. Avoid supplying an excessively large number since the program will fit (\code{'n.lamBeta'} \code{*} \code{'n.lamTheta'}) models in total for each fold of the cross-validation. Typically we suggest \code{'n.lamBeta' = -log10('lamBeta.min.ratio') * c}, where \code{c} \eqn{\in} [\code{10}, \code{20}]. This is only needed when \code{'lambda.Beta = NULL'}.}
 
-\item{n.lamTheta}{The number of \eqn{\lambda_\Theta} values. If \eqn{n > q}, the default is \code{'40'}, otherwise it is \code{'20'}. Avoid supplying an excessively large number since the program will fit (\code{'n.lamBeta'} \code{*} \code{'n.lamTheta'}) models in total for each fold of the cross-validation. Typically we suggest \code{'n.lamTheta' = -log10('lamTheta.min.ratio') * c}, where \code{c} \eqn{\in} [\code{10}, \code{20}]. This is only needed when \code{'lambda.Theta = NULL'}.}
+\item{n.lamTheta}{The number of \eqn{\lambda_\Theta} values. If \eqn{n > q}, the default is \code{'40'}, otherwise it is \code{'30'}. Avoid supplying an excessively large number since the program will fit (\code{'n.lamBeta'} \code{*} \code{'n.lamTheta'}) models in total for each fold of the cross-validation. Typically we suggest \code{'n.lamTheta' = -log10('lamTheta.min.ratio') * c}, where \code{c} \eqn{\in} [\code{10}, \code{20}]. This is only needed when \code{'lambda.Theta = NULL'}.}
 
 \item{lamBeta.scale.factor}{A positive multiplication factor for scaling the entire \eqn{\lambda_B} sequence; the default is \code{'1'}. A typical usage is when the magnitudes of the auto-computed \eqn{\lambda_B} values are inappropriate. For example, this factor would be needed if the optimal value of \eqn{\lambda_B} selected by the cross-validation (i.e. \eqn{{\lambda_B}_\mathrm{min}} with the minimum cross-validated error) approaches either boundary of the search range. This is only needed when \code{'lambda.Beta = NULL'}.}
 
@@ -73,9 +73,9 @@ cv.missoNet(
 
 \item{eps}{A numeric tolerance level for the L1 projection of the empirical covariance matrix; the default is \code{'eps = 1.0E-8'}. The empirical covariance matrix will be projected onto a L1 ball to have \code{min(eigen(}\eqn{\hat{\mathbf{\Sigma}}}\code{)$value)} == \code{'eps'}, if any of the eigenvalues is less than the specified tolerance. Most users will be able to use the default value.}
 
-\item{penalize.diagonal}{Logical: should the diagonal elements of \eqn{\mathbf{\Theta}} be penalized? The default depends on the sample size, \eqn{n}, relative to the number of predictors and responses. If \eqn{n > \mathrm{max}(p, q)}, the default is \code{'TRUE'}, otherwise it is set to \code{'FALSE'}. Most users will be able to use the default setting.}
+\item{penalize.diagonal}{Logical: should the diagonal elements of \eqn{\mathbf{\Theta}} be penalized? The default is \code{'TRUE'}.}
 
-\item{diag.penalty.factor}{Numeric: a separate penalty multiplication factor for the diagonal elements of \eqn{\mathbf{\Theta}} when \code{'penalize.diagonal = TRUE'}. \eqn{\lambda_\Theta} is multiplied by this number to allow a differential shrinkage of the diagonal elements. The default is \code{'NULL'} and the program will guess a value based on an initial estimate of \eqn{\mathbf{\Theta}}. This factor could be \code{'0'} for no shrinkage (equivalent to \code{'penalize.diagonal = FALSE'}). Most users will be able to use the default value.}
+\item{diag.penalty.factor}{Numeric: a separate penalty multiplication factor for the diagonal elements of \eqn{\mathbf{\Theta}} when \code{'penalize.diagonal = TRUE'}. \eqn{\lambda_\Theta} is multiplied by this number to allow a differential shrinkage of the diagonal elements. The default is \code{'NULL'} and the program will guess a value based on an initial estimate of \eqn{\mathbf{\Theta}}. This factor could be \code{'0'} for no shrinkage (equivalent to \code{'penalize.diagonal = FALSE'}).}
 
 \item{standardize}{Logical: should the columns of \code{'X'} be standardized so each has unit variance? The default is \code{'TRUE'}. The estimated results will always be returned on the original scale. \sQuote{\code{cv.missoNet}} computes appropriate \eqn{\lambda} sequences relying on standardization, if \code{'X'} has been standardized prior to fitting the model, you might not wish to standardize it inside the algorithm.}
 
@@ -197,9 +197,8 @@ parallel::stopCluster(cl)
 
 
 ## Use PRE-STANDARDIZED training data if you wish to compare the results with other softwares. 
-## There is no need for centering of variables.
-X.tr.std <- scale(X.tr, center = FALSE, scale = apply(X.tr, 2, sd, na.rm = TRUE))
-Y.tr.std <- scale(Y.tr, center = FALSE, scale = apply(Y.tr, 2, sd, na.rm = TRUE))
+X.tr.std <- scale(X.tr, center = TRUE, scale = TRUE)
+Y.tr.std <- scale(Y.tr, center = TRUE, scale = TRUE)
 cvfit.std <- cv.missoNet(X = X.tr.std, Y = Y.tr.std, kfold = 5,
                          standardize = FALSE, standardize.response = FALSE)
 

@@ -16,14 +16,13 @@ missoNet(
   Theta.maxit = 10000,
   Theta.thr = 1e-08,
   eps = 1e-08,
-  penalize.diagonal = NULL,
+  penalize.diagonal = TRUE,
   diag.penalty.factor = NULL,
   standardize = TRUE,
   standardize.response = TRUE,
   fit.relax = FALSE,
   parallel = FALSE,
   cl = NULL,
-  with.seed = NULL,
   verbose = 1
 )
 }
@@ -50,9 +49,9 @@ missoNet(
 
 \item{eps}{A numeric tolerance level for the L1 projection of the empirical covariance matrix; the default is \code{'eps = 1.0E-8'}. The empirical covariance matrix will be projected onto a L1 ball to have \code{min(eigen(}\eqn{\hat{\mathbf{\Sigma}}}\code{)$value)} == \code{'eps'}, if any of the eigenvalues is less than the specified tolerance. Most users will be able to use the default value.}
 
-\item{penalize.diagonal}{Logical: should the diagonal elements of \eqn{\mathbf{\Theta}} be penalized? The default depends on the sample size, \eqn{n}, relative to the number of predictors and responses. If \eqn{n > \mathrm{max}(p, q)}, the default is \code{'TRUE'}, otherwise it is set to \code{'FALSE'}. Most users will be able to use the default setting.}
+\item{penalize.diagonal}{Logical: should the diagonal elements of \eqn{\mathbf{\Theta}} be penalized? The default is \code{'TRUE'}.}
 
-\item{diag.penalty.factor}{Numeric: a separate penalty multiplication factor for the diagonal elements of \eqn{\mathbf{\Theta}} when \code{'penalize.diagonal = TRUE'}. \eqn{\lambda_\Theta} is multiplied by this number to allow a differential shrinkage of the diagonal elements. The default is \code{'NULL'} and the program will guess a value based on an initial estimate of \eqn{\mathbf{\Theta}}. This factor could be \code{'0'} for no shrinkage (equivalent to \code{'penalize.diagonal = FALSE'}). Most users will be able to use the default value.}
+\item{diag.penalty.factor}{Numeric: a separate penalty multiplication factor for the diagonal elements of \eqn{\mathbf{\Theta}} when \code{'penalize.diagonal = TRUE'}. \eqn{\lambda_\Theta} is multiplied by this number to allow a differential shrinkage of the diagonal elements. The default is \code{'NULL'} and the program will guess a value based on an initial estimate of \eqn{\mathbf{\Theta}}. This factor could be \code{'0'} for no shrinkage (equivalent to \code{'penalize.diagonal = FALSE'}).}
 
 \item{standardize}{Logical: should the columns of \code{'X'} be standardized so each has unit variance? The default is \code{'TRUE'}. The estimated results will always be returned on the original scale. If \code{'X'} has been standardized prior to fitting the model, you might not wish to standardize it inside the algorithm.}
 
@@ -63,8 +62,6 @@ missoNet(
 \item{parallel}{Logical: the default is \code{'FALSE'}. If \code{'TRUE'}, the program uses clusters to fit models with each element of the \eqn{\lambda} sequence \eqn{\{(\lambda_B, \lambda_\Theta)\}} in parallel. Must register parallel clusters beforehand, see examples below.}
 
 \item{cl}{A cluster object created by \sQuote{\code{parallel::makeCluster}} for parallel evaluations. This is only needed when \code{'parallel = TRUE'}.}
-
-\item{with.seed}{A random number seed for the parameter initialization. A user-specified value will eliminate the slight randomness in results.}
 
 \item{verbose}{Value of \code{'0'}, \code{'1'} or \code{'2'}. \code{'verbose = 0'} -- silent; \code{'verbose = 1'} (the default) -- limited tracing with progress bars; \code{'verbose = 2'} -- detailed tracing. Note that displaying the progress bars slightly increases the computation overhead compared to the silent mode. The detailed tracing should be used for monitoring progress only when the program runs extremely slowly, and it is not supported under \code{'parallel = TRUE'}.}
 }
@@ -163,9 +160,8 @@ lambda.Theta <- fit2$est.list[[1]]$lambda.Theta  # equal to 'lamTht.vec[1]'
 
 ## Fit a series of missoNet models using PRE-STANDARDIZED training data
 ## if you wish to compare the results with other softwares. 
-## There is no need for centering of variables.
-X.tr.std <- scale(X.tr, center = FALSE, scale = apply(X.tr, 2, sd, na.rm = TRUE))
-Y.tr.std <- scale(Y.tr, center = FALSE, scale = apply(Y.tr, 2, sd, na.rm = TRUE))
+X.tr.std <- scale(X.tr, center = TRUE, scale = TRUE)
+Y.tr.std <- scale(Y.tr, center = TRUE, scale = TRUE)
 fit3 <- missoNet(X = X.tr.std, Y = Y.tr.std, lambda.Beta = lamB.vec, lambda.Theta = lamTht.vec,
                  standardize = FALSE, standardize.response = FALSE)
 }

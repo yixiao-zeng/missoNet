@@ -49,14 +49,13 @@
 #' @param Theta.maxit The maximum number of iterations of the \sQuote{\code{\link{glasso}}} algorithm for updating \eqn{\hat{\mathbf{\Theta}}}. The default is \code{'Theta.maxit = 10000'}.
 #' @param Theta.thr The convergence threshold of the \sQuote{\code{\link{glasso}}} algorithm for updating \eqn{\hat{\mathbf{\Theta}}}; the default is \code{'Theta.thr = 1.0E-8'}. Iterations stop when the average absolute parameter change is less than (\code{'Theta.thr'} \code{*} \code{ave(abs(offdiag(}\eqn{\hat{\mathbf{\Sigma}}}\code{)))}), where \eqn{\hat{\mathbf{\Sigma}}} denotes the empirical working covariance matrix.
 #' @param eps A numeric tolerance level for the L1 projection of the empirical covariance matrix; the default is \code{'eps = 1.0E-8'}. The empirical covariance matrix will be projected onto a L1 ball to have \code{min(eigen(}\eqn{\hat{\mathbf{\Sigma}}}\code{)$value)} == \code{'eps'}, if any of the eigenvalues is less than the specified tolerance. Most users will be able to use the default value.
-#' @param penalize.diagonal Logical: should the diagonal elements of \eqn{\mathbf{\Theta}} be penalized? The default depends on the sample size, \eqn{n}, relative to the number of predictors and responses. If \eqn{n > \mathrm{max}(p, q)}, the default is \code{'TRUE'}, otherwise it is set to \code{'FALSE'}. Most users will be able to use the default setting.
-#' @param diag.penalty.factor Numeric: a separate penalty multiplication factor for the diagonal elements of \eqn{\mathbf{\Theta}} when \code{'penalize.diagonal = TRUE'}. \eqn{\lambda_\Theta} is multiplied by this number to allow a differential shrinkage of the diagonal elements. The default is \code{'NULL'} and the program will guess a value based on an initial estimate of \eqn{\mathbf{\Theta}}. This factor could be \code{'0'} for no shrinkage (equivalent to \code{'penalize.diagonal = FALSE'}). Most users will be able to use the default value.
+#' @param penalize.diagonal Logical: should the diagonal elements of \eqn{\mathbf{\Theta}} be penalized? The default is \code{'TRUE'}.
+#' @param diag.penalty.factor Numeric: a separate penalty multiplication factor for the diagonal elements of \eqn{\mathbf{\Theta}} when \code{'penalize.diagonal = TRUE'}. \eqn{\lambda_\Theta} is multiplied by this number to allow a differential shrinkage of the diagonal elements. The default is \code{'NULL'} and the program will guess a value based on an initial estimate of \eqn{\mathbf{\Theta}}. This factor could be \code{'0'} for no shrinkage (equivalent to \code{'penalize.diagonal = FALSE'}).
 #' @param standardize Logical: should the columns of \code{'X'} be standardized so each has unit variance? The default is \code{'TRUE'}. The estimated results will always be returned on the original scale. If \code{'X'} has been standardized prior to fitting the model, you might not wish to standardize it inside the algorithm.
 #' @param standardize.response Logical: should the columns of \code{'Y'} be standardized so each has unit variance? The default is \code{'TRUE'}. The estimated results will always be returned on the original scale. If \code{'Y'} has been standardized prior to fitting the model, you might not wish to standardize it inside the algorithm.
 #' @param fit.relax Logical: the default is \code{'FALSE'}. If \code{'TRUE'}, the program will re-estimate the edges in the active set (i.e. nonzero off-diagonal elements) of the network structure \eqn{\hat{\mathbf{\Theta}}} without penalization (\eqn{\lambda_\Theta=0}). This debiased estimate of \eqn{\mathbf{\Theta}} could be useful for some interdependency analyses. WARNING: there may be convergence issues if the empirical covariance matrix is not of full rank (e.g. \eqn{n < q)}).
 #' @param parallel Logical: the default is \code{'FALSE'}. If \code{'TRUE'}, the program uses clusters to fit models with each element of the \eqn{\lambda} sequence \eqn{\{(\lambda_B, \lambda_\Theta)\}} in parallel. Must register parallel clusters beforehand, see examples below.
 #' @param cl A cluster object created by \sQuote{\code{parallel::makeCluster}} for parallel evaluations. This is only needed when \code{'parallel = TRUE'}.
-#' @param with.seed A random number seed for the parameter initialization. A user-specified value will eliminate the slight randomness in results.
 #' @param verbose Value of \code{'0'}, \code{'1'} or \code{'2'}. \code{'verbose = 0'} -- silent; \code{'verbose = 1'} (the default) -- limited tracing with progress bars; \code{'verbose = 2'} -- detailed tracing. Note that displaying the progress bars slightly increases the computation overhead compared to the silent mode. The detailed tracing should be used for monitoring progress only when the program runs extremely slowly, and it is not supported under \code{'parallel = TRUE'}.
 #'
 #' @return This function returns a \code{'list'} consisting of the following components:
@@ -116,9 +115,8 @@
 #' 
 #' ## Fit a series of missoNet models using PRE-STANDARDIZED training data
 #' ## if you wish to compare the results with other softwares. 
-#' ## There is no need for centering of variables.
-#' X.tr.std <- scale(X.tr, center = FALSE, scale = apply(X.tr, 2, sd, na.rm = TRUE))
-#' Y.tr.std <- scale(Y.tr, center = FALSE, scale = apply(Y.tr, 2, sd, na.rm = TRUE))
+#' X.tr.std <- scale(X.tr, center = TRUE, scale = TRUE)
+#' Y.tr.std <- scale(Y.tr, center = TRUE, scale = TRUE)
 #' fit3 <- missoNet(X = X.tr.std, Y = Y.tr.std, lambda.Beta = lamB.vec, lambda.Theta = lamTht.vec,
 #'                  standardize = FALSE, standardize.response = FALSE)
 #' }
@@ -126,35 +124,33 @@
 missoNet <- function(X, Y, lambda.Beta, lambda.Theta, rho = NULL,
                      Beta.maxit = 1e4, Beta.thr = 1e-08, eta = 0.8,
                      Theta.maxit = 1e4, Theta.thr = 1e-08, eps = 1e-08,
-                     penalize.diagonal = NULL, diag.penalty.factor = NULL,
-                     standardize = TRUE, standardize.response = TRUE, fit.relax = FALSE,
-                     parallel = FALSE, cl = NULL, with.seed = NULL, verbose = 1) {
+                     penalize.diagonal = TRUE, diag.penalty.factor = NULL,
+                     standardize = TRUE, standardize.response = TRUE,
+                     fit.relax = FALSE, parallel = FALSE, cl = NULL, verbose = 1) {
   if (length(lambda.Beta) != length(lambda.Theta)) {
     stop("`lambda.Beta` and `lambda.Theta` should be equal in length.")
   }
   
   if (verbose > 0) { cat("\n========================= missoNet ========================\n
-- Parameter initialization ...\n\n") }
-  n <- nrow(X)
-  kfold <- ifelse(n >= 100, 10, 5)
-  set.seed(with.seed)  # for reproducibility
-  ind <- sample(n, replace = FALSE)
-  foldid <- unlist(lapply(1:kfold, function(x) { rep(x, length((1 + floor((x - 1) * n/kfold)):floor(x * n/kfold))) }))
-  init.obj <- InitParams(X = X[ind, ], Y = Y[ind, ], rho = rho, kfold = kfold, foldid = foldid,
-                         Theta.maxit = Theta.maxit, Theta.thr = Theta.thr, eps = eps,
-                         penalize.diagonal = penalize.diagonal, diag.pf = diag.penalty.factor,
+- Model initialization ...\n\n") }
+  init.obj <- InitParams(X = X, Y = Y, rho = rho, under.cv = FALSE, lamB.vec = lambda.Beta,
+                         eps = eps, penalize.diag = penalize.diagonal, diag.pf = diag.penalty.factor,
                          standardize = standardize, standardize.response = standardize.response)
+  B.init.list <- init.obj$B.init
+  init.obj$B.init <- NULL
   
   if (verbose > 0) { cat("-----------------------------------------------------------\n
-- Fittig with the user-supplied `lambda` value(s) ...\n\n") }
+- Fittig with the user-supplied `lambda` pair(s) ...\n\n") }
   if (!parallel) {
     fit_list <- vector("list", length(lambda.Theta))
     names(fit_list) <- paste0(1:length(lambda.Theta), ": lamB=", sprintf("%.3f", lambda.Beta), " lamTht=", sprintf("%.3f", lambda.Theta))
     if (verbose == 1) { pb <- txtProgressBar(min = 0, max = length(lambda.Theta), style = 3, width = 50, char = "=") }
     for (i in 1:length(lambda.Theta)) {
       fit_list[[i]] <- fitWrapper(X = X, Y = Y, lambda.Theta = lambda.Theta[i], lambda.Beta = lambda.Beta[i],
-                                  Beta.maxit = Beta.maxit, Beta.thr = Beta.thr, eta = eta, Theta.maxit = Theta.maxit, Theta.thr = Theta.thr, eps = eps,
-                                  verbose = verbose, fit.relax = fit.relax, init.obj = init.obj)
+                                  Beta.maxit = Beta.maxit, Beta.thr = Beta.thr, eta = eta,
+                                  Theta.maxit = Theta.maxit, Theta.thr = Theta.thr, eps = eps,
+                                  penalize.diagonal = penalize.diagonal, verbose = verbose, fit.relax = fit.relax,
+                                  init.obj = init.obj, B.init = B.init.list[[i]])
       if (verbose == 1) { setTxtProgressBar(pb, i) }
     }
     if (verbose == 1) { close(pb) }
@@ -166,8 +162,10 @@ missoNet <- function(X, Y, lambda.Beta, lambda.Theta, rho = NULL,
     
     fit_list <- pbapply::pblapply(1:length(lambda.Theta), function(i) {
       fitWrapper(X = X, Y = Y, lambda.Theta = lambda.Theta[i], lambda.Beta = lambda.Beta[i],
-                 Beta.maxit = Beta.maxit, Beta.thr = Beta.thr, eta = eta, Theta.maxit = Theta.maxit, Theta.thr = Theta.thr, eps = eps,
-                 verbose = 0, fit.relax = fit.relax, init.obj = init.obj)
+                 Beta.maxit = Beta.maxit, Beta.thr = Beta.thr, eta = eta,
+                 Theta.maxit = Theta.maxit, Theta.thr = Theta.thr, eps = eps,
+                 penalize.diagonal = penalize.diagonal, verbose = 0, fit.relax = fit.relax,
+                 init.obj = init.obj, B.init = B.init.list[[i]])
     }, cl = cl)
     
     names(fit_list) <- paste0(1:length(lambda.Theta), ": lamB=", sprintf("%.3f", lambda.Beta), " lamTht=", sprintf("%.3f", lambda.Theta))
@@ -175,18 +173,23 @@ missoNet <- function(X, Y, lambda.Beta, lambda.Theta, rho = NULL,
   if (verbose > 0) { cat("\n========================= FINISHED ========================\n\n") }
   
   return(list(est.list = fit_list, rho = init.obj$rho.vec,
-              penalize.diagonal = init.obj$penalize.diagonal, diag.penalty.factor = init.obj$diag.pf))
+              penalize.diagonal = penalize.diagonal, diag.penalty.factor = init.obj$diag.pf))
 }
 
 
 fitWrapper <- function(X, Y, lambda.Theta, lambda.Beta,
-                       Beta.maxit, Beta.thr, eta, Theta.maxit, Theta.thr, eps,
-                       verbose, fit.relax, init.obj) {
+                       Beta.maxit, Beta.thr, eta,
+                       Theta.maxit, Theta.thr, eps,
+                       penalize.diagonal, verbose, fit.relax,
+                       init.obj, B.init) {
+  
   fit <- update.missoNet(X = X, Y = Y, lamTh = lambda.Theta, lamB = lambda.Beta,
                          Beta.maxit = Beta.maxit, Beta.thr = Beta.thr,
                          Theta.maxit = Theta.maxit, Theta.thr = Theta.thr,
-                         verbose = verbose, eps = eps, eta = eta, diag.pf = init.obj$diag.pf,
-                         info = NULL, info.update = NULL, under.cv = FALSE, init.obj = init.obj, B.init = init.obj$B.init*init.obj$sdx)
+                         verbose = verbose, eps = eps, eta = eta,
+                         penalize.diag = penalize.diagonal, diag.pf = init.obj$diag.pf,
+                         info = NULL, info.update = NULL, under.cv = FALSE,
+                         init.obj = init.obj, B.init = B.init)
   fit$Beta <- sweep(fit$Beta/init.obj$sdx, 2, init.obj$sdy, `*`)    ## convert back to the original scale
   fit$mu <- as.numeric(init.obj$my - crossprod(fit$Beta, init.obj$mx))
   fit$lambda.Beta <- lambda.Beta
