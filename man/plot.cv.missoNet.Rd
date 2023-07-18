@@ -31,12 +31,13 @@ S3 method for plotting the cross-validation error surface from a fitted \code{'c
 }
 \examples{
 ## Simulate a dataset.
+set.seed(123)  # reproducibility
 sim.dat <- generateData(n = 200, p = 10, q = 10, rho = 0.1, missing.type = "MCAR")
 
 \donttest{
 ## Perform a five-fold cross-validation on the simulated dataset.
 cvfit <- cv.missoNet(X = sim.dat$X, Y = sim.dat$Z, kfold = 5,
-                     fit.1se = TRUE, permute = TRUE, with.seed = 123)
+                     fit.1se = TRUE, permute = TRUE, with.seed = 486)
 
 
 ## Plot the (standardized) mean cross-validated errors in a heatmap.

@@ -18,7 +18,7 @@
 #' @importFrom Rcpp sourceCpp
 #' @importFrom graphics par
 #' @importFrom grid gpar grid.rect
-#' @importFrom stats coef complete.cases quantile rbinom rnorm runif sd
+#' @importFrom stats quantile rbinom rnorm runif sd
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom glasso glasso
 NULL

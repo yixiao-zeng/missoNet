@@ -1,8 +1,8 @@
 Type: Package
 Package: missoNet
 Title: Missingness in Multi-Task Regression with Network Estimation
-Version: 1.1.0.9000
-Date: 2023-06-10
+Version: 1.2.0
+Date: 2023-07-18
 Authors@R: c(
     person("Yixiao", "Zeng", email = "yixiao.zeng@mail.mcgill.ca", role = c("aut", "cre", "cph")),
     person("Celia", "Greenwood", email = "celia.greenwood@mcgill.ca", role = c("ths", "aut")),

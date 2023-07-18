@@ -15,6 +15,7 @@
 #' 
 #' @examples
 #' ## Simulate a dataset.
+#' set.seed(123)  # reproducibility
 #' sim.dat <- generateData(n = 300, p = 10, q = 10, rho = 0.1, missing.type = "MCAR")
 #' tr <- 1:240  # training set indices
 #' tst <- 241:300  # test set indices
@@ -22,7 +23,7 @@
 #' \donttest{
 #' ## Perform a five-fold cross-validation on the training set.
 #' cvfit <- cv.missoNet(X = sim.dat$X[tr, ], Y = sim.dat$Z[tr, ], kfold = 5,
-#'                      fit.1se = TRUE, permute = TRUE, with.seed = 123)
+#'                      fit.1se = TRUE, permute = TRUE, with.seed = 486)
 #' 
 #' 
 #' ## Make predictions of response values on the test set.

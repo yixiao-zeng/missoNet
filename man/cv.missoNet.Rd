@@ -75,7 +75,7 @@ cv.missoNet(
 
 \item{penalize.diagonal}{Logical: should the diagonal elements of \eqn{\mathbf{\Theta}} be penalized? The default is \code{'TRUE'}.}
 
-\item{diag.penalty.factor}{Numeric: a separate penalty multiplication factor for the diagonal elements of \eqn{\mathbf{\Theta}} when \code{'penalize.diagonal = TRUE'}. \eqn{\lambda_\Theta} is multiplied by this number to allow a differential shrinkage of the diagonal elements. The default is \code{'NULL'} and the program will guess a value based on an initial estimate of \eqn{\mathbf{\Theta}}. This factor could be \code{'0'} for no shrinkage (equivalent to \code{'penalize.diagonal = FALSE'}).}
+\item{diag.penalty.factor}{Numeric: a separate penalty multiplication factor for the diagonal elements of \eqn{\mathbf{\Theta}} when \code{'penalize.diagonal = TRUE'}. \eqn{\lambda_\Theta} is multiplied by this number to allow a differential shrinkage of the diagonal elements. The default is \code{'NULL'} and the program will guess a value based on an initial estimate of \eqn{\mathbf{\Theta}}. This factor could be \code{'0'} for no shrinkage (equivalent to \code{'penalize.diagonal = FALSE'}) or \code{'1'} for an equal shrinkage.}
 
 \item{standardize}{Logical: should the columns of \code{'X'} be standardized so each has unit variance? The default is \code{'TRUE'}. The estimated results will always be returned on the original scale. \sQuote{\code{cv.missoNet}} computes appropriate \eqn{\lambda} sequences relying on standardization, if \code{'X'} has been standardized prior to fitting the model, you might not wish to standardize it inside the algorithm.}
 
@@ -162,6 +162,7 @@ See the vignette for examples.
 \examples{
 ## Simulate a dataset with response values missing completely at random (MCAR), 
 ## the overall missing rate is around 10\%.
+set.seed(123)  # reproducibility
 sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
 tr <- 1:240  # training set indices
 tst <- 241:300  # test set indices
@@ -192,7 +193,8 @@ cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5)
 ## that the cross-validated error is within one standard error of the minimum.
 cl <- parallel::makeCluster(min(parallel::detectCores()-1, 2))
 cvfit <- cv.missoNet(X = X.tr, Y = Y.tr, kfold = 5, fit.1se = TRUE,
-                     parallel = TRUE, cl = cl)
+                     parallel = TRUE, cl = cl,
+                     permute = TRUE, with.seed = 486)  # permute with seed for reproducibility
 parallel::stopCluster(cl)
 
 

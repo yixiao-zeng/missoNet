@@ -51,7 +51,7 @@ missoNet(
 
 \item{penalize.diagonal}{Logical: should the diagonal elements of \eqn{\mathbf{\Theta}} be penalized? The default is \code{'TRUE'}.}
 
-\item{diag.penalty.factor}{Numeric: a separate penalty multiplication factor for the diagonal elements of \eqn{\mathbf{\Theta}} when \code{'penalize.diagonal = TRUE'}. \eqn{\lambda_\Theta} is multiplied by this number to allow a differential shrinkage of the diagonal elements. The default is \code{'NULL'} and the program will guess a value based on an initial estimate of \eqn{\mathbf{\Theta}}. This factor could be \code{'0'} for no shrinkage (equivalent to \code{'penalize.diagonal = FALSE'}).}
+\item{diag.penalty.factor}{Numeric: a separate penalty multiplication factor for the diagonal elements of \eqn{\mathbf{\Theta}} when \code{'penalize.diagonal = TRUE'}. \eqn{\lambda_\Theta} is multiplied by this number to allow a differential shrinkage of the diagonal elements. The default is \code{'NULL'} and the program will guess a value based on an initial estimate of \eqn{\mathbf{\Theta}}. This factor could be \code{'0'} for no shrinkage (equivalent to \code{'penalize.diagonal = FALSE'}) or \code{'1'} for an equal shrinkage.}
 
 \item{standardize}{Logical: should the columns of \code{'X'} be standardized so each has unit variance? The default is \code{'TRUE'}. The estimated results will always be returned on the original scale. If \code{'X'} has been standardized prior to fitting the model, you might not wish to standardize it inside the algorithm.}
 
@@ -124,6 +124,7 @@ solutions that are comparable/close to the clean conditional graphical lasso est
 \examples{
 ## Simulate a dataset with response values missing completely at random (MCAR), 
 ## the overall missing rate is around 10\%.
+set.seed(123)  # reproducibility
 sim.dat <- generateData(n = 300, p = 50, q = 20, rho = 0.1, missing.type = "MCAR")
 tr <- 1:240  # training set indices
 tst <- 241:300  # test set indices
